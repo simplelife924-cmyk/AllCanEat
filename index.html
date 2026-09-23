@@ -34,7 +34,6 @@
       padding-bottom: 60px;
     }
 
-    /* 頂部導航 */
     header {
       background-color: var(--primary);
       color: var(--white);
@@ -59,7 +58,6 @@
       font-weight: 500;
     }
 
-    /* 低調的管理員入口按鈕 (右上角) */
     .admin-entry-btn {
       position: absolute;
       top: 14px;
@@ -80,7 +78,6 @@
       background: rgba(255, 255, 255, 0.28);
     }
 
-    /* 頁籤選單 */
     .tabs {
       display: flex;
       justify-content: center;
@@ -109,7 +106,6 @@
       background-color: rgba(170, 207, 208, 0.15);
     }
 
-    /* 主容器與卡片 */
     .container {
       max-width: 680px;
       margin: 20px auto;
@@ -133,7 +129,6 @@
       justify-content: space-between;
     }
 
-    /* 表單元件 */
     .form-group {
       margin-bottom: 16px;
     }
@@ -200,7 +195,6 @@
       background-color: var(--accent);
     }
 
-    /* 金額結算盒 */
     .summary-box {
       background-color: rgba(170, 207, 208, 0.2);
       border-left: 4px solid var(--primary);
@@ -217,7 +211,6 @@
       color: var(--primary);
     }
 
-    /* 按鈕樣式 */
     .btn-submit {
       background-color: var(--primary);
       color: var(--white);
@@ -272,7 +265,6 @@
       margin-top: 15px;
     }
 
-    /* 對帳與狀態列表 (前台公開查帳) */
     .search-box {
       margin-bottom: 15px;
     }
@@ -316,7 +308,6 @@
       line-height: 1.5;
     }
 
-    /* 管理員專屬後台面板樣式 */
     .admin-badge {
       background-color: #e67e22;
       color: #fff;
@@ -385,7 +376,6 @@
       font-size: 0.95rem;
     }
 
-    /* 彈跳提示視窗 (美化版) */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -447,17 +437,14 @@
 </head>
 <body>
 
-  <!-- 頂部資訊列 -->
   <header>
     <h1>🍱 今天要吃什麼勒</h1>
     <div class="shop-badge" id="currentShopText">載入店家資訊中...</div>
-    <!-- 平常很低調的管理員按鈕 -->
     <button class="admin-entry-btn" onclick="openAdminModal()" title="後台管理">
       <span>🔒</span> 管理員
     </button>
   </header>
 
-  <!-- 頁籤選單（只有前台3個） -->
   <div class="tabs" id="mainTabs">
     <button class="tab-btn active" onclick="switchTab('order')">我要點餐</button>
     <button class="tab-btn" onclick="switchTab('status')">對帳與查詢</button>
@@ -466,7 +453,6 @@
 
   <div class="container">
     
-    <!-- 頁籤一：我要點餐 -->
     <div id="tab-order">
       <div class="card">
         <div class="card-title">填寫訂購資訊</div>
@@ -509,7 +495,6 @@
       </div>
     </div>
 
-    <!-- 頁籤二：對帳與查詢 (公開唯讀檢視) -->
     <div id="tab-status" style="display:none;">
       <div class="card">
         <div class="card-title">
@@ -523,7 +508,6 @@
       </div>
     </div>
 
-    <!-- 頁籤三：今日菜單 -->
     <div id="tab-menu" style="display:none;">
       <div class="card">
         <div class="card-title">今日菜單總覽</div>
@@ -531,14 +515,12 @@
       </div>
     </div>
 
-    <!-- 4. 管理員後台控制台 (平常隱藏，登入後才顯示) -->
     <div id="tab-admin" style="display:none;">
       <div class="card">
         <div class="card-title">
           <div>⚙️ 管理員後台控制台 <span class="admin-badge">已登入</span></div>
         </div>
 
-        <!-- 統計數據卡片 -->
         <div class="admin-stats-grid">
           <div class="stat-card">
             <div class="stat-label">今日總訂單數</div>
@@ -558,7 +540,6 @@
           </div>
         </div>
 
-        <!-- 1. 切換今日店家 -->
         <div style="background:#fafdfd; border:1px solid var(--accent); border-radius:8px; padding:14px; margin-bottom:15px;">
           <label>🔄 切換今日店家（更新試算表「今日設定」）</label>
           <div style="display: flex; gap: 8px; margin-top: 6px;">
@@ -567,7 +548,6 @@
           </div>
         </div>
 
-        <!-- 2. 線上即時對帳與切換繳費狀態 -->
         <div style="background:#fafdfd; border:1px solid var(--accent); border-radius:8px; padding:14px; margin-bottom:15px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <label style="margin:0;">📋 點餐人員對帳管理 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(點擊狀態標籤可直接切換試算表狀態)</span></label>
@@ -578,7 +558,6 @@
           </div>
         </div>
 
-        <!-- 3. 清除所有點餐紀錄 -->
         <div style="background:#fff8f8; border:1px solid #fad2d2; border-radius:8px; padding:14px; margin-bottom:15px;">
           <label style="color:var(--danger);">🗑️ 清空今日所有點餐紀錄</label>
           <p style="font-size: 0.8rem; color: #777; margin-bottom: 8px;">
@@ -587,14 +566,12 @@
           <button class="btn-danger" onclick="handleAdminClearOrders()">清空今日所有紀錄</button>
         </div>
 
-        <!-- 返回點餐畫面 -->
         <button class="btn-back" onclick="exitAdmin()">↩ 返回點餐頁面</button>
       </div>
     </div>
 
   </div>
 
-  <!-- 自訂提示視窗 (Common Modal) -->
   <div class="modal-overlay" id="customModal">
     <div class="modal-card">
       <div class="modal-icon" id="modalIcon">🎉</div>
@@ -604,7 +581,6 @@
     </div>
   </div>
 
-  <!-- 管理員密碼驗證視窗 (Admin Login Modal) -->
   <div class="modal-overlay" id="adminLoginModal">
     <div class="modal-card">
       <div class="modal-icon">🔐</div>
@@ -621,7 +597,6 @@
   </div>
 
   <script>
-    // 您部署的 GAS 網址
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
 
     let currentShop = '';
@@ -631,25 +606,36 @@
     let adminToken = '';
     let modalCallback = null;
 
-    // API GET 傳輸封裝
-    async function apiGet(action) {
-      const res = await fetch(`${GAS_API_URL}?action=${action}`, { redirect: 'follow' });
-      return await res.json();
-    }
+    // 通用 JSONP 請求處理器 (無 CORS 阻擋問題)
+    function jsonpRequest(params) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        
+        window[callbackName] = function(data) {
+          delete window[callbackName];
+          if (script && script.parentNode) script.parentNode.removeChild(script);
+          resolve(data);
+        };
 
-    // API POST 傳輸封裝
-    async function apiPost(action, data = {}) {
-      const payload = { action, ...data };
-      const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload),
-        redirect: 'follow'
+        const queryArray = [`callback=${callbackName}`];
+        for (const key in params) {
+          if (params.hasOwnProperty(key)) {
+            queryArray.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+          }
+        }
+
+        const script = document.createElement('script');
+        script.src = `${GAS_API_URL}?${queryArray.join('&')}`;
+        script.onerror = function() {
+          delete window[callbackName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+          reject(new Error('網路連線失敗或後端未回應'));
+        };
+
+        document.body.appendChild(script);
       });
-      return await res.json();
     }
 
-    // 自訂美化彈跳通知
     function showModal(title, msg, icon = '🎉', callback = null) {
       document.getElementById('modalTitle').innerText = title;
       document.getElementById('modalMsg').innerText = msg;
@@ -666,14 +652,13 @@
       }
     }
 
-    // 初始化載入
     window.onload = function() {
       loadInitialData();
     };
 
     async function loadInitialData() {
       try {
-        const data = await apiGet('getTodayMenuData');
+        const data = await jsonpRequest({ action: 'getTodayMenuData' });
         if (data.success) {
           currentShop = data.shop || '尚未設定店家';
           menuItems = data.items || [];
@@ -682,22 +667,19 @@
           document.getElementById('currentShopText').innerText = '今日店家：' + currentShop;
           renderMenuList();
 
-          // 重新初始化點餐品項下拉
           document.getElementById('itemList').innerHTML = '';
           addItemRow();
 
-          // 填充管理員切換店家選單
           populateAdminShopsSelect();
         } else {
           showModal('載入失敗', data.message || '無法取得菜單資料', '⚠️');
         }
       } catch (err) {
-        showModal('載入失敗', '資料載入失敗：' + err, '⚠️');
+        showModal('載入失敗', '資料載入失敗：' + err.message, '⚠️');
       }
     }
 
     function switchTab(tabId) {
-      // 隱藏所有前台分頁及後台
       document.getElementById('tab-order').style.display = 'none';
       document.getElementById('tab-status').style.display = 'none';
       document.getElementById('tab-menu').style.display = 'none';
@@ -719,7 +701,6 @@
       }
     }
 
-    // 新增品項下拉
     function addItemRow() {
       const container = document.getElementById('itemList');
       const rows = container.querySelectorAll('.item-row');
@@ -754,7 +735,6 @@
       calculateTotal();
     }
 
-    // 計算總金額
     function calculateTotal() {
       let total = 0;
       const rows = document.querySelectorAll('.item-row');
@@ -768,7 +748,6 @@
       return total;
     }
 
-    // 送出點餐
     async function handleOrderSubmit() {
       const group = document.getElementById('orderGroup').value;
       if (!group) {
@@ -806,7 +785,7 @@
       };
 
       try {
-        const res = await apiPost('submitOrder', { payload: payload });
+        const res = await jsonpRequest({ action: 'submitOrder', payload: JSON.stringify(payload) });
         btn.disabled = false;
         btn.innerText = '確認送出點餐';
         if (res.success) {
@@ -825,16 +804,15 @@
       } catch (err) {
         btn.disabled = false;
         btn.innerText = '確認送出點餐';
-        showModal('系統錯誤', err.toString(), '❌');
+        showModal('系統錯誤', err.message, '❌');
       }
     }
 
-    // 載入對帳狀態
     async function loadStatusData() {
       const listDiv = document.getElementById('statusList');
       listDiv.innerHTML = '載入中...';
       try {
-        const res = await apiGet('getOrdersAndPaymentStatus');
+        const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
         if (res.success) {
           allOrders = res.data || [];
           renderOrders(allOrders);
@@ -842,7 +820,7 @@
           listDiv.innerHTML = '<div style="text-align:center; color:red;">載入失敗：' + res.message + '</div>';
         }
       } catch (err) {
-        listDiv.innerHTML = '<div style="text-align:center; color:red;">載入失敗：' + err + '</div>';
+        listDiv.innerHTML = '<div style="text-align:center; color:red;">載入失敗：' + err.message + '</div>';
       }
     }
 
@@ -903,10 +881,6 @@
       menuDiv.innerHTML = html;
     }
 
-    /* -------------------------------------------------------------
-       管理員後台控制邏輯
-    ------------------------------------------------------------- */
-
     function openAdminModal() {
       document.getElementById('adminPasswordInput').value = '';
       document.getElementById('adminLoginModal').style.display = 'flex';
@@ -929,13 +903,11 @@
     }
 
     function enterAdminPanel() {
-      // 隱藏一般分頁與分頁列
       document.getElementById('tab-order').style.display = 'none';
       document.getElementById('tab-status').style.display = 'none';
       document.getElementById('tab-menu').style.display = 'none';
       document.getElementById('mainTabs').style.display = 'none';
 
-      // 顯示管理員面板
       document.getElementById('tab-admin').style.display = 'block';
       window.scrollTo(0, 0);
 
@@ -967,14 +939,14 @@
       if (!confirm(`確定要將今日店家切換為【${newShop}】嗎？`)) return;
 
       try {
-        const res = await apiPost('adminChangeShop', { password: adminToken, newShop: newShop });
+        const res = await jsonpRequest({ action: 'adminChangeShop', password: adminToken, newShop: newShop });
         showModal(res.success ? '成功' : '失敗', res.message, res.success ? '✅' : '❌', function() {
           if (res.success) {
             loadInitialData();
           }
         });
       } catch (err) {
-        alert('操作失敗：' + err);
+        alert('操作失敗：' + err.message);
       }
     }
 
@@ -983,7 +955,7 @@
       container.innerHTML = '<div class="loader">讀取中...</div>';
 
       try {
-        const res = await apiGet('getOrdersAndPaymentStatus');
+        const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
         if (res.success) {
           allOrders = res.data || [];
           updateAdminStatistics(allOrders);
@@ -1032,7 +1004,7 @@
           container.innerHTML = '<div style="padding:15px; color:red; text-align:center;">讀取失敗：' + res.message + '</div>';
         }
       } catch (err) {
-        container.innerHTML = '<div style="padding:15px; color:red; text-align:center;">讀取失敗：' + err + '</div>';
+        container.innerHTML = '<div style="padding:15px; color:red; text-align:center;">讀取失敗：' + err.message + '</div>';
       }
     }
 
@@ -1053,35 +1025,33 @@
       document.getElementById('statUnpaidAmount').innerText = '$' + (total - paid);
     }
 
-    // 即時切換繳費狀態
     async function togglePaymentStatus(rowIndex, newStatus) {
       try {
-        const res = await apiPost('adminTogglePaid', { password: adminToken, rowIndex: rowIndex, newStatus: newStatus });
+        const res = await jsonpRequest({ action: 'adminTogglePaid', password: adminToken, rowIndex: rowIndex, newStatus: newStatus });
         if (res.success) {
           loadAdminOrders();
         } else {
           alert('切換失敗：' + res.message);
         }
       } catch (err) {
-        alert('切換失敗：' + err);
+        alert('切換失敗：' + err.message);
       }
     }
 
-    // 清空紀錄
     async function handleAdminClearOrders() {
       if (!confirm('⚠️ 警告：確定要清空今日所有點餐紀錄嗎？\n此動作會清除試算表中的所有訂單資料，無法復原！')) {
         return;
       }
 
       try {
-        const res = await apiPost('adminClearAllOrders', { password: adminToken });
+        const res = await jsonpRequest({ action: 'adminClearAllOrders', password: adminToken });
         showModal(res.success ? '清空完成' : '清空失敗', res.message, res.success ? '🗑️' : '❌', function() {
           if (res.success) {
             loadAdminOrders();
           }
         });
       } catch (err) {
-        alert('清空失敗：' + err);
+        alert('清空失敗：' + err.message);
       }
     }
   </script>
