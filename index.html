@@ -279,7 +279,6 @@
     let isFetchingData = false;
     let searchTimeout = null;
 
-    // 強化版 escapeHTML 確保型別安全與防護全面
     function escapeHTML(str) {
       if (str === null || str === undefined) return '';
       return String(str).replace(/[&<>'"]/g, tag => ({
@@ -309,9 +308,10 @@
       nameSelect.disabled = false;
     }
 
-    function apiRequest(action, data = {}, timeoutMs = 30000) {
-      return new Promise((resolve, reject) => {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
+    // 手機端高度穩定的 fetch API 請求核心（含自動重試機制）
+    async function apiRequest(action, data = {}, retries = 2) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        return new Promise((resolve, reject) => {
           let runner = google.script.run
             .withSuccessHandler(res => resolve(res))
             .withFailureHandler(err => reject(new Error(err.message || err)));
@@ -323,55 +323,43 @@
           else if (action === 'adminChangeShop') runner.adminChangeShop(data.password, data.newShop);
           else if (action === 'adminClearAllOrders') runner.adminClearAllOrders(data.password);
           else reject(new Error("未知的動作: " + action));
-        } else {
-          jsonpRequest(action, data, timeoutMs).then(resolve).catch(reject);
-        }
-      });
-    }
+        });
+      }
 
-    function jsonpRequest(action, params, timeoutMs = 30000) {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-        let isFinished = false;
+      // 手機獨立網頁：使用標準 fetch 配合 POST 請求避開行動網路 URL 過長限制
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 20000); // 20秒逾時控制
 
-        const cleanup = () => {
-          isFinished = true;
-          delete window[callbackName];
-          const script = document.getElementById(callbackName);
-          if (script) script.remove();
-        };
-
-        const timeoutId = setTimeout(() => {
-          if (isFinished) return;
-          cleanup();
-          reject(new Error('連線逾時，請再試一次！'));
-        }, timeoutMs);
-
-        window[callbackName] = function(data) {
-          if (isFinished) return;
+          const response = await fetch(GAS_API_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: action, ...data }),
+            signal: controller.signal
+          });
+          
           clearTimeout(timeoutId);
-          cleanup();
-          resolve(data);
-        };
 
-        const queryArray = [`action=${action}`, `callback=${callbackName}`];
-        for (const key in params) {
-          if (Object.prototype.hasOwnProperty.call(params, key)) {
-            queryArray.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+          if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
+          
+          const textResult = await response.text();
+          let jsonResult;
+          try {
+            jsonResult = JSON.parse(textResult);
+          } catch(e) {
+            throw new Error("伺服器回傳格式異常");
           }
+          return jsonResult;
+        } catch (err) {
+          if (attempt === retries) {
+            throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查手機網路狀態！' : (err.message || '無法連線至伺服器。'));
+          }
+          // 等待 1 秒後自動重試
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
-
-        const script = document.createElement('script');
-        script.id = callbackName;
-        script.src = `${GAS_API_URL}?${queryArray.join('&')}`;
-        script.onerror = function() {
-          if (isFinished) return;
-          clearTimeout(timeoutId);
-          cleanup();
-          reject(new Error('無法連線至伺服器。'));
-        };
-        document.body.appendChild(script);
-      });
+      }
     }
 
     function showModal(title, msg, icon = '🎉', callback = null) {
@@ -700,7 +688,7 @@
       document.getElementById('tab-admin').style.display = 'block';
       window.scrollTo(0, 0);
       populateAdminShopsSelect();
-      loadAdminOrders(true); // 進入後台時確保強制同步最新訂單與統計數據
+      loadAdminOrders(true);
     }
 
     function exitAdmin() {
@@ -747,7 +735,7 @@
       btnElement.disabled = true;
 
       try {
-        const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex: orderId, newStatus: newStatus }, 12000);
+        const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex: orderId, newStatus: newStatus });
         if (!res || !res.success) throw new Error((res && res.message) || "同步更新失敗");
         updateCache('orders', allOrders);
       } catch (err) {
