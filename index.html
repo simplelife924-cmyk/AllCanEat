@@ -311,8 +311,11 @@
       border-radius: 12px;
       font-size: 0.75rem;
       font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .badge-paid {
+    .badge-paid, .badge.paid {
       background-color: var(--success-bg);
       color: var(--success);
       border: 1px solid #b7ebd0;
@@ -321,6 +324,10 @@
       background-color: var(--danger-bg);
       color: var(--danger);
       border: 1px solid #fad2d2;
+    }
+    .badge:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .admin-badge {
@@ -369,19 +376,6 @@
       background-color: #edf5f5;
       color: var(--primary);
       font-weight: 700;
-    }
-    .status-clickable {
-      cursor: pointer;
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 0.75rem;
-      transition: transform 0.1s;
-      user-select: none;
-    }
-    .status-clickable:hover {
-      transform: scale(1.05);
     }
 
     .loader {
@@ -596,7 +590,7 @@
 
         <div style="background:#fafdfd; border:1px solid var(--accent); border-radius:8px; padding:14px; margin-bottom:15px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <label style="margin:0;">📋 點餐人員對帳管理 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(點擊狀態標籤可直接切換試算表狀態)</span></label>
+            <label style="margin:0;">📋 點餐人員對帳管理 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(點擊狀態按鈕可切換狀態)</span></label>
             <button class="btn-action" style="padding: 3px 8px; font-size:0.75rem;" onclick="loadAdminOrders()">🔄 重新整理</button>
           </div>
           <div id="adminOrdersContainer" style="overflow-x: auto;">
@@ -1077,6 +1071,41 @@
       });
     }
 
+    async function handleTogglePaid(orderId, btnElement) {
+      btnElement.disabled = true;
+      const originalText = btnElement.innerText;
+      btnElement.innerText = "處理中...";
+
+      try {
+        const targetOrder = allOrders.find(o => o.rowIndex === orderId);
+        const currentStatus = targetOrder ? targetOrder.paid : false;
+        const newStatus = !currentStatus;
+
+        const res = await jsonpRequest({ 
+          action: 'adminTogglePaid', 
+          password: adminToken, 
+          rowIndex: orderId, 
+          newStatus: newStatus 
+        });
+
+        if (res.success || res.status === "success") {
+          const isPaid = res.newStatus !== undefined ? res.newStatus : newStatus;
+          if (targetOrder) targetOrder.paid = isPaid;
+          
+          btnElement.innerText = isPaid ? "已付款" : "未付款";
+          btnElement.className = isPaid ? "badge badge-paid paid" : "badge badge-unpaid";
+          updateAdminStatistics(allOrders);
+        } else {
+          throw new Error(res.message || "切換失敗");
+        }
+      } catch (err) {
+        showModal('提醒', "狀態已還原：系統繁忙中，請稍後再試！", '⚠️');
+        btnElement.innerText = originalText;
+      } finally {
+        btnElement.disabled = false;
+      }
+    }
+
     async function loadAdminOrders() {
       const container = document.getElementById('adminOrdersContainer');
       container.innerHTML = '<div class="loader"><span class="spinner"></span> 讀取中...</div>';
@@ -1100,7 +1129,7 @@
                   <th>姓名</th>
                   <th>總額</th>
                   <th>點餐品項與備註</th>
-                  <th>繳費狀態 (點擊切換)</th>
+                  <th>繳費狀態</th>
                 </tr>
               </thead>
               <tbody>
@@ -1108,9 +1137,9 @@
 
           allOrders.forEach(r => {
             const targetRowIndex = r.rowIndex;
-            const statusBadge = r.paid
-              ? `<span id="badge-${targetRowIndex}" class="badge badge-paid status-clickable" onclick="togglePaymentStatus(this, ${targetRowIndex}, false)" title="點擊切換為未繳">✅ 已繳</span>`
-              : `<span id="badge-${targetRowIndex}" class="badge badge-unpaid status-clickable" onclick="togglePaymentStatus(this, ${targetRowIndex}, true)" title="點擊切換為已繳">❌ 未繳</span>`;
+            const isPaid = r.paid;
+            const btnClass = isPaid ? "badge badge-paid paid" : "badge badge-unpaid";
+            const btnText = isPaid ? "已付款" : "未付款";
 
             html += `
               <tr>
@@ -1121,7 +1150,9 @@
                   ${escapeHTML(r.itemsSummary) || ''}
                   ${r.note ? '<br><small style="color:#777;">備註：' + escapeHTML(r.note) + '</small>' : ''}
                 </td>
-                <td style="text-align:center;">${statusBadge}</td>
+                <td style="text-align:center;">
+                  <button class="${btnClass}" onclick="handleTogglePaid(${targetRowIndex}, this)">${btnText}</button>
+                </td>
               </tr>
             `;
           });
@@ -1151,54 +1182,6 @@
       document.getElementById('statTotalAmount').innerText = '$' + total;
       document.getElementById('statPaidAmount').innerText = '$' + paid;
       document.getElementById('statUnpaidAmount').innerText = '$' + (total - paid);
-    }
-
-    async function togglePaymentStatus(element, rowIndex, newStatus) {
-      const targetOrder = allOrders.find(o => o.rowIndex === rowIndex);
-      if (!targetOrder) return;
-
-      const oldPaidState = targetOrder.paid;
-      targetOrder.paid = newStatus;
-
-      if (newStatus) {
-        element.className = "badge badge-paid status-clickable";
-        element.innerText = "✅ 已繳";
-        element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, false)`);
-        element.setAttribute("title", "點擊切換為未繳");
-      } else {
-        element.className = "badge badge-unpaid status-clickable";
-        element.innerText = "❌ 未繳";
-        element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, true)`);
-        element.setAttribute("title", "點擊切換為已繳");
-      }
-
-      updateAdminStatistics(allOrders);
-
-      try {
-        const res = await jsonpRequest({ 
-          action: 'adminTogglePaid', 
-          password: adminToken, 
-          rowIndex: rowIndex, 
-          newStatus: newStatus 
-        });
-
-        if (!res.success) {
-          throw new Error(res.message || '後端更新失敗');
-        }
-      } catch (err) {
-        targetOrder.paid = oldPaidState;
-        if (oldPaidState) {
-          element.className = "badge badge-paid status-clickable";
-          element.innerText = "✅ 已繳";
-          element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, false)`);
-        } else {
-          element.className = "badge badge-unpaid status-clickable";
-          element.innerText = "❌ 未繳";
-          element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, true)`);
-        }
-        updateAdminStatistics(allOrders);
-        showModal('切換失敗', '狀態已還原：' + err.message, '❌');
-      }
     }
 
     function handleAdminClearOrders() {
