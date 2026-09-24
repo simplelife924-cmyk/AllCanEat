@@ -675,13 +675,12 @@
         const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         let isTimeout = false;
         
-        // 延長至 30 秒，避免多人同時存取時 GAS 排隊逾時
         const timeoutId = setTimeout(() => {
           isTimeout = true;
           delete window[callbackName];
           const script = document.getElementById(callbackName);
           if (script) script.remove();
-          reject(new Error('伺服器連線逾時，請檢查網路連線或稍後重試。'));
+          reject(new Error('請檢查網路連線或稍後重試。'));
         }, 30000);
 
         window[callbackName] = function(data) {
@@ -1108,11 +1107,10 @@
           `;
 
           allOrders.forEach(r => {
-            // 使用 r.orderId 或 r.id 取代原本脆弱的 rowIndex
-            const targetId = r.orderId || r.id || r.rowIndex;
+            const targetRowIndex = r.rowIndex;
             const statusBadge = r.paid
-              ? `<span id="badge-${targetId}" class="badge badge-paid status-clickable" onclick="togglePaymentStatus(this, '${targetId}', false)" title="點擊切換為未繳">✅ 已繳</span>`
-              : `<span id="badge-${targetId}" class="badge badge-unpaid status-clickable" onclick="togglePaymentStatus(this, '${targetId}', true)" title="點擊切換為已繳">❌ 未繳</span>`;
+              ? `<span id="badge-${targetRowIndex}" class="badge badge-paid status-clickable" onclick="togglePaymentStatus(this, ${targetRowIndex}, false)" title="點擊切換為未繳">✅ 已繳</span>`
+              : `<span id="badge-${targetRowIndex}" class="badge badge-unpaid status-clickable" onclick="togglePaymentStatus(this, ${targetRowIndex}, true)" title="點擊切換為已繳">❌ 未繳</span>`;
 
             html += `
               <tr>
@@ -1155,8 +1153,8 @@
       document.getElementById('statUnpaidAmount').innerText = '$' + (total - paid);
     }
 
-    async function togglePaymentStatus(element, orderId, newStatus) {
-      const targetOrder = allOrders.find(o => (o.orderId || o.id || o.rowIndex) == orderId);
+    async function togglePaymentStatus(element, rowIndex, newStatus) {
+      const targetOrder = allOrders.find(o => o.rowIndex === rowIndex);
       if (!targetOrder) return;
 
       const oldPaidState = targetOrder.paid;
@@ -1165,12 +1163,12 @@
       if (newStatus) {
         element.className = "badge badge-paid status-clickable";
         element.innerText = "✅ 已繳";
-        element.setAttribute("onclick", `togglePaymentStatus(this, '${orderId}', false)`);
+        element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, false)`);
         element.setAttribute("title", "點擊切換為未繳");
       } else {
         element.className = "badge badge-unpaid status-clickable";
         element.innerText = "❌ 未繳";
-        element.setAttribute("onclick", `togglePaymentStatus(this, '${orderId}', true)`);
+        element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, true)`);
         element.setAttribute("title", "點擊切換為已繳");
       }
 
@@ -1180,7 +1178,7 @@
         const res = await jsonpRequest({ 
           action: 'adminTogglePaid', 
           password: adminToken, 
-          orderId: orderId, 
+          rowIndex: rowIndex, 
           newStatus: newStatus 
         });
 
@@ -1192,11 +1190,11 @@
         if (oldPaidState) {
           element.className = "badge badge-paid status-clickable";
           element.innerText = "✅ 已繳";
-          element.setAttribute("onclick", `togglePaymentStatus(this, '${orderId}', false)`);
+          element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, false)`);
         } else {
           element.className = "badge badge-unpaid status-clickable";
           element.innerText = "❌ 未繳";
-          element.setAttribute("onclick", `togglePaymentStatus(this, '${orderId}', true)`);
+          element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, true)`);
         }
         updateAdminStatistics(allOrders);
         showModal('切換失敗', '狀態已還原：' + err.message, '❌');
