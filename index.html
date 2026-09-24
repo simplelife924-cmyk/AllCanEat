@@ -201,7 +201,7 @@
         </div>
 
         <div style="background:#fafdfd; border:1px solid var(--accent); border-radius:8px; padding:14px; margin-bottom:15px;">
-          <label>🔄 切換今日店家（更新試算表「今日設定」）</label>
+          <label>🔄 切換今日店家</label>
           <div style="display: flex; gap: 8px; margin-top: 6px;">
             <select id="adminShopsSelect"></select>
             <button class="btn-action" style="white-space: nowrap;" onclick="handleAdminChangeShop()">確認更換</button>
@@ -308,7 +308,6 @@
       nameSelect.disabled = false;
     }
 
-    // 手機端高度穩定的 fetch API 請求核心（含自動重試機制）
     async function apiRequest(action, data = {}, retries = 2) {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         return new Promise((resolve, reject) => {
@@ -326,11 +325,10 @@
         });
       }
 
-      // 手機獨立網頁：使用標準 fetch 配合 POST 請求避開行動網路 URL 過長限制
       for (let attempt = 0; attempt <= retries; attempt++) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 20000); // 20秒逾時控制
+          const timeoutId = setTimeout(() => controller.abort(), 20000);
 
           const response = await fetch(GAS_API_URL, {
             method: 'POST',
@@ -356,7 +354,6 @@
           if (attempt === retries) {
             throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查手機網路狀態！' : (err.message || '無法連線至伺服器。'));
           }
-          // 等待 1 秒後自動重試
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
@@ -417,7 +414,7 @@
       currentShop = res.shop || '尚未設定店家';
       menuItems = res.items || [];
       allShopsList = res.allShops || [];
-      allOrders = res.orders || [];
+      if (res.orders) allOrders = res.orders;
 
       document.getElementById('currentShopText').innerText = '今日店家：' + currentShop;
       renderMenuList();
@@ -456,8 +453,6 @@
         if (res && res.success) {
           localStorage.setItem('lunchApp_cachedData', JSON.stringify(res));
           applyDataToUI(res);
-        } else {
-          if(menuItems.length === 0) showModal('載入失敗', (res && res.message) || '無法取得菜單資料', '⚠️');
         }
       } catch (err) {
         if(menuItems.length === 0) showModal('網路不穩', err.message, '⚠️');
@@ -482,6 +477,7 @@
         document.getElementById('tab-status').style.display = 'block';
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
         renderOrders(allOrders);
+        loadStatusData(false); // 進入時背景靜默同步
       } else if (tabId === 'menu') {
         document.getElementById('tab-menu').style.display = 'block';
         document.querySelectorAll('.tab-btn')[2].classList.add('active');
@@ -577,34 +573,18 @@
     }
 
     async function loadStatusData(forceRefresh = false) {
-      if(isFetchingData) return;
-      
-      const listDiv = document.getElementById('statusList');
-      const btn = document.getElementById('btnRefreshStatus');
-      
-      if (forceRefresh || allOrders.length === 0) {
-        if (allOrders.length === 0) listDiv.innerHTML = '<span class="spinner"></span> 載入中...';
-        btn.innerHTML = '🔄 更新中...';
-        isFetchingData = true;
-        
-        try {
-          const res = await apiRequest('getOrdersAndPaymentStatus');
-          if (res && res.success) {
-            allOrders = res.data || [];
-            updateCache('orders', allOrders);
-            renderOrders(allOrders);
-          } else if (allOrders.length === 0) {
-            listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗</div>';
-          }
-        } catch (err) {
-          if (allOrders.length === 0) listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗</div>';
-        } finally {
-          btn.innerHTML = '🔄 重新整理';
-          isFetchingData = false;
-        }
-      } else {
+      if (!forceRefresh && allOrders.length > 0) {
         renderOrders(allOrders);
       }
+      
+      try {
+        const res = await apiRequest('getOrdersAndPaymentStatus');
+        if (res && res.success) {
+          allOrders = res.data || [];
+          updateCache('orders', allOrders);
+          renderOrders(allOrders);
+        }
+      } catch (err) {}
     }
 
     function updateCache(key, value) {
@@ -688,7 +668,11 @@
       document.getElementById('tab-admin').style.display = 'block';
       window.scrollTo(0, 0);
       populateAdminShopsSelect();
-      loadAdminOrders(true);
+      
+      // 秒開：直接用現有記憶體資料渲染，不等待網路
+      renderAdminTable(allOrders);
+      // 背景靜默更新最新對帳狀態
+      loadAdminOrders(false);
     }
 
     function exitAdmin() {
@@ -757,27 +741,21 @@
     }
 
     async function loadAdminOrders(forceRefresh = false) {
-      if(isFetchingData) return;
+      if (forceRefresh && allOrders.length === 0) {
+        document.getElementById('adminOrdersContainer').innerHTML = '<div class="loader"><span class="spinner"></span> 載入訂單中...</div>';
+      }
       
-      const btn = document.getElementById('btnRefreshAdmin');
-      if (forceRefresh || allOrders.length === 0) {
-        btn.innerHTML = '🔄 更新中...';
-        isFetchingData = true;
-        try {
-          const res = await apiRequest('getOrdersAndPaymentStatus');
-          if (res && res.success) {
-            allOrders = res.data || [];
-            updateCache('orders', allOrders);
-            renderAdminTable(allOrders);
-          }
-        } catch (err) {
-          if (allOrders.length === 0) document.getElementById('adminOrdersContainer').innerHTML = '<div style="padding:15px; color:var(--danger); text-align:center;">讀取失敗</div>';
-        } finally {
-          btn.innerHTML = '🔄 重新整理';
-          isFetchingData = false;
+      try {
+        const res = await apiRequest('getOrdersAndPaymentStatus');
+        if (res && res.success) {
+          allOrders = res.data || [];
+          updateCache('orders', allOrders);
+          renderAdminTable(allOrders);
         }
-      } else {
-        renderAdminTable(allOrders);
+      } catch (err) {
+        if (allOrders.length === 0) {
+          document.getElementById('adminOrdersContainer').innerHTML = '<div style="padding:15px; color:var(--danger); text-align:center;">讀取失敗</div>';
+        }
       }
     }
 
