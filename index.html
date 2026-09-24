@@ -302,11 +302,6 @@
       color: var(--danger);
       border: 1px solid #fad2d2;
     }
-    .order-details {
-      font-size: 0.85rem;
-      color: #555;
-      line-height: 1.5;
-    }
 
     .admin-badge {
       background-color: #e67e22;
@@ -606,7 +601,6 @@
     let adminToken = '';
     let modalCallback = null;
 
-    // 通用 JSONP 請求處理器 (無 CORS 阻擋問題)
     function jsonpRequest(params) {
       return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -981,8 +975,8 @@
 
           allOrders.forEach(r => {
             const statusBadge = r.paid
-              ? `<span class="badge badge-paid status-clickable" onclick="togglePaymentStatus(${r.rowIndex}, false)" title="點擊切換為未繳">✅ 已繳</span>`
-              : `<span class="badge badge-unpaid status-clickable" onclick="togglePaymentStatus(${r.rowIndex}, true)" title="點擊切換為已繳">❌ 未繳</span>`;
+              ? `<span id="badge-${r.rowIndex}" class="badge badge-paid status-clickable" onclick="togglePaymentStatus(this, ${r.rowIndex}, false)" title="點擊切換為未繳">✅ 已繳</span>`
+              : `<span id="badge-${r.rowIndex}" class="badge badge-unpaid status-clickable" onclick="togglePaymentStatus(this, ${r.rowIndex}, true)" title="點擊切換為已繳">❌ 未繳</span>`;
 
             html += `
               <tr>
@@ -1025,16 +1019,56 @@
       document.getElementById('statUnpaidAmount').innerText = '$' + (total - paid);
     }
 
-    async function togglePaymentStatus(rowIndex, newStatus) {
+    // 【已優化：樂觀更新機制】點擊瞬間立即切換前端畫面與金額統計，背景非同步送出更新
+    async function togglePaymentStatus(element, rowIndex, newStatus) {
+      // 1. 立即在前端更換樣式與文字 (樂觀更新)
+      const targetOrder = allOrders.find(o => o.rowIndex === rowIndex);
+      if (!targetOrder) return;
+
+      const oldPaidState = targetOrder.paid;
+      targetOrder.paid = newStatus; // 更新本地暫存狀態
+
+      if (newStatus) {
+        element.className = "badge badge-paid status-clickable";
+        element.innerText = "✅ 已繳";
+        element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, false)`);
+        element.setAttribute("title", "點擊切換為未繳");
+      } else {
+        element.className = "badge badge-unpaid status-clickable";
+        element.innerText = "❌ 未繳";
+        element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, true)`);
+        element.setAttribute("title", "點擊切換為已繳");
+      }
+
+      // 即時重新計算上方金額統計卡片
+      updateAdminStatistics(allOrders);
+
+      // 2. 在背景非同步呼叫 GAS 寫入資料
       try {
-        const res = await jsonpRequest({ action: 'adminTogglePaid', password: adminToken, rowIndex: rowIndex, newStatus: newStatus });
-        if (res.success) {
-          loadAdminOrders();
-        } else {
-          alert('切換失敗：' + res.message);
+        const res = await jsonpRequest({ 
+          action: 'adminTogglePaid', 
+          password: adminToken, 
+          rowIndex: rowIndex, 
+          newStatus: newStatus 
+        });
+
+        if (!res.success) {
+          throw new Error(res.message || '後端更新失敗');
         }
       } catch (err) {
-        alert('切換失敗：' + err.message);
+        // 3. 若失敗則回滾狀態並跳出提示
+        targetOrder.paid = oldPaidState;
+        if (oldPaidState) {
+          element.className = "badge badge-paid status-clickable";
+          element.innerText = "✅ 已繳";
+          element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, false)`);
+        } else {
+          element.className = "badge badge-unpaid status-clickable";
+          element.innerText = "❌ 未繳";
+          element.setAttribute("onclick", `togglePaymentStatus(this, ${rowIndex}, true)`);
+        }
+        updateAdminStatistics(allOrders);
+        alert('切換失敗，狀態已還原：' + err.message);
       }
     }
 
