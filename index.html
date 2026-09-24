@@ -1318,7 +1318,7 @@
     }
 
     function handleAdminClearOrders() {
-      showConfirmModal('清空紀錄警告', '確定要清空今日所有點餐紀錄嗎？\n此動作會清除試算表中的所有訂單資料且無法復原！', '⚠️', async function() {
+      showConfirmModal('清空紀錄警告', '確定要清空今日所有點餐紀錄嗎？\n按下去就回不去了瑞凡。', '⚠️', async function() {
         try {
           const res = await jsonpRequest({ action: 'adminClearAllOrders', password: adminToken });
           showModal(res && res.success ? '清空完成' : '清空失敗', res ? res.message : '', res && res.success ? '🗑️' : '❌', function() {
