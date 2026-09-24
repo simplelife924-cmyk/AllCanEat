@@ -149,6 +149,10 @@
       transition: 0.2s;
       background-color: #fff;
     }
+    select:disabled {
+      background-color: #eef4f4;
+      cursor: not-allowed;
+    }
     input:focus, select:focus {
       border-color: var(--secondary);
       box-shadow: 0 0 0 3px rgba(121, 168, 169, 0.2);
@@ -493,9 +497,10 @@
       <div class="card">
         <div class="card-title">填寫訂購資訊</div>
 
+        <!-- 組別選擇 -->
         <div class="form-group">
-          <label>組別 *</label>
-          <select id="orderGroup">
+          <label for="groupSelect">組別 *</label>
+          <select id="groupSelect" onchange="updateNameOptions()">
             <option value="">-- 請選擇組別 --</option>
             <option value="第一組">第一組</option>
             <option value="第二組">第二組</option>
@@ -506,9 +511,12 @@
           </select>
         </div>
 
+        <!-- 座號姓名選擇 (綁定組別下拉選單) -->
         <div class="form-group">
-          <label>座號與姓名 *</label>
-          <input type="text" id="orderName" placeholder="例如：01 我是誰" required>
+          <label for="nameSelect">座號與姓名 *</label>
+          <select id="nameSelect" disabled>
+            <option value="">-- 請先選擇組別 --</option>
+          </select>
         </div>
 
         <div class="form-group">
@@ -517,10 +525,10 @@
           <button type="button" class="btn-add-item" id="btnAddItem" onclick="addItemRow()">+ 新增一項餐點</button>
         </div>
 
-       <div class="form-group">
+        <div class="form-group">
           <label>備註</label>
           <input type="text" id="orderNote" placeholder="（不一定要填）">
-       </div>
+        </div>
 
         <div class="summary-box">
           <span>應付總金額</span>
@@ -643,6 +651,54 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
     const ADMIN_PASSWORD = "6767"; 
 
+    // 各組人員名單資料庫（來自各組名單.xlsx 與教師組設定）
+    const groupMembersData = {
+      "第一組": [
+        "04 舒香雅",
+        "10 施美美",
+        "12 王麗敏",
+        "18 江珈宜",
+        "21 林彩葳",
+        "26 林瑋妮"
+      ],
+      "第二組": [
+        "08 吳同祐",
+        "09 劉靜文",
+        "11 黃昱瑄",
+        "20 郭貞纓",
+        "27 陳玟妤",
+        "29 簡雅珍"
+      ],
+      "第三組": [
+        "01 楊宜靜",
+        "03 陳昱寧",
+        "13 莊芯卉",
+        "15 何婧湘",
+        "17 羅懿",
+        "19 廖慧蘭"
+      ],
+      "第四組": [
+        "06 邱韻如",
+        "07 汪維嘉",
+        "22 薛佩𠊙",
+        "23 劉育均",
+        "24 徐皜軒",
+        "28 謝宛真"
+      ],
+      "第五組": [
+        "02 吳欣珉",
+        "05 鍾涵茹",
+        "14 劉曉珊",
+        "16 薛席婷",
+        "25 陳怡芳",
+        "30 張語宸"
+      ],
+      "教師組": [
+        "助教",
+        "老師"
+      ]
+    };
+
     let currentShop = '';
     let menuItems = [];
     let allOrders = [];
@@ -659,6 +715,45 @@
         "'": '&#39;',
         '"': '&quot;'
       }[tag] || tag));
+    }
+
+    /**
+     * 當組別切換時自動更新座號姓名下拉選單
+     */
+    function updateNameOptions() {
+      const groupSelect = document.getElementById("groupSelect");
+      const nameSelect = document.getElementById("nameSelect");
+      const selectedGroup = groupSelect.value;
+
+      // 清空目前的姓名選項
+      nameSelect.innerHTML = "";
+
+      if (!selectedGroup || !groupMembersData[selectedGroup]) {
+        // 未選擇組別時禁用姓名選單
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "-- 請先選擇組別 --";
+        nameSelect.appendChild(defaultOption);
+        nameSelect.disabled = true;
+        return;
+      }
+
+      // 預設提示選項
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "-- 請選擇座號姓名 --";
+      nameSelect.appendChild(defaultOption);
+
+      // 動態加入該組成員
+      groupMembersData[selectedGroup].forEach(member => {
+        const opt = document.createElement("option");
+        opt.value = member;
+        opt.textContent = member;
+        nameSelect.appendChild(opt);
+      });
+
+      // 啟用姓名選單
+      nameSelect.disabled = false;
     }
 
     function jsonpRequest(params, timeoutMs = 20000) {
@@ -753,8 +848,14 @@
     window.onload = function() {
       const savedGroup = localStorage.getItem('lunchApp_group');
       const savedName = localStorage.getItem('lunchApp_name');
-      if (savedGroup) document.getElementById('orderGroup').value = savedGroup;
-      if (savedName) document.getElementById('orderName').value = savedName;
+      
+      if (savedGroup) {
+        document.getElementById('groupSelect').value = savedGroup;
+        updateNameOptions();
+        if (savedName) {
+          document.getElementById('nameSelect').value = savedName;
+        }
+      }
 
       loadInitialData();
     };
@@ -862,15 +963,15 @@
     }
 
     async function handleOrderSubmit() {
-      const group = document.getElementById('orderGroup').value;
+      const group = document.getElementById('groupSelect').value;
       if (!group) {
         showModal('請確認', '請選擇組別！', '⚠️');
         return;
       }
 
-      const name = document.getElementById('orderName').value.trim();
+      const name = document.getElementById('nameSelect').value;
       if (!name) {
-        showModal('請確認', '請填寫座號與姓名！', '⚠️');
+        showModal('請確認', '請選擇座號與姓名！', '⚠️');
         return;
       }
 
@@ -1083,7 +1184,6 @@
       });
     }
 
-    // Optimistic UI 切換邏輯與連線異常防護
     async function handleTogglePaid(orderId, btnElement) {
       if (btnElement.disabled) return;
 
@@ -1093,16 +1193,13 @@
       const originalStatus = targetOrder.paid;
       const newStatus = !originalStatus;
 
-      // 1. 樂觀 UI 更新：先在前端瞬間轉換畫面與金額
       targetOrder.paid = newStatus;
       updateBadgeUI(btnElement, newStatus);
       updateAdminStatistics(allOrders);
 
-      // 2. 暫時禁用按鈕防止連續點擊
       btnElement.disabled = true;
 
       try {
-        // 3. 背景傳送同步請求至 GAS
         const res = await jsonpRequest({ 
           action: 'adminTogglePaid', 
           password: adminToken, 
@@ -1114,7 +1211,6 @@
           throw new Error((res && res.message) || "同步更新失敗");
         }
       } catch (err) {
-        // 4. 發生網路異常時自動復原為原本狀態並通知使用者
         targetOrder.paid = originalStatus;
         updateBadgeUI(btnElement, originalStatus);
         updateAdminStatistics(allOrders);
