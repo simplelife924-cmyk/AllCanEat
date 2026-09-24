@@ -756,7 +756,8 @@
       nameSelect.disabled = false;
     }
 
-    function jsonpRequest(params, timeoutMs = 20000) {
+    // 1. 將預設 timeoutMs 調高至 30000 (30秒)，避免冷啟動時過早斷定逾時
+    function jsonpRequest(params, timeoutMs = 30000) {
       return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         let isFinished = false;
@@ -771,7 +772,7 @@
         const timeoutId = setTimeout(() => {
           if (isFinished) return;
           cleanup();
-          reject(new Error('連線逾時，請檢查 Google Apps Script 部署設定或網路連線。'));
+          reject(new Error('連線逾時，請再試一次！'));
         }, timeoutMs);
 
         window[callbackName] = function(data) {
@@ -795,7 +796,7 @@
           if (isFinished) return;
           clearTimeout(timeoutId);
           cleanup();
-          reject(new Error('無法連線至 Google Apps Script 伺服器，請確認網址與權限設定。'));
+          reject(new Error('無法連線至伺服器，請確認權限或重新整理。'));
         };
 
         document.body.appendChild(script);
@@ -860,17 +861,16 @@
       loadInitialData();
     };
 
+    // 2. 修改初始化載入：發送一次 getInitialData 即可取得全部資料
     async function loadInitialData() {
       try {
-        const [menuRes, ordersRes] = await Promise.all([
-          jsonpRequest({ action: 'getTodayMenuData' }),
-          jsonpRequest({ action: 'getOrdersAndPaymentStatus' })
-        ]);
+        const res = await jsonpRequest({ action: 'getInitialData' });
 
-        if (menuRes && menuRes.success) {
-          currentShop = menuRes.shop || '尚未設定店家';
-          menuItems = menuRes.items || [];
-          allShopsList = menuRes.allShops || [];
+        if (res && res.success) {
+          currentShop = res.shop || '尚未設定店家';
+          menuItems = res.items || [];
+          allShopsList = res.allShops || [];
+          allOrders = res.orders || [];
 
           document.getElementById('currentShopText').innerText = '今日店家：' + currentShop;
           renderMenuList();
@@ -878,14 +878,10 @@
           document.getElementById('itemList').innerHTML = '';
           addItemRow();
           populateAdminShopsSelect();
-        } else {
-          showModal('載入失敗', (menuRes && menuRes.message) || '無法取得菜單資料', '⚠️');
-          document.getElementById('currentShopText').innerText = '載入失敗';
-        }
-
-        if (ordersRes && ordersRes.success) {
-          allOrders = ordersRes.data || [];
           renderOrders(allOrders);
+        } else {
+          showModal('載入失敗', (res && res.message) || '無法取得菜單資料', '⚠️');
+          document.getElementById('currentShopText').innerText = '載入失敗';
         }
       } catch (err) {
         showModal('載入失敗', err.message, '⚠️');
