@@ -661,25 +661,28 @@
       }[tag] || tag));
     }
 
-    function jsonpRequest(params) {
+    function jsonpRequest(params, timeoutMs = 20000) {
       return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-        let isTimeout = false;
-        
-        const timeoutId = setTimeout(() => {
-          isTimeout = true;
+        let isFinished = false;
+
+        const cleanup = () => {
+          isFinished = true;
           delete window[callbackName];
           const script = document.getElementById(callbackName);
           if (script) script.remove();
-          reject(new Error('請檢查網路連線或稍後重試。'));
-        }, 15000);
+        };
+
+        const timeoutId = setTimeout(() => {
+          if (isFinished) return;
+          cleanup();
+          reject(new Error('連線逾時，請檢查 Google Apps Script 部署設定或網路連線。'));
+        }, timeoutMs);
 
         window[callbackName] = function(data) {
-          if (isTimeout) return;
+          if (isFinished) return;
           clearTimeout(timeoutId);
-          delete window[callbackName];
-          const script = document.getElementById(callbackName);
-          if (script) script.remove();
+          cleanup();
           resolve(data);
         };
 
@@ -694,11 +697,10 @@
         script.id = callbackName;
         script.src = `${GAS_API_URL}?${queryArray.join('&')}`;
         script.onerror = function() {
-          if (isTimeout) return;
+          if (isFinished) return;
           clearTimeout(timeoutId);
-          delete window[callbackName];
-          script.remove();
-          reject(new Error('網路連線失敗或後端未回應。'));
+          cleanup();
+          reject(new Error('無法連線至 Google Apps Script 伺服器，請確認網址與權限設定。'));
         };
 
         document.body.appendChild(script);
@@ -764,7 +766,7 @@
           jsonpRequest({ action: 'getOrdersAndPaymentStatus' })
         ]);
 
-        if (menuRes.success) {
+        if (menuRes && menuRes.success) {
           currentShop = menuRes.shop || '尚未設定店家';
           menuItems = menuRes.items || [];
           allShopsList = menuRes.allShops || [];
@@ -776,16 +778,16 @@
           addItemRow();
           populateAdminShopsSelect();
         } else {
-          showModal('載入失敗', menuRes.message || '無法取得菜單資料', '⚠️');
+          showModal('載入失敗', (menuRes && menuRes.message) || '無法取得菜單資料', '⚠️');
           document.getElementById('currentShopText').innerText = '載入失敗';
         }
 
-        if (ordersRes.success) {
+        if (ordersRes && ordersRes.success) {
           allOrders = ordersRes.data || [];
           renderOrders(allOrders);
         }
       } catch (err) {
-        showModal('載入失敗', '資料載入失敗：' + err.message, '⚠️');
+        showModal('載入失敗', err.message, '⚠️');
         document.getElementById('currentShopText').innerText = '網路連線異常';
       }
     }
@@ -903,7 +905,7 @@
         btn.disabled = false;
         btn.innerText = '確認送出點餐';
         
-        if (res.success) {
+        if (res && res.success) {
           showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', function() {
             document.getElementById('orderNote').value = '';
             document.getElementById('itemList').innerHTML = '';
@@ -913,7 +915,7 @@
             switchTab('status');
           });
         } else {
-          showModal('送出失敗', res.message, '❌');
+          showModal('送出失敗', res ? res.message : '發生未知錯誤', '❌');
         }
       } catch (err) {
         btn.disabled = false;
@@ -928,11 +930,11 @@
         listDiv.innerHTML = '<span class="spinner"></span> 載入中...';
         try {
           const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
-          if (res.success) {
+          if (res && res.success) {
             allOrders = res.data || [];
             renderOrders(allOrders);
           } else {
-            listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗：' + escapeHTML(res.message) + '</div>';
+            listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗：' + escapeHTML(res ? res.message : '') + '</div>';
           }
         } catch (err) {
           listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗：' + escapeHTML(err.message) + '</div>';
@@ -1070,8 +1072,8 @@
       showConfirmModal('切換店家確認', `確定要將今日店家切換為【${newShop}】嗎？`, '🏪', async function() {
         try {
           const res = await jsonpRequest({ action: 'adminChangeShop', password: adminToken, newShop: newShop });
-          showModal(res.success ? '成功' : '失敗', res.message, res.success ? '✅' : '❌', function() {
-            if (res.success) {
+          showModal(res && res.success ? '成功' : '失敗', res ? res.message : '', res && res.success ? '✅' : '❌', function() {
+            if (res && res.success) {
               loadInitialData();
             }
           });
@@ -1081,7 +1083,7 @@
       });
     }
 
-    // 優化重點：Optimistic UI 樂觀即時切換狀態
+    // Optimistic UI 切換邏輯與連線異常防護
     async function handleTogglePaid(orderId, btnElement) {
       if (btnElement.disabled) return;
 
@@ -1091,32 +1093,32 @@
       const originalStatus = targetOrder.paid;
       const newStatus = !originalStatus;
 
-      // 1. 樂觀 UI 更新（立即改變前端畫面與統計數字，完全不等待 API 請求）
+      // 1. 樂觀 UI 更新：先在前端瞬間轉換畫面與金額
       targetOrder.paid = newStatus;
       updateBadgeUI(btnElement, newStatus);
       updateAdminStatistics(allOrders);
 
-      // 2. 暫時禁用按鈕防止連續快速重複點擊
+      // 2. 暫時禁用按鈕防止連續點擊
       btnElement.disabled = true;
 
       try {
-        // 3. 背景非同步傳送更新請求至 GAS 試算表
+        // 3. 背景傳送同步請求至 GAS
         const res = await jsonpRequest({ 
           action: 'adminTogglePaid', 
           password: adminToken, 
           rowIndex: orderId, 
           newStatus: newStatus 
-        });
+        }, 12000);
 
-        if (!res.success && res.status !== "success") {
-          throw new Error(res.message || "更新失敗");
+        if (!res || (!res.success && res.status !== "success")) {
+          throw new Error((res && res.message) || "同步更新失敗");
         }
       } catch (err) {
-        // 4. 發生錯誤時自動復原為原本狀態並通知使用者
+        // 4. 發生網路異常時自動復原為原本狀態並通知使用者
         targetOrder.paid = originalStatus;
         updateBadgeUI(btnElement, originalStatus);
         updateAdminStatistics(allOrders);
-        showModal('同步失敗', "無法連線更新試算表，狀態已自動還原！", '⚠️');
+        showModal('同步失敗', "無法連線更新試算表，狀態已自動還原！\n(" + err.message + ")", '⚠️');
       } finally {
         btnElement.disabled = false;
       }
@@ -1191,11 +1193,11 @@
 
       try {
         const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
-        if (res.success) {
+        if (res && res.success) {
           allOrders = res.data || [];
           renderTable(allOrders);
         } else {
-          container.innerHTML = '<div style="padding:15px; color:var(--danger); text-align:center;">讀取失敗：' + escapeHTML(res.message) + '</div>';
+          container.innerHTML = '<div style="padding:15px; color:var(--danger); text-align:center;">讀取失敗：' + escapeHTML(res ? res.message : '') + '</div>';
         }
       } catch (err) {
         container.innerHTML = '<div style="padding:15px; color:var(--danger); text-align:center;">讀取失敗：' + escapeHTML(err.message) + '</div>';
@@ -1223,8 +1225,8 @@
       showConfirmModal('清空紀錄警告', '確定要清空今日所有點餐紀錄嗎？\n此動作會清除試算表中的所有訂單資料且無法復原！', '⚠️', async function() {
         try {
           const res = await jsonpRequest({ action: 'adminClearAllOrders', password: adminToken });
-          showModal(res.success ? '清空完成' : '清空失敗', res.message, res.success ? '🗑️' : '❌', function() {
-            if (res.success) {
+          showModal(res && res.success ? '清空完成' : '清空失敗', res ? res.message : '', res && res.success ? '🗑️' : '❌', function() {
+            if (res && res.success) {
               allOrders = [];
               loadAdminOrders(true);
             }
