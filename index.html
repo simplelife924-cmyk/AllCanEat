@@ -76,13 +76,18 @@
     .loader { text-align: center; padding: 30px; color: var(--secondary); font-size: 0.95rem; }
     .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(121, 168, 169, 0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
+
+    .retry-box { text-align:center; color:#888; padding:20px; }
+    .retry-box .retry-btn { margin-top: 12px; }
+    .conn-banner { display:none; background:#fdeeee; color:#c0392b; font-size:0.8rem; text-align:center; padding:6px 10px; border-bottom:1px solid #fad2d2; }
+    .conn-banner.show { display:block; }
+
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 78, 95, 0.45); display: none; justify-content: center; align-items: center; z-index: 2000; }
     .modal-card { background: #ffffff; border-radius: 14px; padding: 24px; max-width: 320px; width: 85%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1.5px solid var(--accent); animation: popIn 0.25s ease-out; }
     @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .modal-icon { font-size: 2.2rem; margin-bottom: 10px; }
     .modal-title { font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-    .modal-msg { font-size: 0.95rem; color: #444; margin-bottom: 18px; line-height: 1.5; }
+    .modal-msg { font-size: 0.95rem; color: #444; margin-bottom: 18px; line-height: 1.5; white-space: pre-line; }
     .modal-btn-group { display: flex; gap: 10px; justify-content: center; }
     .modal-btn { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: 0.2s; flex: 1; }
     .modal-btn:hover { background: var(--primary-dark); }
@@ -91,6 +96,8 @@
   </style>
 </head>
 <body>
+
+  <div class="conn-banner" id="connBanner">⚠️ 目前資料可能不是最新，正在嘗試重新連線...</div>
 
   <header>
     <h1>🍱 今天要吃什麼勒</h1>
@@ -262,6 +269,11 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec"; 
     const ADMIN_PASSWORD = "6767"; 
 
+    // ====== 連線相關調整參數（可依需求微調）======
+    const REQUEST_TIMEOUT_MS = 30000;   // 單次請求逾時：20s → 30s，行動網路較常見的延遲更寬容
+    const MAX_RETRIES = 2;              // 失敗重試次數
+    const RETRY_BASE_DELAY_MS = 1200;   // 重試退避基準時間（會隨次數遞增）
+
     const groupMembersData = {
       "第一組": ["04 舒香雅", "10 施美美", "12 王麗敏", "18 江珈宜", "21 林彩葳", "26 林瑋妮"],
       "第二組": ["08 吳同祐", "09 劉靜文", "11 黃昱瑄", "20 郭貞纓", "27 陳玟妤", "29 簡雅珍"],
@@ -308,13 +320,19 @@
       nameSelect.disabled = false;
     }
 
-    async function apiRequest(action, data = {}, retries = 2) {
+    // ====== 核心改動：apiRequest ======
+    // 1. timeout 拉長並可調整
+    // 2. cache: 'no-store'，避免行動網路的中繼快取（電信商 / 瀏覽器）快取住失敗回應
+    // 3. 重試改成「遞增退避」而非固定 1 秒
+    // 4. 偵測回傳內容若是 HTML（代表被導去 Google 登入頁，通常是部署權限問題）給出明確訊息
+    // 5. 連線失敗時觸發畫面上的紅色提示 banner
+    async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         return new Promise((resolve, reject) => {
           let runner = google.script.run
             .withSuccessHandler(res => resolve(res))
             .withFailureHandler(err => reject(new Error(err.message || err)));
-          
+
           if (action === 'getInitialData') runner.getInitialData();
           else if (action === 'getOrdersAndPaymentStatus') runner.getOrdersAndPaymentStatus();
           else if (action === 'submitOrder') runner.submitOrder(data.payload ? JSON.parse(data.payload) : data);
@@ -325,38 +343,63 @@
         });
       }
 
+      let lastErr = null;
+
       for (let attempt = 0; attempt <= retries; attempt++) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 20000);
+          const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
           const response = await fetch(GAS_API_URL, {
             method: 'POST',
             redirect: 'follow',
+            cache: 'no-store',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: action, ...data }),
             signal: controller.signal
           });
-          
+
           clearTimeout(timeoutId);
 
           if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
-          
+
           const textResult = await response.text();
+
+          // 偵測是否被導向 Google 登入頁 / 權限頁（回傳的是 HTML 而非 JSON）
+          const trimmed = textResult.trim();
+          if (trimmed.startsWith('<')) {
+            throw new Error("伺服器回傳了非預期的內容，請確認 Apps Script 部署權限設定為「任何人」，且已重新部署最新版本。");
+          }
+
           let jsonResult;
           try {
-            jsonResult = JSON.parse(textResult);
-          } catch(e) {
-            throw new Error("伺服器回傳格式異常");
+            jsonResult = JSON.parse(trimmed);
+          } catch (e) {
+            throw new Error("伺服器回傳格式異常，請稍後再試");
           }
+
+          hideConnBanner();
           return jsonResult;
         } catch (err) {
+          lastErr = err;
           if (attempt === retries) {
-            throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查手機網路狀態！' : (err.message || '無法連線至伺服器。'));
+            showConnBanner();
+            throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查手機網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
           }
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // 遞增退避：1.2s, 2.4s, 3.6s...
+          await new Promise(resolve => setTimeout(resolve, RETRY_BASE_DELAY_MS * (attempt + 1)));
         }
       }
+      throw lastErr || new Error('無法連線至伺服器。');
+    }
+
+    function showConnBanner() {
+      const el = document.getElementById('connBanner');
+      if (el) el.classList.add('show');
+    }
+    function hideConnBanner() {
+      const el = document.getElementById('connBanner');
+      if (el) el.classList.remove('show');
     }
 
     function showModal(title, msg, icon = '🎉', callback = null) {
@@ -392,13 +435,13 @@
     window.onload = function() {
       const savedGroup = localStorage.getItem('lunchApp_group');
       const savedName = localStorage.getItem('lunchApp_name');
-      
+
       if (savedGroup) {
         document.getElementById('groupSelect').value = savedGroup;
         updateNameOptions();
         if (savedName) document.getElementById('nameSelect').value = savedName;
       }
-      
+
       const cachedData = localStorage.getItem('lunchApp_cachedData');
       if (cachedData) {
         try {
@@ -418,7 +461,7 @@
 
       document.getElementById('currentShopText').innerText = '今日店家：' + currentShop;
       renderMenuList();
-      
+
       if(document.getElementById('itemList').children.length === 0) {
         addItemRow();
       } else {
@@ -445,6 +488,7 @@
       calculateTotal();
     }
 
+    // 載入初始資料：加上失敗重試按鈕、避免使用者卡在無限轉圈畫面
     async function loadInitialData() {
       if(isFetchingData) return;
       isFetchingData = true;
@@ -453,9 +497,19 @@
         if (res && res.success) {
           localStorage.setItem('lunchApp_cachedData', JSON.stringify(res));
           applyDataToUI(res);
+        } else if (res && !res.success) {
+          throw new Error(res.message || '讀取資料失敗');
         }
       } catch (err) {
-        if(menuItems.length === 0) showModal('網路不穩', err.message, '⚠️');
+        if (menuItems.length === 0) {
+          document.getElementById('currentShopText').innerHTML = '⚠️ 連線失敗';
+          const menuDiv = document.getElementById('menuList');
+          if (menuDiv) {
+            menuDiv.innerHTML =
+              '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) +
+              '<br><button class="btn-action retry-btn" onclick="loadInitialData()">🔄 重新嘗試</button></div>';
+          }
+        }
       } finally {
         isFetchingData = false;
       }
@@ -576,7 +630,7 @@
       if (!forceRefresh && allOrders.length > 0) {
         renderOrders(allOrders);
       }
-      
+
       try {
         const res = await apiRequest('getOrdersAndPaymentStatus');
         if (res && res.success) {
@@ -584,7 +638,17 @@
           updateCache('orders', allOrders);
           renderOrders(allOrders);
         }
-      } catch (err) {}
+      } catch (err) {
+        // 靜默同步失敗時，若目前列表是空的，仍要讓使用者知道並可重試
+        if (allOrders.length === 0) {
+          const listDiv = document.getElementById('statusList');
+          if (listDiv) {
+            listDiv.innerHTML =
+              '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) +
+              '<br><button class="btn-action retry-btn" onclick="loadStatusData(true)">🔄 重新嘗試</button></div>';
+          }
+        }
+      }
     }
 
     function updateCache(key, value) {
@@ -633,7 +697,7 @@
     function renderMenuList() {
       const menuDiv = document.getElementById('menuList');
       if (menuItems.length === 0) return menuDiv.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">查無今日店家的菜單資料</div>';
-      
+
       let html = '<table style="width:100%; border-collapse: collapse; font-size:0.9rem;">';
       html += '<tr style="background:#f4f7f7; color:#1f4e5f; text-align:left;"><th style="padding:10px;">品項名稱</th><th style="padding:10px; text-align:right;">單價</th></tr>';
       menuItems.forEach(item => {
@@ -668,7 +732,7 @@
       document.getElementById('tab-admin').style.display = 'block';
       window.scrollTo(0, 0);
       populateAdminShopsSelect();
-      
+
       // 秒開：直接用現有記憶體資料渲染，不等待網路
       renderAdminTable(allOrders);
       // 背景靜默更新最新對帳狀態
@@ -712,7 +776,7 @@
 
       const originalStatus = targetOrder.paid;
       const newStatus = !originalStatus;
-      
+
       targetOrder.paid = newStatus;
       updateBadgeUI(btnElement, newStatus);
       updateAdminStatistics(allOrders);
@@ -744,7 +808,7 @@
       if (forceRefresh && allOrders.length === 0) {
         document.getElementById('adminOrdersContainer').innerHTML = '<div class="loader"><span class="spinner"></span> 載入訂單中...</div>';
       }
-      
+
       try {
         const res = await apiRequest('getOrdersAndPaymentStatus');
         if (res && res.success) {
@@ -754,7 +818,9 @@
         }
       } catch (err) {
         if (allOrders.length === 0) {
-          document.getElementById('adminOrdersContainer').innerHTML = '<div style="padding:15px; color:var(--danger); text-align:center;">讀取失敗</div>';
+          document.getElementById('adminOrdersContainer').innerHTML =
+            '<div class="retry-box" style="color:var(--danger);">讀取失敗：' + escapeHTML(err.message) +
+            '<br><button class="btn-action retry-btn" onclick="loadAdminOrders(true)">🔄 重新嘗試</button></div>';
         }
       }
     }
@@ -762,7 +828,7 @@
     function renderAdminTable(orders) {
       const container = document.getElementById('adminOrdersContainer');
       updateAdminStatistics(orders);
-      
+
       if (!orders || orders.length === 0) {
         container.innerHTML = '<div style="padding:15px; color:#888; text-align:center;">目前尚無任何點餐紀錄。</div>';
         return;
