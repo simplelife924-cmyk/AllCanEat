@@ -1015,12 +1015,12 @@
     function submitAdminLogin() {
       const pwd = document.getElementById('adminPasswordInput').value;
       if (!pwd) {
-        showModal('請確認', '請輸入管理員密碼！', '⚠️');
+        showModal('請輸入', '猜猜看密碼多少？', '⚠️');
         return;
       }
 
       if (pwd !== ADMIN_PASSWORD) {
-        showModal('驗證失敗', '密碼錯誤！請確認後重新輸入。', '❌');
+        showModal('毋對喔', '你再猜猜看？', '❌');
         document.getElementById('adminPasswordInput').value = '';
         return;
       }
