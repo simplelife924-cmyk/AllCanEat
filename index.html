@@ -535,7 +535,7 @@
       <div class="card">
         <div class="card-title">
           <span>點餐與繳費狀態</span>
-          <button class="btn-action" style="padding: 4px 10px; font-size: 0.8rem;" onclick="loadStatusData()">🔄 重新整理</button>
+          <button class="btn-action" style="padding: 4px 10px; font-size: 0.8rem;" onclick="loadStatusData(true)">🔄 重新整理</button>
         </div>
         <div class="search-box">
           <input type="text" id="statusFilter" placeholder="搜尋姓名或組別..." oninput="filterStatus()">
@@ -591,7 +591,7 @@
         <div style="background:#fafdfd; border:1px solid var(--accent); border-radius:8px; padding:14px; margin-bottom:15px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <label style="margin:0;">📋 點餐人員對帳管理 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(點擊狀態按鈕可切換狀態)</span></label>
-            <button class="btn-action" style="padding: 3px 8px; font-size:0.75rem;" onclick="loadAdminOrders()">🔄 重新整理</button>
+            <button class="btn-action" style="padding: 3px 8px; font-size:0.75rem;" onclick="loadAdminOrders(true)">🔄 重新整理</button>
           </div>
           <div id="adminOrdersContainer" style="overflow-x: auto;">
             <div class="loader"><span class="spinner"></span> 載入訂單中...</div>
@@ -612,7 +612,6 @@
 
   </div>
 
-  <!-- 通用提示卡片 -->
   <div class="modal-overlay" id="customModal">
     <div class="modal-card">
       <div class="modal-icon" id="modalIcon">🎉</div>
@@ -625,7 +624,6 @@
     </div>
   </div>
 
-  <!-- 管理員登入 Modal -->
   <div class="modal-overlay" id="adminLoginModal" style="z-index: 1000;">
     <div class="modal-card">
       <div class="modal-icon">🔐</div>
@@ -643,7 +641,6 @@
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
-    
     const ADMIN_PASSWORD = "6767"; 
 
     let currentShop = '';
@@ -675,7 +672,7 @@
           const script = document.getElementById(callbackName);
           if (script) script.remove();
           reject(new Error('請檢查網路連線或稍後重試。'));
-        }, 30000);
+        }, 15000);
 
         window[callbackName] = function(data) {
           if (isTimeout) return;
@@ -762,22 +759,30 @@
 
     async function loadInitialData() {
       try {
-        const data = await jsonpRequest({ action: 'getTodayMenuData' });
-        if (data.success) {
-          currentShop = data.shop || '尚未設定店家';
-          menuItems = data.items || [];
-          allShopsList = data.allShops || [];
+        const [menuRes, ordersRes] = await Promise.all([
+          jsonpRequest({ action: 'getTodayMenuData' }),
+          jsonpRequest({ action: 'getOrdersAndPaymentStatus' })
+        ]);
+
+        if (menuRes.success) {
+          currentShop = menuRes.shop || '尚未設定店家';
+          menuItems = menuRes.items || [];
+          allShopsList = menuRes.allShops || [];
 
           document.getElementById('currentShopText').innerText = '今日店家：' + currentShop;
           renderMenuList();
 
           document.getElementById('itemList').innerHTML = '';
           addItemRow();
-
           populateAdminShopsSelect();
         } else {
-          showModal('載入失敗', data.message || '無法取得菜單資料', '⚠️');
+          showModal('載入失敗', menuRes.message || '無法取得菜單資料', '⚠️');
           document.getElementById('currentShopText').innerText = '載入失敗';
+        }
+
+        if (ordersRes.success) {
+          allOrders = ordersRes.data || [];
+          renderOrders(allOrders);
         }
       } catch (err) {
         showModal('載入失敗', '資料載入失敗：' + err.message, '⚠️');
@@ -800,7 +805,11 @@
       } else if (tabId === 'status') {
         document.getElementById('tab-status').style.display = 'block';
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        loadStatusData();
+        if (allOrders.length > 0) {
+          renderOrders(allOrders);
+        } else {
+          loadStatusData(false);
+        }
       } else if (tabId === 'menu') {
         document.getElementById('tab-menu').style.display = 'block';
         document.querySelectorAll('.tab-btn')[2].classList.add('active');
@@ -904,6 +913,7 @@
             document.getElementById('itemList').innerHTML = '';
             addItemRow();
             calculateTotal();
+            loadStatusData(true);
             switchTab('status');
           });
         } else {
@@ -916,19 +926,23 @@
       }
     }
 
-    async function loadStatusData() {
+    async function loadStatusData(forceRefresh = false) {
       const listDiv = document.getElementById('statusList');
-      listDiv.innerHTML = '<span class="spinner"></span> 載入中...';
-      try {
-        const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
-        if (res.success) {
-          allOrders = res.data || [];
-          renderOrders(allOrders);
-        } else {
-          listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗：' + escapeHTML(res.message) + '</div>';
+      if (forceRefresh || allOrders.length === 0) {
+        listDiv.innerHTML = '<span class="spinner"></span> 載入中...';
+        try {
+          const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
+          if (res.success) {
+            allOrders = res.data || [];
+            renderOrders(allOrders);
+          } else {
+            listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗：' + escapeHTML(res.message) + '</div>';
+          }
+        } catch (err) {
+          listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗：' + escapeHTML(err.message) + '</div>';
         }
-      } catch (err) {
-        listDiv.innerHTML = '<div style="text-align:center; color:var(--danger);">載入失敗：' + escapeHTML(err.message) + '</div>';
+      } else {
+        renderOrders(allOrders);
       }
     }
 
@@ -1032,7 +1046,7 @@
       window.scrollTo(0, 0);
 
       populateAdminShopsSelect();
-      loadAdminOrders();
+      loadAdminOrders(false);
     }
 
     function exitAdmin() {
@@ -1101,64 +1115,72 @@
       } catch (err) {
         showModal('提醒', "狀態已還原：系統繁忙中，請稍後再試！", '⚠️');
         btnElement.innerText = originalText;
-      } finally {
-        btnElement.disabled = false;
-      }
+      } opacity: 1;
+      btnElement.disabled = false;
     }
 
-    async function loadAdminOrders() {
+    async function loadAdminOrders(forceRefresh = false) {
       const container = document.getElementById('adminOrdersContainer');
+
+      const renderTable = (orders) => {
+        updateAdminStatistics(orders);
+        if (orders.length === 0) {
+          container.innerHTML = '<div style="padding:15px; color:#888; text-align:center;">目前尚無任何點餐紀錄。</div>';
+          return;
+        }
+
+        let html = `
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>組別</th>
+                <th>姓名</th>
+                <th>總額</th>
+                <th>點餐品項與備註</th>
+                <th>繳費狀態</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        orders.forEach(r => {
+          const targetRowIndex = r.rowIndex;
+          const isPaid = r.paid;
+          const btnClass = isPaid ? "badge badge-paid paid" : "badge badge-unpaid";
+          const btnText = isPaid ? "已付款" : "未付款";
+
+          html += `
+            <tr>
+              <td>${escapeHTML(r.group) || '-'}</td>
+              <td><strong>${escapeHTML(r.name)}</strong></td>
+              <td style="font-weight:bold; color:var(--primary);">$${r.total}</td>
+              <td>
+                ${escapeHTML(r.itemsSummary) || ''}
+                ${r.note ? '<br><small style="color:#777;">備註：' + escapeHTML(r.note) + '</small>' : ''}
+              </td>
+              <td style="text-align:center;">
+                <button class="${btnClass}" onclick="handleTogglePaid(${targetRowIndex}, this)">${btnText}</button>
+              </td>
+            </tr>
+          `;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+      };
+
+      if (!forceRefresh && allOrders.length > 0) {
+        renderTable(allOrders);
+        return;
+      }
+
       container.innerHTML = '<div class="loader"><span class="spinner"></span> 讀取中...</div>';
 
       try {
         const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
         if (res.success) {
           allOrders = res.data || [];
-          updateAdminStatistics(allOrders);
-
-          if (allOrders.length === 0) {
-            container.innerHTML = '<div style="padding:15px; color:#888; text-align:center;">目前尚無任何點餐紀錄。</div>';
-            return;
-          }
-
-          let html = `
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>組別</th>
-                  <th>姓名</th>
-                  <th>總額</th>
-                  <th>點餐品項與備註</th>
-                  <th>繳費狀態</th>
-                </tr>
-              </thead>
-              <tbody>
-          `;
-
-          allOrders.forEach(r => {
-            const targetRowIndex = r.rowIndex;
-            const isPaid = r.paid;
-            const btnClass = isPaid ? "badge badge-paid paid" : "badge badge-unpaid";
-            const btnText = isPaid ? "已付款" : "未付款";
-
-            html += `
-              <tr>
-                <td>${escapeHTML(r.group) || '-'}</td>
-                <td><strong>${escapeHTML(r.name)}</strong></td>
-                <td style="font-weight:bold; color:var(--primary);">$${r.total}</td>
-                <td>
-                  ${escapeHTML(r.itemsSummary) || ''}
-                  ${r.note ? '<br><small style="color:#777;">備註：' + escapeHTML(r.note) + '</small>' : ''}
-                </td>
-                <td style="text-align:center;">
-                  <button class="${btnClass}" onclick="handleTogglePaid(${targetRowIndex}, this)">${btnText}</button>
-                </td>
-              </tr>
-            `;
-          });
-
-          html += '</tbody></table>';
-          container.innerHTML = html;
+          renderTable(allOrders);
         } else {
           container.innerHTML = '<div style="padding:15px; color:var(--danger); text-align:center;">讀取失敗：' + escapeHTML(res.message) + '</div>';
         }
@@ -1190,7 +1212,8 @@
           const res = await jsonpRequest({ action: 'adminClearAllOrders', password: adminToken });
           showModal(res.success ? '清空完成' : '清空失敗', res.message, res.success ? '🗑️' : '❌', function() {
             if (res.success) {
-              loadAdminOrders();
+              allOrders = [];
+              loadAdminOrders(true);
             }
           });
         } catch (err) {
