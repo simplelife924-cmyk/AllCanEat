@@ -313,7 +313,7 @@
       font-weight: 700;
       border: none;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s ease-in-out;
     }
     .badge-paid, .badge.paid {
       background-color: var(--success-bg);
@@ -590,7 +590,7 @@
 
         <div style="background:#fafdfd; border:1px solid var(--accent); border-radius:8px; padding:14px; margin-bottom:15px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <label style="margin:0;">📋 點餐人員對帳管理 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(點擊狀態按鈕可切換狀態)</span></label>
+            <label style="margin:0;">📋 點餐人員對帳管理 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(點擊狀態按鈕可即時切換)</span></label>
             <button class="btn-action" style="padding: 3px 8px; font-size:0.75rem;" onclick="loadAdminOrders(true)">🔄 重新整理</button>
           </div>
           <div id="adminOrdersContainer" style="overflow-x: auto;">
@@ -805,11 +805,7 @@
       } else if (tabId === 'status') {
         document.getElementById('tab-status').style.display = 'block';
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        if (allOrders.length > 0) {
-          renderOrders(allOrders);
-        } else {
-          loadStatusData(false);
-        }
+        renderOrders(allOrders);
       } else if (tabId === 'menu') {
         document.getElementById('tab-menu').style.display = 'block';
         document.querySelectorAll('.tab-btn')[2].classList.add('active');
@@ -1085,16 +1081,26 @@
       });
     }
 
+    // 優化重點：Optimistic UI 樂觀即時切換狀態
     async function handleTogglePaid(orderId, btnElement) {
+      if (btnElement.disabled) return;
+
+      const targetOrder = allOrders.find(o => o.rowIndex === orderId);
+      if (!targetOrder) return;
+
+      const originalStatus = targetOrder.paid;
+      const newStatus = !originalStatus;
+
+      // 1. 樂觀 UI 更新（立即改變前端畫面與統計數字，完全不等待 API 請求）
+      targetOrder.paid = newStatus;
+      updateBadgeUI(btnElement, newStatus);
+      updateAdminStatistics(allOrders);
+
+      // 2. 暫時禁用按鈕防止連續快速重複點擊
       btnElement.disabled = true;
-      const originalText = btnElement.innerText;
-      btnElement.innerText = "處理中...";
 
       try {
-        const targetOrder = allOrders.find(o => o.rowIndex === orderId);
-        const currentStatus = targetOrder ? targetOrder.paid : false;
-        const newStatus = !currentStatus;
-
+        // 3. 背景非同步傳送更新請求至 GAS 試算表
         const res = await jsonpRequest({ 
           action: 'adminTogglePaid', 
           password: adminToken, 
@@ -1102,21 +1108,28 @@
           newStatus: newStatus 
         });
 
-        if (res.success || res.status === "success") {
-          const isPaid = res.newStatus !== undefined ? res.newStatus : newStatus;
-          if (targetOrder) targetOrder.paid = isPaid;
-          
-          btnElement.innerText = isPaid ? "已付款" : "未付款";
-          btnElement.className = isPaid ? "badge badge-paid paid" : "badge badge-unpaid";
-          updateAdminStatistics(allOrders);
-        } else {
-          throw new Error(res.message || "切換失敗");
+        if (!res.success && res.status !== "success") {
+          throw new Error(res.message || "更新失敗");
         }
       } catch (err) {
-        showModal('提醒', "狀態已還原：系統繁忙中，請稍後再試！", '⚠️');
-        btnElement.innerText = originalText;
-      } opacity: 1;
-      btnElement.disabled = false;
+        // 4. 發生錯誤時自動復原為原本狀態並通知使用者
+        targetOrder.paid = originalStatus;
+        updateBadgeUI(btnElement, originalStatus);
+        updateAdminStatistics(allOrders);
+        showModal('同步失敗', "無法連線更新試算表，狀態已自動還原！", '⚠️');
+      } finally {
+        btnElement.disabled = false;
+      }
+    }
+
+    function updateBadgeUI(btnElement, isPaid) {
+      if (isPaid) {
+        btnElement.innerText = "✔ 已付款";
+        btnElement.className = "badge badge-paid paid";
+      } else {
+        btnElement.innerText = "✖ 未付款";
+        btnElement.className = "badge badge-unpaid";
+      }
     }
 
     async function loadAdminOrders(forceRefresh = false) {
@@ -1147,7 +1160,7 @@
           const targetRowIndex = r.rowIndex;
           const isPaid = r.paid;
           const btnClass = isPaid ? "badge badge-paid paid" : "badge badge-unpaid";
-          const btnText = isPaid ? "已付款" : "未付款";
+          const btnText = isPaid ? "✔ 已付款" : "✖ 未付款";
 
           html += `
             <tr>
