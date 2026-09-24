@@ -632,6 +632,9 @@
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
+    
+    // 💡 修正重點：在此設定你的前端後台管理密碼
+    const ADMIN_PASSWORD = "1234"; 
 
     let currentShop = '';
     let menuItems = [];
@@ -971,12 +974,20 @@
       document.getElementById('adminLoginModal').style.display = 'none';
     }
 
+    // 💡 修正重點：加入驗證機制，比對密碼是否符合常數 ADMIN_PASSWORD
     function submitAdminLogin() {
       const pwd = document.getElementById('adminPasswordInput').value;
       if (!pwd) {
         alert('請輸入管理員密碼');
         return;
       }
+
+      if (pwd !== ADMIN_PASSWORD) {
+        alert('密碼錯誤！請確認後重新輸入。');
+        document.getElementById('adminPasswordInput').value = '';
+        return;
+      }
+
       adminToken = pwd;
       closeAdminModal();
       enterAdminPanel();
