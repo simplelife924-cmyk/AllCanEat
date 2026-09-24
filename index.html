@@ -77,7 +77,6 @@
     .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(121, 168, 169, 0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    /* 移除重疊的模糊背景，確保手機順暢 */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 78, 95, 0.45); display: none; justify-content: center; align-items: center; z-index: 2000; }
     .modal-card { background: #ffffff; border-radius: 14px; padding: 24px; max-width: 320px; width: 85%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1.5px solid var(--accent); animation: popIn 0.25s ease-out; }
     @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -260,7 +259,7 @@
   </div>
 
   <script>
-    const GAS_API_URL = ""; // 同一網域下可留空直接呼叫 Web App
+    const GAS_API_URL = ""; 
     const ADMIN_PASSWORD = "6767"; 
 
     const groupMembersData = {
@@ -280,8 +279,9 @@
     let isFetchingData = false;
     let searchTimeout = null;
 
+    // 強化版 escapeHTML 確保型別安全與防護全面
     function escapeHTML(str) {
-      if (!str) return '';
+      if (str === null || str === undefined) return '';
       return String(str).replace(/[&<>'"]/g, tag => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
       }[tag] || tag));
@@ -309,7 +309,6 @@
       nameSelect.disabled = false;
     }
 
-    // 整合 google.script.run 與 JSONP 雙重相容網路呼叫
     function apiRequest(action, data = {}, timeoutMs = 30000) {
       return new Promise((resolve, reject) => {
         if (typeof google !== 'undefined' && google.script && google.script.run) {
@@ -317,7 +316,6 @@
             .withSuccessHandler(res => resolve(res))
             .withFailureHandler(err => reject(new Error(err.message || err)));
           
-          // 對應後端函式
           if (action === 'getInitialData') runner.getInitialData();
           else if (action === 'getOrdersAndPaymentStatus') runner.getOrdersAndPaymentStatus();
           else if (action === 'submitOrder') runner.submitOrder(data.payload ? JSON.parse(data.payload) : data);
@@ -326,7 +324,6 @@
           else if (action === 'adminClearAllOrders') runner.adminClearAllOrders(data.password);
           else reject(new Error("未知的動作: " + action));
         } else {
-          // 支援獨立網頁 JSONP 呼叫
           jsonpRequest(action, data, timeoutMs).then(resolve).catch(reject);
         }
       });
@@ -632,7 +629,7 @@
 
     function renderOrders(orders) {
       const listDiv = document.getElementById('statusList');
-      if (orders.length === 0) {
+      if (!orders || orders.length === 0) {
         listDiv.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">目前尚無點餐紀錄</div>';
         return;
       }
@@ -656,7 +653,6 @@
       listDiv.innerHTML = html;
     }
 
-    // 整合 Debounce 防抖機制的搜尋過濾
     function filterStatus() {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
@@ -704,8 +700,7 @@
       document.getElementById('tab-admin').style.display = 'block';
       window.scrollTo(0, 0);
       populateAdminShopsSelect();
-      renderAdminTable(allOrders);
-      loadAdminOrders(true);
+      loadAdminOrders(true); // 進入後台時確保強制同步最新訂單與統計數據
     }
 
     function exitAdmin() {
@@ -747,7 +742,6 @@
       const newStatus = !originalStatus;
       
       targetOrder.paid = newStatus;
-      targetOrder.status = newStatus ? "已付款" : "未付款";
       updateBadgeUI(btnElement, newStatus);
       updateAdminStatistics(allOrders);
       btnElement.disabled = true;
@@ -758,7 +752,6 @@
         updateCache('orders', allOrders);
       } catch (err) {
         targetOrder.paid = originalStatus;
-        targetOrder.status = originalStatus ? "已付款" : "未付款";
         updateBadgeUI(btnElement, originalStatus);
         updateAdminStatistics(allOrders);
         showModal('同步失敗', "無法連線更新，狀態已自動還原！\n(" + err.message + ")", '⚠️');
@@ -804,7 +797,7 @@
       const container = document.getElementById('adminOrdersContainer');
       updateAdminStatistics(orders);
       
-      if (orders.length === 0) {
+      if (!orders || orders.length === 0) {
         container.innerHTML = '<div style="padding:15px; color:#888; text-align:center;">目前尚無任何點餐紀錄。</div>';
         return;
       }
@@ -827,12 +820,14 @@
 
     function updateAdminStatistics(orders) {
       let total = 0, paid = 0;
-      orders.forEach(o => {
-        const amt = Number(o.total) || 0;
-        total += amt;
-        if (o.paid) paid += amt;
-      });
-      document.getElementById('statOrderCount').innerText = orders.length + ' 筆';
+      if (orders) {
+        orders.forEach(o => {
+          const amt = Number(o.total) || 0;
+          total += amt;
+          if (o.paid) paid += amt;
+        });
+      }
+      document.getElementById('statOrderCount').innerText = (orders ? orders.length : 0) + ' 筆';
       document.getElementById('statTotalAmount').innerText = '$' + total;
       document.getElementById('statPaidAmount').innerText = '$' + paid;
       document.getElementById('statUnpaidAmount').innerText = '$' + (total - paid);
