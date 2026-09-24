@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>今天要吃什麼勒</title>
   <style>
-    /* 這裡保留您原本所有的 CSS，完全不用更動 */
     :root {
       --bg-color: #f4f7f7;
       --primary: #1f4e5f;
@@ -57,7 +56,7 @@
     .btn-danger:hover { background-color: #c0392b; }
     .btn-back { background: #718096; color: white; border: none; padding: 11px; border-radius: 8px; width: 100%; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 15px; transition: 0.2s; }
     .btn-back:hover { background: #4a5568; }
-    .search-box { margin-bottom: 15px; }
+    .search-box { margin-bottom: 15px; width: 100%; padding: 10px 12px; border: 1.5px solid var(--accent); border-radius: 8px; font-size: 0.95rem; outline: none; }
     .order-item { border: 1px solid var(--accent); border-radius: 8px; padding: 14px; margin-bottom: 12px; background: #fafdfd; transition: box-shadow 0.2s; }
     .order-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
@@ -77,7 +76,9 @@
     .loader { text-align: center; padding: 30px; color: var(--secondary); font-size: 0.95rem; }
     .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(121, 168, 169, 0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 78, 95, 0.45); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(2px); }
+    
+    /* 移除重疊的模糊背景，確保手機順暢 */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 78, 95, 0.45); display: none; justify-content: center; align-items: center; z-index: 2000; }
     .modal-card { background: #ffffff; border-radius: 14px; padding: 24px; max-width: 320px; width: 85%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1.5px solid var(--accent); animation: popIn 0.25s ease-out; }
     @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .modal-icon { font-size: 2.2rem; margin-bottom: 10px; }
@@ -94,7 +95,6 @@
 
   <header>
     <h1>🍱 今天要吃什麼勒</h1>
-    <!-- 保留載入動畫，優化時背景偷偷讀取 -->
     <div class="shop-badge" id="currentShopText"><span class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:4px;"></span>載入中...</div>
     <button class="admin-entry-btn" onclick="openAdminModal()" title="後台管理">
       <span>🔒</span> 管理員
@@ -158,8 +158,8 @@
           <span>點餐與繳費狀態</span>
           <button class="btn-action" id="btnRefreshStatus" style="padding: 4px 10px; font-size: 0.8rem;" onclick="loadStatusData(true)">🔄 重新整理</button>
         </div>
-        <div class="search-box">
-          <input type="text" id="statusFilter" placeholder="搜尋姓名或組別..." oninput="filterStatus()">
+        <div style="margin-bottom: 15px;">
+          <input type="text" id="statusFilter" class="search-box" placeholder="輸入姓名或組別搜尋..." oninput="filterStatus()">
         </div>
         <div id="statusList" class="loader">
           <span class="spinner"></span> 載入紀錄中...
@@ -260,7 +260,7 @@
   </div>
 
   <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
+    const GAS_API_URL = ""; // 同一網域下可留空直接呼叫 Web App
     const ADMIN_PASSWORD = "6767"; 
 
     const groupMembersData = {
@@ -277,8 +277,8 @@
     let allOrders = [];
     let allShopsList = [];
     let adminToken = '';
-    let modalCallback = null;
-    let isFetchingData = false; // 防止重複發送請求
+    let isFetchingData = false;
+    let searchTimeout = null;
 
     function escapeHTML(str) {
       if (!str) return '';
@@ -309,7 +309,30 @@
       nameSelect.disabled = false;
     }
 
-    function jsonpRequest(params, timeoutMs = 30000) {
+    // 整合 google.script.run 與 JSONP 雙重相容網路呼叫
+    function apiRequest(action, data = {}, timeoutMs = 30000) {
+      return new Promise((resolve, reject) => {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          let runner = google.script.run
+            .withSuccessHandler(res => resolve(res))
+            .withFailureHandler(err => reject(new Error(err.message || err)));
+          
+          // 對應後端函式
+          if (action === 'getInitialData') runner.getInitialData();
+          else if (action === 'getOrdersAndPaymentStatus') runner.getOrdersAndPaymentStatus();
+          else if (action === 'submitOrder') runner.submitOrder(data.payload ? JSON.parse(data.payload) : data);
+          else if (action === 'adminTogglePaid') runner.adminTogglePaid(data.password, data.rowIndex, data.newStatus);
+          else if (action === 'adminChangeShop') runner.adminChangeShop(data.password, data.newShop);
+          else if (action === 'adminClearAllOrders') runner.adminClearAllOrders(data.password);
+          else reject(new Error("未知的動作: " + action));
+        } else {
+          // 支援獨立網頁 JSONP 呼叫
+          jsonpRequest(action, data, timeoutMs).then(resolve).catch(reject);
+        }
+      });
+    }
+
+    function jsonpRequest(action, params, timeoutMs = 30000) {
       return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         let isFinished = false;
@@ -334,7 +357,7 @@
           resolve(data);
         };
 
-        const queryArray = [`callback=${callbackName}`];
+        const queryArray = [`action=${action}`, `callback=${callbackName}`];
         for (const key in params) {
           if (Object.prototype.hasOwnProperty.call(params, key)) {
             queryArray.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
@@ -348,7 +371,7 @@
           if (isFinished) return;
           clearTimeout(timeoutId);
           cleanup();
-          reject(new Error('無法連線至伺服器，請確認權限或重新整理。'));
+          reject(new Error('無法連線至伺服器。'));
         };
         document.body.appendChild(script);
       });
@@ -378,6 +401,7 @@
       document.getElementById('customModal').style.display = 'flex';
     }
 
+    let modalCallback = null;
     function closeModal() {
       document.getElementById('customModal').style.display = 'none';
       if (modalCallback) { modalCallback(); modalCallback = null; }
@@ -393,16 +417,15 @@
         if (savedName) document.getElementById('nameSelect').value = savedName;
       }
       
-      // 優化 1：嘗試從 localStorage 瞬間載入畫面
       const cachedData = localStorage.getItem('lunchApp_cachedData');
       if (cachedData) {
         try {
           const res = JSON.parse(cachedData);
-          applyDataToUI(res); // 瞬間渲染
+          applyDataToUI(res);
         } catch(e) {}
       }
 
-      loadInitialData(); // 背景默默更新
+      loadInitialData();
     };
 
     function applyDataToUI(res) {
@@ -414,11 +437,9 @@
       document.getElementById('currentShopText').innerText = '今日店家：' + currentShop;
       renderMenuList();
       
-      // 確保至少有一行輸入框
       if(document.getElementById('itemList').children.length === 0) {
         addItemRow();
       } else {
-        // 如果已經有輸入框，只更新下拉選單內容不破壞已選狀態
         updateExistingItemRows();
       }
 
@@ -437,7 +458,7 @@
       document.querySelectorAll('.item-row select').forEach(select => {
         const val = select.value;
         select.innerHTML = options;
-        select.value = val; // 恢復選擇
+        select.value = val;
       });
       calculateTotal();
     }
@@ -446,7 +467,7 @@
       if(isFetchingData) return;
       isFetchingData = true;
       try {
-        const res = await jsonpRequest({ action: 'getInitialData' });
+        const res = await apiRequest('getInitialData');
         if (res && res.success) {
           localStorage.setItem('lunchApp_cachedData', JSON.stringify(res));
           applyDataToUI(res);
@@ -549,14 +570,14 @@
       };
 
       try {
-        const res = await jsonpRequest({ action: 'submitOrder', payload: JSON.stringify(payload) });
+        const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
         if (res && res.success) {
           showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', function() {
             document.getElementById('orderNote').value = '';
             document.getElementById('itemList').innerHTML = '';
             addItemRow();
             calculateTotal();
-            loadStatusData(true); // 自動更新狀態列
+            loadStatusData(true);
             switchTab('status');
           });
         } else {
@@ -570,7 +591,6 @@
       }
     }
 
-    // 優化 2：無痛更新 UI，不要清空畫面
     async function loadStatusData(forceRefresh = false) {
       if(isFetchingData) return;
       
@@ -583,7 +603,7 @@
         isFetchingData = true;
         
         try {
-          const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
+          const res = await apiRequest('getOrdersAndPaymentStatus');
           if (res && res.success) {
             allOrders = res.data || [];
             updateCache('orders', allOrders);
@@ -636,10 +656,14 @@
       listDiv.innerHTML = html;
     }
 
+    // 整合 Debounce 防抖機制的搜尋過濾
     function filterStatus() {
-      const kw = document.getElementById('statusFilter').value.toLowerCase();
-      const filtered = allOrders.filter(o => (o.name && o.name.toLowerCase().includes(kw)) || (o.group && o.group.toString().toLowerCase().includes(kw)));
-      renderOrders(filtered);
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const kw = document.getElementById('statusFilter').value.toLowerCase();
+        const filtered = allOrders.filter(o => (o.name && o.name.toLowerCase().includes(kw)) || (o.group && o.group.toString().toLowerCase().includes(kw)));
+        renderOrders(filtered);
+      }, 300);
     }
 
     function renderMenuList() {
@@ -680,7 +704,7 @@
       document.getElementById('tab-admin').style.display = 'block';
       window.scrollTo(0, 0);
       populateAdminShopsSelect();
-      renderAdminTable(allOrders); // 先用快取顯示，再背景抓
+      renderAdminTable(allOrders);
       loadAdminOrders(true);
     }
 
@@ -706,7 +730,7 @@
       if (!newShop) return;
       showConfirmModal('切換確認', `確定切換店家為【${newShop}】嗎？`, '🏪', async function() {
         try {
-          const res = await jsonpRequest({ action: 'adminChangeShop', password: adminToken, newShop: newShop });
+          const res = await apiRequest('adminChangeShop', { password: adminToken, newShop: newShop });
           showModal(res && res.success ? '成功' : '失敗', res ? res.message : '', res && res.success ? '✅' : '❌', function() {
             if (res && res.success) loadInitialData();
           });
@@ -722,19 +746,19 @@
       const originalStatus = targetOrder.paid;
       const newStatus = !originalStatus;
       
-      // 樂觀更新 (Optimistic UI Update) - 讓使用者感覺瞬間完成
       targetOrder.paid = newStatus;
+      targetOrder.status = newStatus ? "已付款" : "未付款";
       updateBadgeUI(btnElement, newStatus);
       updateAdminStatistics(allOrders);
       btnElement.disabled = true;
 
       try {
-        const res = await jsonpRequest({ action: 'adminTogglePaid', password: adminToken, rowIndex: orderId, newStatus: newStatus }, 12000);
+        const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex: orderId, newStatus: newStatus }, 12000);
         if (!res || !res.success) throw new Error((res && res.message) || "同步更新失敗");
         updateCache('orders', allOrders);
       } catch (err) {
-        // 若失敗則退回原狀態
         targetOrder.paid = originalStatus;
+        targetOrder.status = originalStatus ? "已付款" : "未付款";
         updateBadgeUI(btnElement, originalStatus);
         updateAdminStatistics(allOrders);
         showModal('同步失敗', "無法連線更新，狀態已自動還原！\n(" + err.message + ")", '⚠️');
@@ -751,7 +775,6 @@
       }
     }
 
-    // 優化 3：無痛更新後台管理列表
     async function loadAdminOrders(forceRefresh = false) {
       if(isFetchingData) return;
       
@@ -760,7 +783,7 @@
         btn.innerHTML = '🔄 更新中...';
         isFetchingData = true;
         try {
-          const res = await jsonpRequest({ action: 'getOrdersAndPaymentStatus' });
+          const res = await apiRequest('getOrdersAndPaymentStatus');
           if (res && res.success) {
             allOrders = res.data || [];
             updateCache('orders', allOrders);
@@ -818,7 +841,7 @@
     function handleAdminClearOrders() {
       showConfirmModal('清空警告', '確定要清空今日所有紀錄嗎？', '⚠️', async function() {
         try {
-          const res = await jsonpRequest({ action: 'adminClearAllOrders', password: adminToken });
+          const res = await apiRequest('adminClearAllOrders', { password: adminToken });
           showModal(res && res.success ? '清空完成' : '清空失敗', res ? res.message : '', res && res.success ? '🗑️' : '❌', function() {
             if (res && res.success) { allOrders = []; updateCache('orders', []); renderAdminTable([]); }
           });
