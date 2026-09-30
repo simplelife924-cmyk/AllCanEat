@@ -310,14 +310,12 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
 </style>
 </head>
 <body>
-<!-- 背景光暈獨立容器，避免導致 Scroll -->
 <div class="bg-glow"></div>
 
 <div class="conn-banner" id="connBanner">修但幾勒，正在重新連線…</div>
 
 <header>
   <div class="head-inner">
-    <!-- 根據附圖實作的群組外觀 -->
     <div class="header-action-group">
       <div class="title-pill">🍱 今天要吃什麼勒</div>
       <button class="admin-pill" onclick="openAdminModal()" title="後台管理">🔒 管理員</button>
@@ -361,7 +359,7 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
       </div>
       <div class="form-group">
         <label for="orderNote">備註</label>
-        <input type="text" id="orderNote" placeholder="不一定要填">
+        <input type="text" id="orderNote" placeholder="（不一定要填）">
       </div>
       <div class="summary-box">
         <span>應付總金額</span>
@@ -387,7 +385,7 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
   <div id="tab-menu" style="display:none;">
     <div class="card">
       <div class="card-title">今日菜單</div>
-      <div id="menuList" class="loader"><span class="spinner"></span>修但幾勒喔...</div>
+      <div id="menuList" class="loader"><span class="spinner"></span>載入菜單中…</div>
     </div>
   </div>
 
@@ -415,7 +413,7 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
           <label style="margin:0">對帳管理 <span style="font-size:0.75rem;font-weight:400;opacity:0.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
           <button class="btn-action" id="btnRefreshAdmin" style="padding:6px 14px" onclick="loadAdminOrders(true)">重新整理</button>
         </div>
-        <div id="adminOrdersContainer" style="overflow-x:auto"><div class="loader"><span class="spinner"></span>修但幾勒喔...</div></div>
+        <div id="adminOrdersContainer" style="overflow-x:auto"><div class="loader"><span class="spinner"></span>載入訂單中…</div></div>
       </div>
       <div class="panel danger">
         <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
@@ -493,6 +491,14 @@ function updateNameOptions() {
     o.value = m; o.textContent = m; sel.appendChild(o);
   });
   sel.disabled = false;
+  localStorage.setItem('lunchApp_group', g);
+}
+
+function saveUserSelection() {
+  const g = $('groupSelect').value;
+  const n = $('nameSelect').value;
+  if (g) localStorage.setItem('lunchApp_group', g);
+  if (n) localStorage.setItem('lunchApp_name', n);
 }
 
 async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
@@ -540,6 +546,7 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
   }
   throw lastErr || new Error('無法連線至伺服器。');
 }
+
 function showConnBanner() { $('connBanner').classList.add('show'); }
 function hideConnBanner() { $('connBanner').classList.remove('show'); }
 
@@ -550,6 +557,7 @@ function showModal(title, msg, icon = '🎉', callback = null) {
   modalCallback = callback;
   $('customModal').style.display = 'flex'; b.focus();
 }
+
 function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
   $('modalTitle').innerText = title; $('modalMsg').innerText = msg; $('modalIcon').innerText = icon;
   $('modalCancelBtn').style.display = 'inline-block';
@@ -558,10 +566,12 @@ function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
   modalCallback = null;
   $('customModal').style.display = 'flex';
 }
+
 function closeModal() {
   $('customModal').style.display = 'none';
   if (modalCallback) { modalCallback(); modalCallback = null; }
 }
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeModal(); closeAdminModal(); }
 });
@@ -575,6 +585,7 @@ window.onload = function() {
   const cached = localStorage.getItem('lunchApp_cachedData');
   if (cached) { try { applyDataToUI(JSON.parse(cached)); } catch (e) {} }
   loadInitialData();
+  if ($('itemList').children.length === 0) addItemRow();
 };
 
 function applyDataToUI(res) {
@@ -596,6 +607,7 @@ function menuOptionsHTML() {
   menuItems.forEach(i => { o += `<option value="${escapeHTML(i.name)}" data-price="${i.price}">${escapeHTML(i.name)} ($${i.price})</option>`; });
   return o;
 }
+
 function updateExistingItemRows() {
   const options = menuOptionsHTML();
   document.querySelectorAll('.item-row select').forEach(s => { const v = s.value; s.innerHTML = options; s.value = v; });
@@ -614,277 +626,387 @@ async function loadInitialData() {
   } catch (err) {
     if (menuItems.length === 0) {
       const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '連線失敗';
-      $('menuList').innerHTML = '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) + '<br><button class="btn-action retry-btn" style="margin-top:12px" onclick="loadInitialData()">重新嘗試</button></div>';
+      $('menuList').innerHTML = '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) + '<br><button class="btn-action retry-btn" style="margin-top:12px" onclick="loadInitialData()">重新載入</button></div>';
     }
-  } finally { isFetchingData = false; }
+  } finally {
+    isFetchingData = false;
+  }
 }
 
-/* --- 頁籤與核心互動邏輯補全 --- */
-function switchTab(tabId) {
-  ['order', 'status', 'menu', 'admin'].forEach(id => {
-    const el = $('tab-' + id);
-    if (el) el.style.display = (id === tabId) ? 'block' : 'none';
+function switchTab(tabName) {
+  document.querySelectorAll('.tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+  ['order', 'status', 'menu', 'admin'].forEach(t => {
+    const el = $('tab-' + t);
+    if (el) el.style.display = (t === tabName) ? 'block' : 'none';
   });
   
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('active');
-    if (btn.getAttribute('onclick').includes(`'${tabId}'`)) {
-      btn.classList.add('active');
-    }
-  });
-
-  if (tabId === 'status') {
-    loadStatusData(false);
+  if (tabName === 'order') {
+    document.querySelectorAll('.tabs .tab-btn')[0].classList.add('active');
+  } else if (tabName === 'status') {
+    document.querySelectorAll('.tabs .tab-btn')[1].classList.add('active');
+    loadStatusData();
+  } else if (tabName === 'menu') {
+    document.querySelectorAll('.tabs .tab-btn')[2].classList.add('active');
   }
 }
 
 function addItemRow() {
   const list = $('itemList');
   if (list.children.length >= 5) {
-    showModal('已達上限', '最多只能點 5 項餐點喔！', '✋');
+    showModal('提示', '每筆訂單最多只能點 5 項餐點喔！', '⚠️');
     return;
   }
   const row = document.createElement('div');
   row.className = 'item-row';
   row.innerHTML = `
-    <select onchange="calculateTotal()">${menuOptionsHTML()}</select>
-    <div class="price-tag">$0</div>
-    <button type="button" class="btn-remove" onclick="this.parentElement.remove(); calculateTotal();">×</button>
+    <select onchange="updateRowPrice(this)">${menuOptionsHTML()}</select>
+    <span class="price-tag">$0</span>
+    <button type="button" class="btn-remove" onclick="removeItemRow(this)" title="刪除品項">×</button>
   `;
   list.appendChild(row);
+  document.getElementById('btnAddItem').style.display = list.children.length >= 5 ? 'none' : 'block';
+}
+
+function removeItemRow(btn) {
+  const row = btn.closest('.item-row');
+  row.style.transform = 'scale(0.8)';
+  row.style.opacity = '0';
+  setTimeout(() => {
+    row.remove();
+    document.getElementById('btnAddItem').style.display = 'block';
+    calculateTotal();
+  }, 200);
+}
+
+function updateRowPrice(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const price = parseInt(opt.getAttribute('data-price')) || 0;
+  const tag = sel.parentElement.querySelector('.price-tag');
+  tag.textContent = '$' + price;
   calculateTotal();
 }
 
 function calculateTotal() {
   let total = 0;
-  document.querySelectorAll('.item-row select').forEach(sel => {
-    const opt = sel.options[sel.selectedIndex];
-    total += opt ? parseInt(opt.getAttribute('data-price') || 0, 10) : 0;
-  });
-  const d = $('totalDisplay');
-  d.innerText = '$' + total;
-  d.classList.remove('bump');
-  void d.offsetWidth; 
-  d.classList.add('bump');
-  
   document.querySelectorAll('.item-row').forEach(row => {
     const sel = row.querySelector('select');
-    const p = row.querySelector('.price-tag');
     const opt = sel.options[sel.selectedIndex];
-    p.innerText = '$' + (opt ? (opt.getAttribute('data-price') || 0) : 0);
+    const price = parseInt(opt.getAttribute('data-price')) || 0;
+    total += price;
   });
+  const totalEl = $('totalDisplay');
+  totalEl.textContent = '$' + total;
+  totalEl.classList.remove('bump');
+  void totalEl.offsetWidth;
+  totalEl.classList.add('bump');
+  return total;
 }
 
 async function handleOrderSubmit() {
-  const g = $('groupSelect').value, n = $('nameSelect').value, note =$('orderNote').value;
-  if (!g || !n) return showModal('資料不齊全', '請選擇組別與姓名！', '⚠️');
-  
-  const items = [];
-  document.querySelectorAll('.item-row select').forEach(sel => {
-    if (sel.value) items.push(sel.value);
-  });
-  if (items.length === 0) return showModal('還沒點餐', '請至少選擇一項餐點！', '🍔');
+  const group = $('groupSelect').value;
+  const name = $('nameSelect').value;
+  const note = $('orderNote').value.trim();
 
-  const btn = $('submitBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>處理中...';
+  if (!group) {
+    showModal('請選擇組別', '請先選擇您的所屬組別！', '⚠️');
+    return;
+  }
+  if (!name) {
+    showModal('請選擇姓名', '請先選擇您的座號與姓名！', '⚠️');
+    return;
+  }
+
+  const items = [];
+  document.querySelectorAll('.item-row').forEach(row => {
+    const sel = row.querySelector('select');
+    if (sel.value) {
+      const opt = sel.options[sel.selectedIndex];
+      items.push({
+        name: sel.value,
+        price: parseInt(opt.getAttribute('data-price')) || 0
+      });
+    }
+  });
+
+  if (items.length === 0) {
+    showModal('請選擇餐點', '請至少選擇一項想吃的餐點品項！', '⚠️');
+    return;
+  }
+
+  const submitBtn = $('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span>正在送出點餐…';
 
   try {
-    const res = await apiRequest('submitOrder', {
-      payload: JSON.stringify({ group: g, name: n, items: items, note: note })
-    });
+    saveUserSelection();
+    const payload = {
+      group: group,
+      name: name,
+      items: items,
+      note: note,
+      shop: currentShop
+    };
+    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
     if (res && res.success) {
-      localStorage.setItem('lunchApp_group', g);
-      localStorage.setItem('lunchApp_name', n);
-      showModal('點餐成功', '您的餐點已送出！', '✅', () => {
-        $('itemList').innerHTML = '';$('orderNote').value = '';
+      showModal('點餐成功！', `太棒了！已成功幫您送出 ${name} 的點餐紀錄。\n應付總金額：$${res.total || calculateTotal()}`, '🎉', () => {
+        // 清空餐點選擇
+        $('itemList').innerHTML = '';
         addItemRow();
-        loadInitialData();
+        $('orderNote').value = '';
+        calculateTotal();
         switchTab('status');
       });
     } else {
-      throw new Error(res.message || '點餐失敗');
+      throw new Error(res.message || '送出失敗');
     }
   } catch (err) {
-    showModal('發生錯誤', err.message, '❌');
+    showModal('送出失敗', err.message || '網路異常，請稍後再試！', '❌');
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '送出點餐';
+    submitBtn.disabled = false;
+    submitBtn.textContent = '送出點餐';
   }
 }
 
 async function loadStatusData(force = false) {
-  if (isFetchingData && !force) return;
   const container = $('statusList');
-  if (force) container.innerHTML = '<div class="loader"><span class="spinner"></span>重新載入中…</div>';
-  isFetchingData = true;
+  if (force || allOrders.length === 0) {
+    container.innerHTML = '<div class="loader"><span class="spinner"></span>載入紀錄中…</div>';
+  }
   try {
     const res = await apiRequest('getOrdersAndPaymentStatus');
     if (res && res.success) {
       allOrders = res.orders || [];
       renderOrders(allOrders);
     } else {
-      throw new Error(res.message || '讀取失敗');
+      throw new Error(res.message || '載入失敗');
     }
-  } catch(err) {
-    container.innerHTML = `<div class="empty">${escapeHTML(err.message)}</div>`;
-  } finally {
-    isFetchingData = false;
+  } catch (err) {
+    container.innerHTML = '<div class="empty">無法載入對帳資料：' + escapeHTML(err.message) + '</div>';
   }
+}
+
+function filterStatus() {
+  const keyword = $('statusFilter').value.trim().toLowerCase();
+  if (!keyword) {
+    renderOrders(allOrders);
+    return;
+  }
+  const filtered = allOrders.filter(o => 
+    (o.name && o.name.toLowerCase().includes(keyword)) ||
+    (o.group && o.group.toLowerCase().includes(keyword)) ||
+    (o.details && o.details.toLowerCase().includes(keyword))
+  );
+  renderOrders(filtered);
 }
 
 function renderOrders(orders) {
   const container = $('statusList');
   if (!orders || orders.length === 0) {
-    container.innerHTML = '<div class="empty">目前還沒有人點餐喔！</div>';
+    container.innerHTML = '<div class="empty">目前還沒有人點餐，不如你先點？</div>';
     return;
   }
   let html = '';
-  orders.forEach((o, i) => {
-    const isPaid = o.paid;
+  orders.forEach((o, index) => {
+    const isPaid = o.paid === true || o.paid === '已付';
+    const badgeClass = isPaid ? 'badge-paid' : 'badge-unpaid';
+    const badgeText = isPaid ? '已付 $ ' + (o.total \vert{}\vert{} 0) : '未付 $ ' + (o.total || 0);
     html += `
-    <div class="order-item ${isPaid ? 'is-paid' : ''}" style="--i:${i}">
-      <div class="order-header">
-        <div class="order-user">${escapeHTML(o.group)} - ${escapeHTML(o.name)}</div>
-        <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${isPaid ? '已繳費' : '未繳費'}</span>
+      <div class="order-item ${isPaid ? 'is-paid' : ''}" style="--i: ${index}">
+        <div class="order-header">
+          <div class="order-user">${escapeHTML(o.group)} - ${escapeHTML(o.name)}</div>
+          <span class="badge ${badgeClass}">${badgeText}</span>
+        </div>
+        <div class="order-details">
+          餐點：<strong>${escapeHTML(o.details)}</strong><br>
+          ${o.note ? '備註：' + escapeHTML(o.note) + '<br>' : ''}
+          時間：${escapeHTML(o.timestamp || '')}
+        </div>
       </div>
-      <div class="order-details">
-        <strong>餐點：</strong>${escapeHTML(o.items.join(', '))}<br>
-        <strong>總計：</strong>$${o.totalAmount}
-        ${o.note ? `<br><strong>備註：</strong>${escapeHTML(o.note)}` : ''}
-      </div>
-    </div>`;
+    `;
   });
   container.innerHTML = html;
-  filterStatus();
-}
-
-function filterStatus() {
-  const kw = $('statusFilter').value.toLowerCase();
-  document.querySelectorAll('.order-item').forEach(el => {
-    const text = el.innerText.toLowerCase();
-    el.style.display = text.includes(kw) ? 'block' : 'none';
-  });
 }
 
 function renderMenuList() {
   const container = $('menuList');
-  if (menuItems.length === 0) {
-    container.innerHTML = '<div class="empty">目前沒有菜單資料</div>';
+  if (!menuItems || menuItems.length === 0) {
+    container.innerHTML = '<div class="empty">今日尚無菜單資料</div>';
     return;
   }
   let html = '<table class="menu-table"><tbody>';
   menuItems.forEach(i => {
-    html += `<tr><td>${escapeHTML(i.name)}</td><td>$${i.price}</td></tr>`;
+    html += `<tr><td><strong>${escapeHTML(i.name)}</strong></td><td>$${escapeHTML(i.price)}</td></tr>`;
   });
   html += '</tbody></table>';
   container.innerHTML = html;
 }
 
-function openAdminModal() { $('adminLoginModal').style.display = 'flex';$('adminPasswordInput').focus(); }
-function closeAdminModal() { $('adminLoginModal').style.display = 'none';$('adminPasswordInput').value = ''; }
+function openAdminModal() {
+  if (adminToken === ADMIN_PASSWORD) {
+    switchTab('admin');
+    loadAdminOrders();
+    return;
+  }
+  $('adminPasswordInput').value = '';
+  $('adminLoginModal').style.display = 'flex';$('adminPasswordInput').focus();
+}
+
+function closeAdminModal() {
+  $('adminLoginModal').style.display = 'none';
+}
 
 function submitAdminLogin() {
   const pwd = $('adminPasswordInput').value;
   if (pwd === ADMIN_PASSWORD) {
-    adminToken = pwd;
+    adminToken = ADMIN_PASSWORD;
     closeAdminModal();
     switchTab('admin');
-    renderAdminTable(allOrders);
-    populateAdminShopsSelect();
+    loadAdminOrders();
   } else {
-    alert('密碼錯誤！');
+    showModal('密碼錯誤', '錯！你再猜猜？', '🔒');
   }
 }
 
-function exitAdmin() { switchTab('order'); adminToken = ''; }
-
-function populateAdminShopsSelect() {
-  const sel = $('adminShopsSelect');
-  if (!sel) return;
-  sel.innerHTML = allShopsList.map(s => `<option value="${escapeHTML(s)}" ${s===currentShop?'selected':''}>${escapeHTML(s)}</option>`).join('');
+function exitAdmin() {
+  switchTab('order');
 }
 
 async function loadAdminOrders(force = false) {
   const container = $('adminOrdersContainer');
-  if (force) container.innerHTML = '<div class="loader"><span class="spinner"></span>重新載入中…</div>';
+  if (force || allOrders.length === 0) {
+    container.innerHTML = '<div class="loader"><span class="spinner"></span>載入訂單中…</div>';
+  }
   try {
     const res = await apiRequest('getOrdersAndPaymentStatus');
     if (res && res.success) {
       allOrders = res.orders || [];
       renderAdminTable(allOrders);
+    } else {
+      throw new Error(res.message || '載入失敗');
     }
-  } catch(err) {
-    container.innerHTML = `<div class="empty">${escapeHTML(err.message)}</div>`;
+  } catch (err) {
+    container.innerHTML = '<div class="empty">無法載入後台資料：' + escapeHTML(err.message) + '</div>';
   }
 }
 
 function renderAdminTable(orders) {
-  const container = $('adminOrdersContainer');
   let totalAmt = 0, paidAmt = 0, unpaidAmt = 0;
-  
-  if (!orders || orders.length === 0) {
-    container.innerHTML = '<div class="empty">目前沒有訂單資料</div>';
-  } else {
-    let html = '<table class="admin-table"><thead><tr><th>姓名</th><th>餐點</th><th>金額</th><th>備註</th><th>狀態切換</th></tr></thead><tbody>';
-    orders.forEach(o => {
-      totalAmt += o.totalAmount;
-      if (o.paid) paidAmt += o.totalAmount; else unpaidAmt += o.totalAmount;
-      html += `<tr>
-        <td>${escapeHTML(o.group)}<br><strong>${escapeHTML(o.name)}</strong></td>
-        <td>${escapeHTML(o.items.join(', '))}</td>
-        <td style="font-weight:bold">$${o.totalAmount}</td>
-        <td style="font-size:0.8rem;color:var(--text-muted)">${escapeHTML(o.note||'-')}</td>
-        <td><button class="badge ${o.paid?'badge-paid':'badge-unpaid'}" onclick="togglePayment(this, ${o.rowIndex}, ${!o.paid})">${o.paid?'已繳費':'未繳費'}</button></td>
-      </tr>`;
-    });
-    html += '</tbody></table>';
-    container.innerHTML = html;
-  }
-  
+  orders.forEach(o => {
+    const t = parseInt(o.total) || 0;
+    totalAmt += t;
+    if (o.paid === true || o.paid === '已付') paidAmt += t;
+    else unpaidAmt += t;
+  });
+
   $('statOrderCount').innerText = orders.length;
   $('statTotalAmount').innerText = '$' + totalAmt;
   $('statPaidAmount').innerText = '$' + paidAmt;
   $('statUnpaidAmount').innerText = '$' + unpaidAmt;
+
+  const container = $('adminOrdersContainer');
+  if (!orders || orders.length === 0) {
+    container.innerHTML = '<div class="empty">目前尚無任何訂單紀錄</div>';
+    return;
+  }
+
+  let html = `
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>組別 / 姓名</th>
+          <th>餐點明細</th>
+          <th>金額</th>
+          <th>繳費狀態</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  orders.forEach(o => {
+    const isPaid = o.paid === true || o.paid === '已付';
+    html += `
+      <tr>
+        <td><strong>${escapeHTML(o.group)}</strong><br>${escapeHTML(o.name)}</td>
+        <td>${escapeHTML(o.details)}${o.note ? '<br><small style="color:var(--text-muted)">備註：' + escapeHTML(o.note) + '</small>' : ''}</td>
+        <td><strong>$${escapeHTML(o.total)}</strong></td>
+        <td>
+          <button class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}" onclick="togglePaidStatus(${o.rowIndex}, ${!isPaid})">
+            ${isPaid ? '已付' : '未付'}
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
 }
 
-async function togglePayment(btn, rowIndex, newStatus) {
-  btn.disabled = true;
-  const originalText = btn.innerText;
-  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;margin:0"></span>';
+async function togglePaidStatus(rowIndex, newStatus) {
   try {
-    const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex: rowIndex, newStatus: newStatus });
+    const res = await apiRequest('adminTogglePaid', {
+      password: ADMIN_PASSWORD,
+      rowIndex: rowIndex,
+      newStatus: newStatus ? '已付' : '未付'
+    });
     if (res && res.success) {
-      loadAdminOrders(false);
-    } else { throw new Error(res.message); }
-  } catch(err) {
-    alert('切換失敗: ' + err.message);
-    btn.disabled = false;
-    btn.innerText = originalText;
+      loadAdminOrders(true);
+    } else {
+      throw new Error(res.message || '更新失敗');
+    }
+  } catch (err) {
+    showModal('更新失敗', err.message, '❌');
   }
+}
+
+function populateAdminShopsSelect() {
+  const sel = $('adminShopsSelect');
+  if (!allShopsList || allShopsList.length === 0) {
+    sel.innerHTML = '<option value="">無可用店家</option>';
+    return;
+  }
+  let html = '';
+  allShopsList.forEach(s => {
+    const selected = (s === currentShop) ? 'selected' : '';
+    html += `<option value="${escapeHTML(s)}" ${selected}>${escapeHTML(s)}</option>`;
+  });
+  sel.innerHTML = html;
 }
 
 async function handleAdminChangeShop() {
   const newShop = $('adminShopsSelect').value;
-  if (!newShop || newShop === currentShop) return;
-  showConfirmModal('確認更換店家？', `確定要將今日店家更換為「${newShop}」嗎？\n這將可能需要重新設定菜單。`, '🏪', async () => {
+  if (!newShop) return;
+  showConfirmModal('確認更換店家', `確定要將今日店家切換為「${newShop}」嗎？`, '❓', async () => {
     try {
-      const res = await apiRequest('adminChangeShop', { password: adminToken, newShop: newShop });
+      const res = await apiRequest('adminChangeShop', {
+        password: ADMIN_PASSWORD,
+        newShop: newShop
+      });
       if (res && res.success) {
-        showModal('更換成功', '店家已更新，請重新整理頁面。', '✅', () => location.reload());
-      } else throw new Error(res.message);
-    } catch (e) { alert('更換失敗: ' + e.message); }
+        showModal('更換成功', `今日店家已成功切換為：${newShop}`, '🎉', () => {
+          loadInitialData();
+        });
+      } else {
+        throw new Error(res.message || '更換失敗');
+      }
+    } catch (err) {
+      showModal('更換失敗', err.message, '❌');
+    }
   });
 }
 
-async function handleAdminClearOrders() {
-  showConfirmModal('警告：清空紀錄', '確定要清空今日所有點餐紀錄嗎？此動作無法復原！', '⚠️', async () => {
+function handleAdminClearOrders() {
+  showConfirmModal('清空確認', '確定要清空今日所有的點餐紀錄嗎？此動作無法復原！', '⚠️', async () => {
     try {
-      const res = await apiRequest('adminClearAllOrders', { password: adminToken });
+      const res = await apiRequest('adminClearAllOrders', { password: ADMIN_PASSWORD });
       if (res && res.success) {
-        showModal('已清空', '所有紀錄已清除。', '🗑️', () => location.reload());
-      } else throw new Error(res.message);
-    } catch (e) { alert('清除失敗: ' + e.message); }
+        showModal('已清空', '今日所有點餐紀錄已清空完成。', '🗑️', () => {
+          loadAdminOrders(true);
+        });
+      } else {
+        throw new Error(res.message || '清空失敗');
+      }
+    } catch (err) {
+      showModal('清空失敗', err.message, '❌');
+    }
   });
 }
 </script>
