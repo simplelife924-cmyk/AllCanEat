@@ -1,880 +1,796 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>今天要吃什麼勒</title>
-  <style>
-    :root {
-      --bg-color: #f4f7f7;
-      --primary: #1f4e5f;
-      --primary-dark: #163a47;
-      --secondary: #79a8a9;
-      --accent: #aacfd0;
-      --accent-light: rgba(170, 207, 208, 0.25);
-      --white: #ffffff;
-      --text: #2c3e50;
-      --danger: #e74c3c;
-      --danger-bg: #fdeeee;
-      --success: #27ae60;
-      --success-bg: #e8f8f0;
-      --border: #d2e4e4;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text); padding-bottom: 60px; }
-    header { background-color: var(--primary); color: var(--white); padding: 16px 20px; text-align: center; position: relative; box-shadow: 0 2px 8px rgba(31, 78, 95, 0.2); }
-    header h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .shop-badge { display: inline-block; background-color: var(--secondary); color: var(--white); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
-    .admin-entry-btn { position: absolute; top: 14px; right: 14px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: #fff; padding: 5px 9px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s; }
-    .admin-entry-btn:hover { background: rgba(255, 255, 255, 0.28); }
-    .tabs { display: flex; justify-content: center; background-color: var(--white); border-bottom: 2px solid var(--accent); position: sticky; top: 0; z-index: 10; }
-    .tab-btn { flex: 1; max-width: 220px; padding: 13px 10px; border: none; background: none; font-size: 0.95rem; font-weight: 600; color: var(--secondary); cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent; }
-    .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); background-color: rgba(170, 207, 208, 0.15); }
-    .container { max-width: 680px; margin: 20px auto; padding: 0 16px; }
-    .card { background-color: var(--white); border-radius: 12px; padding: 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.04); border: 1px solid var(--accent); margin-bottom: 20px; }
-    .card-title { font-size: 1.15rem; color: var(--primary); font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--primary); margin-bottom: 6px; }
-    input[type="text"], input[type="password"], select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--accent); border-radius: 8px; font-size: 0.95rem; outline: none; transition: 0.2s; background-color: #fff; }
-    select:disabled { background-color: #eef4f4; cursor: not-allowed; }
-    input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(121, 168, 169, 0.2); }
-    .item-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-    .item-row select { flex: 2; }
-    .item-row .price-tag { width: 75px; text-align: right; font-weight: 700; color: var(--primary); font-size: 0.95rem; }
-    .btn-remove { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 0 6px; transition: transform 0.2s; }
-    .btn-remove:hover { transform: scale(1.1); }
-    .btn-add-item { background-color: rgba(170, 207, 208, 0.25); border: 1.5px dashed var(--secondary); color: var(--primary); padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 6px; transition: 0.2s; }
-    .btn-add-item:hover { background-color: var(--accent); }
-    .summary-box { background-color: rgba(170, 207, 208, 0.2); border-left: 4px solid var(--primary); padding: 12px 16px; border-radius: 6px; margin: 18px 0; display: flex; justify-content: space-between; align-items: center; }
-    .total-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
-    .btn-submit { background-color: var(--primary); color: var(--white); border: none; padding: 13px; width: 100%; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-    .btn-submit:hover:not(:disabled) { background-color: var(--primary-dark); }
-    .btn-submit:disabled { background-color: #94a3a8; cursor: not-allowed; }
-    .btn-action { background-color: var(--primary); color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
-    .btn-action:hover { background-color: var(--primary-dark); }
-    .btn-danger { background-color: var(--danger); color: white; border: none; padding: 10px 14px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; width: 100%; transition: 0.2s; }
-    .btn-danger:hover { background-color: #c0392b; }
-    .btn-back { background: #718096; color: white; border: none; padding: 11px; border-radius: 8px; width: 100%; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 15px; transition: 0.2s; }
-    .btn-back:hover { background: #4a5568; }
-    .search-box { margin-bottom: 15px; width: 100%; padding: 10px 12px; border: 1.5px solid var(--accent); border-radius: 8px; font-size: 0.95rem; outline: none; }
-    .order-item { border: 1px solid var(--accent); border-radius: 8px; padding: 14px; margin-bottom: 12px; background: #fafdfd; transition: box-shadow 0.2s; }
-    .order-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .order-user { font-weight: 700; color: var(--primary); font-size: 1rem; }
-    .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.15s ease-in-out; }
-    .badge-paid, .badge.paid { background-color: var(--success-bg); color: var(--success); border: 1px solid #b7ebd0; }
-    .badge-unpaid { background-color: var(--danger-bg); color: var(--danger); border: 1px solid #fad2d2; }
-    .badge:disabled { opacity: 0.6; cursor: not-allowed; }
-    .admin-badge { background-color: #e67e22; color: #fff; font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; margin-left: 6px; }
-    .admin-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
-    .stat-card { background: #f8fbfb; border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; text-align: center; }
-    .stat-card .stat-num { font-size: 1.25rem; font-weight: 800; color: var(--primary); margin-top: 4px; }
-    .stat-card .stat-label { font-size: 0.75rem; color: #666; }
-    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .admin-table th, .admin-table td { border: 1px solid #e1ecec; padding: 8px 6px; text-align: left; }
-    .admin-table th { background-color: #edf5f5; color: var(--primary); font-weight: 700; }
-    .loader { text-align: center; padding: 30px; color: var(--secondary); font-size: 0.95rem; }
-    .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(121, 168, 169, 0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-right: 8px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F4F6F8">
+<title>今天要吃什麼勒</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 
+ * 🎨 現代化頂級 UI/UX 視覺重構 (Awwwards / Webby 級別)
+ * 核心風格：Modern Bento, Glassmorphism, Soft Neumorphism, Spring Animations
+ */
+:root {
+  --bg: #F4F6F9; /* 清新冷灰白底 */
+  --surface: rgba(255, 255, 255, 0.85); /* 毛玻璃主體 */
+  --surface-solid: #FFFFFF;
+  --text-main: #0F172A; /* 極致深藍 */
+  --text-muted: #64748B;
+  --primary: #FF5A5F; /* 珊瑚紅 (主視覺) */
+  --primary-hover: #E0484D;
+  --secondary: #FFB320; /* 暖陽黃 */
+  --accent: #0EA5E9; /* 天際藍 */
+  --danger: #FF3B30;
+  --danger-bg: #FFE5E5;
+  --success: #10B981;
+  --success-bg: #D1FAE5;
+  --border: rgba(15, 23, 42, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  
+  --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 8px 24px rgba(255, 90, 95, 0.3);
+  
+  --r-lg: 32px;
+  --r-md: 20px;
+  --r-sm: 14px;
+  --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-    .retry-box { text-align:center; color:#888; padding:20px; }
-    .retry-box .retry-btn { margin-top: 12px; }
-    .conn-banner { display:none; background:#fdeeee; color:#c0392b; font-size:0.8rem; text-align:center; padding:6px 10px; border-bottom:1px solid #fad2d2; }
-    .conn-banner.show { display:block; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; background-color: var(--bg); }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 78, 95, 0.45); display: none; justify-content: center; align-items: center; z-index: 2000; }
-    .modal-card { background: #ffffff; border-radius: 14px; padding: 24px; max-width: 320px; width: 85%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1.5px solid var(--accent); animation: popIn 0.25s ease-out; }
-    @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .modal-icon { font-size: 2.2rem; margin-bottom: 10px; }
-    .modal-title { font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-    .modal-msg { font-size: 0.95rem; color: #444; margin-bottom: 18px; line-height: 1.5; white-space: pre-line; }
-    .modal-btn-group { display: flex; gap: 10px; justify-content: center; }
-    .modal-btn { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: 0.2s; flex: 1; }
-    .modal-btn:hover { background: var(--primary-dark); }
-    .modal-btn-cancel { background: #95a5a6; }
-    .modal-btn-cancel:hover { background: #7f8c8d; }
-  </style>
+/* 現代化點狀網格背景，增加空間感 */
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1px, transparent 0);
+  background-size: 28px 28px;
+  color: var(--text-main);
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 背景裝飾光暈 */
+body::before, body::after {
+  content: ""; position: absolute; border-radius: 50%; filter: blur(80px); z-index: -1; pointer-events: none; opacity: 0.5;
+}
+body::before { width: 400px; height: 400px; background: rgba(255, 179, 32, 0.2); top: -100px; right: -150px; }
+body::after { width: 300px; height: 300px; background: rgba(255, 90, 95, 0.15); top: 20%; left: -100px; }
+
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--secondary); outline-offset: 2px; border-radius: 4px; }
+
+/* 頂部連線提示 */
+.conn-banner { display: none; background: var(--danger); color: #fff; font-size: 0.85rem; font-weight: 700; text-align: center; padding: 10px 16px; box-shadow: var(--shadow-sm); z-index: 9999; position: relative; }
+.conn-banner.show { display: block; animation: slideDown 0.4s var(--spring); }
+@keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Header - 極簡玻璃風格 */
+header {
+  position: relative; padding: calc(40px + env(safe-area-inset-top)) 24px 72px; text-align: center; z-index: 1;
+}
+.head-inner { position: relative; max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+header h1 { font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); background: rgba(255,255,255,0.6); padding: 6px 16px; border-radius: 99px; display: inline-block; box-shadow: var(--shadow-sm); border: 1px solid var(--glass-border); margin-bottom: 24px; }
+.shop-label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+
+/* 華麗的今日店家標題 */
+.shop-badge {
+  display: block; font-size: clamp(2.4rem, 9vw, 4rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--text-main) 0%, #334155 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: floatUp 0.8s var(--spring) both; word-break: break-word; text-shadow: 0 12px 24px rgba(0,0,0,0.04);
+}
+.shop-badge.is-load, .shop-badge.is-err { font-size: 1.5rem; background: var(--text-muted); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: pulse 2s infinite ease-in-out; }
+
+/* 管理員按鈕 (右上角隱藏感設計) */
+.admin-entry-btn {
+  position: absolute; top: 0; right: 0; background: rgba(255,255,255,0.7); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.3s var(--ease); backdrop-filter: blur(8px); box-shadow: var(--shadow-sm);
+}
+.admin-entry-btn:hover { background: var(--text-main); color: #fff; transform: translateY(-2px); }
+
+@keyframes floatUp { from { opacity: 0; transform: translateY(24px) scale(0.95); } to { opacity: 1; transform: none; } }
+@keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+/* 玻璃質感導覽列 Tabs */
+.tabs {
+  display: flex; gap: 6px; max-width: 480px; margin: -32px auto 0; padding: 6px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid var(--glass-border); border-radius: 99px; box-shadow: var(--shadow-md); position: sticky; top: 16px; z-index: 100; width: calc(100% - 32px); transition: 0.3s var(--ease);
+}
+.tab-btn {
+  flex: 1; padding: 12px 8px; min-height: 44px; border: none; background: transparent; border-radius: 99px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.4s var(--spring); position: relative;
+}
+.tab-btn::before { content: ""; position: absolute; inset: 0; background: var(--text-main); border-radius: 99px; opacity: 0; transform: scale(0.8); transition: 0.4s var(--spring); z-index: -1; }
+.tab-btn.active { color: #fff; }
+.tab-btn.active::before { opacity: 1; transform: scale(1); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
+.tab-btn:not(.active):hover { color: var(--text-main); background: rgba(0,0,0,0.03); }
+
+/* 主容器 */
+.container { max-width: 680px; margin: 32px auto; padding: 0 16px; }
+.container > div { animation: slideIn 0.5s var(--spring) both; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* 現代卡片 (Modern Bento) */
+.card {
+  background: var(--surface); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1.5px solid var(--glass-border); border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-md); margin-bottom: 24px; transition: 0.3s var(--ease);
+}
+.card-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; letter-spacing: -0.02em; }
+
+/* 表單元件 */
+.form-group { margin-bottom: 22px; }
+label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
+input[type=text], input[type=password], select {
+  width: 100%; padding: 14px 16px; min-height: 52px; border: 1.5px solid rgba(15,23,42,0.1); border-radius: var(--r-sm); font-size: 1rem; background: var(--surface-solid); color: var(--text-main); outline: none; transition: 0.3s var(--ease); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+select {
+  appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%230F172A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: calc(100% - 16px) center; background-size: 12px; background-repeat: no-repeat; padding-right: 40px; cursor: pointer;
+}
+select:disabled { background-color: #F8FAFC; opacity: 0.6; cursor: not-allowed; }
+input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 4px rgba(255, 179, 32, 0.15), inset 0 2px 4px rgba(0,0,0,0.01); }
+
+/* 餐點列設計 */
+.item-row {
+  display: flex; gap: 12px; align-items: center; margin-bottom: 12px; animation: slideIn 0.4s var(--spring) both; background: rgba(255,255,255,0.5); padding: 8px; border-radius: var(--r-md); border: 1px solid var(--border);
+}
+.item-row select { flex: 2; border: none; box-shadow: none; background-color: transparent; padding: 10px; min-height: 44px; }
+.item-row select:focus { box-shadow: none; background: #fff; border-radius: var(--r-sm); }
+.price-tag { width: 70px; text-align: right; font-weight: 900; font-size: 1.1rem; color: var(--text-main); font-variant-numeric: tabular-nums; }
+.btn-remove {
+  width: 40px; height: 40px; flex: none; background: #fff; border: 1.5px solid var(--border); color: var(--text-muted); border-radius: 50%; font-weight: 900; cursor: pointer; transition: 0.3s var(--spring); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm);
+}
+.btn-remove:hover { background: var(--danger-bg); color: var(--danger); border-color: rgba(255,59,48,0.2); transform: rotate(90deg) scale(1.1); }
+
+.btn-add-item {
+  background: transparent; border: 2px dashed rgba(15,23,42,0.15); color: var(--text-muted); padding: 14px; min-height: 52px; width: 100%; border-radius: var(--r-sm); cursor: pointer; font-weight: 700; transition: 0.3s var(--ease); margin-top: 8px;
+}
+.btn-add-item:hover { background: rgba(15,23,42,0.02); border-color: var(--text-main); color: var(--text-main); }
+
+/* 總結區塊 */
+.summary-box {
+  background: var(--surface-solid); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 20px 24px; margin: 32px 0 24px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+}
+.summary-box::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--secondary); }
+.total-price { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.02em; color: var(--text-main); font-variant-numeric: tabular-nums; display: inline-block; line-height: 1; }
+.total-price.bump { animation: springBump 0.5s var(--spring); }
+@keyframes springBump { 0% { transform: scale(1); } 40% { transform: scale(1.15) translateY(-2px); color: var(--primary); } 100% { transform: scale(1); } }
+
+/* 按鈕美學 */
+.btn-submit {
+  background: var(--primary); color: #fff; border: none; padding: 18px; min-height: 60px; width: 100%; border-radius: 99px; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.05em; cursor: pointer; box-shadow: var(--shadow-glow); transition: 0.4s var(--spring); position: relative; overflow: hidden;
+}
+.btn-submit::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(255,255,255,0.2), transparent); opacity: 0; transition: 0.3s; }
+.btn-submit:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(255, 90, 95, 0.4); }
+.btn-submit:hover:not(:disabled)::after { opacity: 1; }
+.btn-submit:active:not(:disabled) { transform: translateY(1px) scale(0.98); box-shadow: 0 4px 12px rgba(255, 90, 95, 0.2); }
+.btn-submit:disabled { background: #CBD5E1; color: #94A3B8; box-shadow: none; cursor: not-allowed; }
+
+.btn-action { background: var(--text-main); color: #fff; border: none; padding: 10px 18px; min-height: 40px; border-radius: 99px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s var(--spring); box-shadow: var(--shadow-sm); }
+.btn-action:hover { background: var(--secondary); color: var(--text-main); transform: translateY(-2px); }
+
+.btn-danger { background: var(--danger); color: #fff; border: none; padding: 14px; min-height: 48px; border-radius: var(--r-sm); font-weight: 900; cursor: pointer; width: 100%; transition: 0.3s var(--spring); }
+.btn-danger:hover { background: #E03329; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(255,59,48,0.2); }
+
+.btn-back { background: var(--surface-solid); color: var(--text-main); border: 1.5px solid var(--border); padding: 14px; min-height: 48px; border-radius: 99px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 12px; transition: 0.3s var(--spring); }
+.btn-back:hover { background: var(--bg); transform: translateY(-2px); }
+
+.search-box { margin-bottom: 20px; background: rgba(255,255,255,0.5) !important; border-radius: 99px !important; padding-left: 24px !important; }
+
+/* 訂單列表 (交錯出現動畫) */
+.order-item {
+  position: relative; border: 1px solid var(--glass-border); border-radius: var(--r-md); padding: 18px 20px 18px 24px; margin-bottom: 16px; background: var(--surface-solid); overflow: hidden; animation: slideIn 0.5s var(--spring) both; animation-delay: calc(var(--i, 0) * 60ms); box-shadow: var(--shadow-sm); transition: 0.3s var(--ease);
+}
+.order-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: rgba(15,23,42,0.1); }
+.order-item::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--danger); transition: 0.4s ease; }
+.order-item.is-paid::before { background: var(--success); }
+
+.order-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+.order-user { font-weight: 900; font-size: 1.1rem; color: var(--text-main); letter-spacing: -0.01em; }
+.order-details { font-size: 0.9rem; line-height: 1.6; color: var(--text-muted); }
+.order-details strong { color: var(--text-main); }
+
+/* 現代 Badge */
+.badge { padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; white-space: nowrap; transition: 0.3s var(--spring); letter-spacing: 0.03em; }
+.badge-paid, .badge.paid { background: var(--success-bg); color: var(--success); }
+.badge-unpaid { background: var(--danger-bg); color: var(--danger); }
+span.badge { cursor: default; }
+.badge:disabled { opacity: 0.5; cursor: wait; }
+button.badge:hover:not(:disabled) { filter: brightness(0.95); transform: translateY(-1px); }
+button.badge:active:not(:disabled) { transform: scale(0.92); }
+
+/* 後台管理區塊 */
+.admin-badge { background: var(--secondary); color: var(--text-main); font-size: 0.72rem; font-weight: 900; padding: 4px 10px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+.admin-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; box-shadow: var(--shadow-sm); transition: 0.3s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+.stat-num { font-size: 1.8rem; font-weight: 900; margin-top: 4px; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+.panel { border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px; margin-bottom: 20px; background: var(--surface-solid); box-shadow: var(--shadow-sm); }
+.panel.danger { border: 1px solid rgba(255,59,48,0.2); background: #FFF9F9; }
+
+/* 表格優化 */
+.admin-table, .menu-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; }
+.admin-table { min-width: 560px; }
+.admin-table th, .admin-table td { border-bottom: 1px solid var(--border); padding: 14px 10px; text-align: left; }
+.admin-table th { font-weight: 800; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; padding-bottom: 12px; }
+.admin-table tr:last-child td { border-bottom: none; }
+
+.menu-table td { padding: 16px 8px; border-bottom: 1px dashed rgba(15,23,42,0.1); }
+.menu-table tr:last-child td { border-bottom: none; }
+.menu-table td:last-child { text-align: right; font-weight: 900; font-size: 1.1rem; color: var(--text-main); font-variant-numeric: tabular-nums; }
+
+.empty { text-align: center; padding: 40px 20px; font-weight: 700; color: var(--text-muted); background: rgba(255,255,255,0.4); border-radius: var(--r-md); border: 1px dashed var(--border); }
+.loader, .retry-box { text-align: center; padding: 40px 20px; font-weight: 700; color: var(--text-muted); }
+
+/* 現代漸層環形 Loading 動畫 */
+.spinner {
+  display: inline-block; width: 22px; height: 22px; border: 3px solid rgba(15,23,42,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; vertical-align: middle; margin-right: 10px;
+}
+header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
+.btn-submit .spinner { border-color: rgba(255,255,255,0.3); border-top-color: #fff; width: 18px; height: 18px; border-width: 2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Glassmorphism Modals */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px;
+}
+.modal-card {
+  background: var(--surface-solid); border: 1px solid var(--glass-border); border-radius: var(--r-lg); padding: 32px 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: var(--shadow-lg); animation: modalPop 0.5s var(--spring); position: relative; overflow: hidden;
+}
+@keyframes modalPop { 0% { transform: scale(0.9) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+
+.modal-icon { font-size: 3.2rem; margin-bottom: 12px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.1)); animation: floatUp 0.6s var(--spring) 0.1s both; }
+.modal-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 10px; color: var(--text-main); }
+.modal-msg { font-size: 0.95rem; margin-bottom: 28px; color: var(--text-muted); white-space: pre-line; line-height: 1.6; }
+.modal-btn-group { display: flex; gap: 12px; }
+.modal-btn {
+  flex: 1; background: var(--text-main); color: #fff; border: none; padding: 14px; min-height: 52px; border-radius: 99px; font-weight: 800; cursor: pointer; transition: 0.3s var(--spring); box-shadow: var(--shadow-sm);
+}
+.modal-btn:hover { background: var(--secondary); color: var(--text-main); transform: translateY(-2px); }
+.modal-btn-cancel { background: var(--bg); color: var(--text-main); }
+.modal-btn-cancel:hover { background: #E2E8F0; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+@media (max-width: 480px) {
+  header { padding: calc(32px + env(safe-area-inset-top)) 20px 60px; }
+  .shop-badge { font-size: 2.2rem; }
+  .card { padding: 24px 20px; }
+}
+</style>
 </head>
 <body>
+<div class="conn-banner" id="connBanner">修但幾勒，正在重新連線…</div>
 
-  <div class="conn-banner" id="connBanner">⚠️ 目前資料可能不是最新，正在嘗試重新連線...</div>
-
-  <header>
+<header>
+  <div class="head-inner">
     <h1>🍱 今天要吃什麼勒</h1>
-    <div class="shop-badge" id="currentShopText"><span class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:4px;"></span>載入中...</div>
-    <button class="admin-entry-btn" onclick="openAdminModal()" title="後台管理">
-      <span>🔒</span> 管理員
-    </button>
-  </header>
-
-  <div class="tabs" id="mainTabs">
-    <button class="tab-btn active" onclick="switchTab('order')">我要點餐</button>
-    <button class="tab-btn" onclick="switchTab('status')">對帳與查詢</button>
-    <button class="tab-btn" onclick="switchTab('menu')">今日菜單</button>
+    <button class="admin-entry-btn" onclick="openAdminModal()" title="後台管理">🔒 管理員</button>
+    <div class="shop-label">今日店家</div>
+    <span class="shop-badge is-load" id="currentShopText"><span class="spinner"></span>載入中…</span>
   </div>
+</header>
 
-  <div class="container">
-    <div id="tab-order">
-      <div class="card">
-        <div class="card-title">填寫訂購資訊</div>
+<div class="tabs" id="mainTabs">
+  <button class="tab-btn active" onclick="switchTab('order')">我要點餐</button>
+  <button class="tab-btn" onclick="switchTab('status')">對帳與查詢</button>
+  <button class="tab-btn" onclick="switchTab('menu')">今日菜單</button>
+</div>
 
-        <div class="form-group">
-          <label for="groupSelect">組別 *</label>
-          <select id="groupSelect" onchange="updateNameOptions()">
-            <option value="">-- 請選擇組別 --</option>
-            <option value="第一組">第一組</option>
-            <option value="第二組">第二組</option>
-            <option value="第三組">第三組</option>
-            <option value="第四組">第四組</option>
-            <option value="第五組">第五組</option>
-            <option value="教師組">教師組</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="nameSelect">座號與姓名 *</label>
-          <select id="nameSelect" disabled>
-            <option value="">-- 請先選擇組別 --</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>餐點品項 (最多 5 項)</label>
-          <div id="itemList"></div>
-          <button type="button" class="btn-add-item" id="btnAddItem" onclick="addItemRow()">+ 新增一項餐點</button>
-        </div>
-
-        <div class="form-group">
-          <label>備註</label>
-          <input type="text" id="orderNote" placeholder="（不一定要填）">
-        </div>
-
-        <div class="summary-box">
-          <span>應付總金額</span>
-          <span class="total-price" id="totalDisplay">$0</span>
-        </div>
-
-        <button class="btn-submit" id="submitBtn" onclick="handleOrderSubmit()">確認送出點餐</button>
+<div class="container">
+  <!-- 點餐頁籤 -->
+  <div id="tab-order">
+    <div class="card">
+      <div class="card-title">填寫訂購資訊</div>
+      <div class="form-group">
+        <label for="groupSelect">組別 *</label>
+        <select id="groupSelect" onchange="updateNameOptions()">
+          <option value="">請選擇組別</option>
+          <option value="第一組">第一組</option>
+          <option value="第二組">第二組</option>
+          <option value="第三組">第三組</option>
+          <option value="第四組">第四組</option>
+          <option value="第五組">第五組</option>
+          <option value="教師組">教師組</option>
+        </select>
       </div>
-    </div>
-
-    <div id="tab-status" style="display:none;">
-      <div class="card">
-        <div class="card-title">
-          <span>點餐與繳費狀態</span>
-          <button class="btn-action" id="btnRefreshStatus" style="padding: 4px 10px; font-size: 0.8rem;" onclick="loadStatusData(true)">🔄 重新整理</button>
-        </div>
-        <div style="margin-bottom: 15px;">
-          <input type="text" id="statusFilter" class="search-box" placeholder="輸入姓名或組別搜尋..." oninput="filterStatus()">
-        </div>
-        <div id="statusList" class="loader">
-          <span class="spinner"></span> 載入紀錄中...
-        </div>
+      <div class="form-group">
+        <label for="nameSelect">座號與姓名 *</label>
+        <select id="nameSelect" disabled><option value="">請先選擇組別</option></select>
       </div>
-    </div>
-
-    <div id="tab-menu" style="display:none;">
-      <div class="card">
-        <div class="card-title">今日菜單總覽</div>
-        <div id="menuList" class="loader">
-          <span class="spinner"></span> 載入菜單中...
-        </div>
+      <div class="form-group">
+        <label>餐點品項（最多 5 項）</label>
+        <div id="itemList"></div>
+        <button type="button" class="btn-add-item" id="btnAddItem" onclick="addItemRow()">+ 新增一項餐點</button>
       </div>
-    </div>
-
-    <div id="tab-admin" style="display:none;">
-      <div class="card">
-        <div class="card-title">
-          <div>⚙️ 管理員控制台 <span class="admin-badge">已登入</span></div>
-        </div>
-
-        <div class="admin-stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">今日總訂單數</div>
-            <div class="stat-num" id="statOrderCount">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">訂單總金額</div>
-            <div class="stat-num" id="statTotalAmount">$0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">已收金額 (已繳)</div>
-            <div class="stat-num" style="color:var(--success);" id="statPaidAmount">$0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">未收金額 (未繳)</div>
-            <div class="stat-num" style="color:var(--danger);" id="statUnpaidAmount">$0</div>
-          </div>
-        </div>
-
-        <div style="background:#fafdfd; border:1px solid var(--accent); border-radius:8px; padding:14px; margin-bottom:15px;">
-          <label>🔄 切換今日店家</label>
-          <div style="display: flex; gap: 8px; margin-top: 6px;">
-            <select id="adminShopsSelect"></select>
-            <button class="btn-action" style="white-space: nowrap;" onclick="handleAdminChangeShop()">確認更換</button>
-          </div>
-        </div>
-
-        <div style="background:#fafdfd; border:1px solid var(--accent); border-radius:8px; padding:14px; margin-bottom:15px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <label style="margin:0;">📋 點餐人員對帳管理 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(點擊狀態按鈕可即時切換)</span></label>
-            <button class="btn-action" id="btnRefreshAdmin" style="padding: 3px 8px; font-size:0.75rem;" onclick="loadAdminOrders(true)">🔄 重新整理</button>
-          </div>
-          <div id="adminOrdersContainer" style="overflow-x: auto;">
-            <div class="loader"><span class="spinner"></span> 載入訂單中...</div>
-          </div>
-        </div>
-
-        <div style="background:#fff8f8; border:1px solid #fad2d2; border-radius:8px; padding:14px; margin-bottom:15px;">
-          <label style="color:var(--danger);">🗑️ 清空今日所有點餐紀錄</label>
-          <p style="font-size: 0.8rem; color: #777; margin-bottom: 8px;">
-            將會清除「今日誰點餐」中的所有訂購資料，並保留標題列。
-          </p>
-          <button class="btn-danger" onclick="handleAdminClearOrders()">清空今日所有紀錄</button>
-        </div>
-
-        <button class="btn-back" onclick="exitAdmin()">↩ 返回點餐頁面</button>
+      <div class="form-group">
+        <label for="orderNote">備註</label>
+        <input type="text" id="orderNote" placeholder="不一定要填">
       </div>
+      <div class="summary-box">
+        <span>應付總金額</span>
+        <span class="total-price" id="totalDisplay">$0</span>
+      </div>
+      <button class="btn-submit" id="submitBtn" onclick="handleOrderSubmit()">送出點餐</button>
     </div>
   </div>
 
-  <div class="modal-overlay" id="customModal">
-    <div class="modal-card">
-      <div class="modal-icon" id="modalIcon">🎉</div>
-      <div class="modal-title" id="modalTitle">提示</div>
-      <div class="modal-msg" id="modalMsg">訊息內容</div>
-      <div class="modal-btn-group">
-        <button class="modal-btn modal-btn-cancel" id="modalCancelBtn" style="display:none;" onclick="closeModal()">取消</button>
-        <button class="modal-btn" id="modalConfirmBtn" onclick="closeModal()">賀哦，哇災！</button>
+  <!-- 狀態查詢頁籤 -->
+  <div id="tab-status" style="display:none;">
+    <div class="card">
+      <div class="card-title">
+        <span>點餐與繳費狀態</span>
+        <button class="btn-action" id="btnRefreshStatus" onclick="loadStatusData(true)">重新整理</button>
       </div>
+      <input type="text" id="statusFilter" class="search-box" placeholder="輸入姓名或組別搜尋" oninput="filterStatus()">
+      <div id="statusList" class="loader"><span class="spinner"></span>載入紀錄中…</div>
     </div>
   </div>
 
-  <div class="modal-overlay" id="adminLoginModal" style="z-index: 1000;">
-    <div class="modal-card">
-      <div class="modal-icon">🔐</div>
-      <div class="modal-title">管理員身份驗證</div>
-      <div class="form-group" style="margin-top: 12px; text-align: left;">
-        <label>請輸入管理密碼：</label>
-        <input type="password" id="adminPasswordInput" placeholder="輸入後台密碼" onkeypress="if(event.key === 'Enter') submitAdminLogin()">
-      </div>
-      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
-        <button class="modal-btn modal-btn-cancel" style="padding: 8px 16px;" onclick="closeAdminModal()">取消</button>
-        <button class="modal-btn" style="padding: 8px 16px;" onclick="submitAdminLogin()">登入後台</button>
-      </div>
+  <!-- 菜單頁籤 -->
+  <div id="tab-menu" style="display:none;">
+    <div class="card">
+      <div class="card-title">今日菜單</div>
+      <div id="menuList" class="loader"><span class="spinner"></span>載入菜單中…</div>
     </div>
   </div>
 
-  <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec"; 
-    const ADMIN_PASSWORD = "6767"; 
+  <!-- 後台管理頁籤 -->
+  <div id="tab-admin" style="display:none;">
+    <div class="card">
+      <div class="card-title">
+        <div>管理員控制台<span class="admin-badge">已登入</span></div>
+      </div>
+      <div class="admin-stats-grid">
+        <div class="stat-card"><div class="stat-label">今日訂單數</div><div class="stat-num" id="statOrderCount">0</div></div>
+        <div class="stat-card"><div class="stat-label">訂單總金額</div><div class="stat-num" id="statTotalAmount">$0</div></div>
+        <div class="stat-card"><div class="stat-label">已收金額</div><div class="stat-num" style="color:var(--success)" id="statPaidAmount">$0</div></div>
+        <div class="stat-card"><div class="stat-label">未收金額</div><div class="stat-num" style="color:var(--danger)" id="statUnpaidAmount">$0</div></div>
+      </div>
+      <div class="panel">
+        <label>切換今日店家</label>
+        <div style="display:flex;gap:12px;margin-top:8px">
+          <select id="adminShopsSelect"></select>
+          <button class="btn-action" style="white-space:nowrap; height: 52px" onclick="handleAdminChangeShop()">確認更換</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px">
+          <label style="margin:0">對帳管理 <span style="font-size:0.75rem;font-weight:400;opacity:0.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
+          <button class="btn-action" id="btnRefreshAdmin" style="padding:6px 14px" onclick="loadAdminOrders(true)">重新整理</button>
+        </div>
+        <div id="adminOrdersContainer" style="overflow-x:auto"><div class="loader"><span class="spinner"></span>載入訂單中…</div></div>
+      </div>
+      <div class="panel danger">
+        <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
+        <p style="font-size:0.85rem;margin-bottom:16px;color:var(--text-muted)">會清除「今日誰點餐」的所有訂購資料，標題列會保留。</p>
+        <button class="btn-danger" onclick="handleAdminClearOrders()">清空今日紀錄</button>
+      </div>
+      <button class="btn-back" onclick="exitAdmin()">返回點餐頁面</button>
+    </div>
+  </div>
+</div>
 
-    // ====== 連線相關調整參數（可依需求微調）======
-    const REQUEST_TIMEOUT_MS = 30000;   // 單次請求逾時：20s → 30s，行動網路較常見的延遲更寬容
-    const MAX_RETRIES = 2;              // 失敗重試次數
-    const RETRY_BASE_DELAY_MS = 1200;   // 重試退避基準時間（會隨次數遞增）
+<!-- 提示彈窗 -->
+<div class="modal-overlay" id="customModal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-icon" id="modalIcon">🎉</div>
+    <div class="modal-title" id="modalTitle">提示</div>
+    <div class="modal-msg" id="modalMsg"></div>
+    <div class="modal-btn-group">
+      <button class="modal-btn modal-btn-cancel" id="modalCancelBtn" style="display:none" onclick="closeModal()">取消</button>
+      <button class="modal-btn" id="modalConfirmBtn" onclick="closeModal()">賀哦，哇災！</button>
+    </div>
+  </div>
+</div>
 
-    const groupMembersData = {
-      "第一組": ["04 舒香雅", "10 施美美", "12 王麗敏", "18 江珈宜", "21 林彩葳", "26 林瑋妮"],
-      "第二組": ["08 吳同祐", "09 劉靜文", "11 黃昱瑄", "20 郭貞纓", "27 陳玟妤", "29 簡雅珍"],
-      "第三組": ["01 楊宜靜", "03 陳昱寧", "13 莊芯卉", "15 何婧湘", "17 羅懿", "19 廖慧蘭"],
-      "第四組": ["06 邱韻如", "07 汪維嘉", "22 薛佩𠊙", "23 劉育均", "24 徐皜軒", "28 謝宛真"],
-      "第五組": ["02 吳欣珉", "05 鍾涵茹", "14 劉曉珊", "16 薛席婷", "25 陳怡芳", "30 張語宸"],
-      "教師組": ["助教", "老師"]
-    };
+<!-- 後台登入彈窗 -->
+<div class="modal-overlay" id="adminLoginModal" style="z-index:2100" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-icon">🔐</div>
+    <div class="modal-title">管理員驗證</div>
+    <div class="form-group" style="margin-top:20px;text-align:left">
+      <label for="adminPasswordInput">管理密碼</label>
+      <input type="password" id="adminPasswordInput" placeholder="請輸入後台密碼" onkeypress="if(event.key==='Enter')submitAdminLogin()">
+    </div>
+    <div class="modal-btn-group">
+      <button class="modal-btn modal-btn-cancel" onclick="closeAdminModal()">取消</button>
+      <button class="modal-btn" onclick="submitAdminLogin()">登入後台</button>
+    </div>
+  </div>
+</div>
 
-    let currentShop = '';
-    let menuItems = [];
-    let allOrders = [];
-    let allShopsList = [];
-    let adminToken = '';
-    let isFetchingData = false;
-    let searchTimeout = null;
+<!-- 原封不動的 JavaScript 邏輯 -->
+<script>
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
+const ADMIN_PASSWORD = "6767";
+const REQUEST_TIMEOUT_MS = 30000, MAX_RETRIES = 2, RETRY_BASE_DELAY_MS = 1200;
 
-    function escapeHTML(str) {
-      if (str === null || str === undefined) return '';
-      return String(str).replace(/[&<>'"]/g, tag => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-      }[tag] || tag));
-    }
+const groupMembersData = {
+  "第一組": ["04 舒香雅","10 施美美","12 王麗敏","18 江珈宜","21 林彩葳","26 林瑋妮"],
+  "第二組": ["08 吳同祐","09 劉靜文","11 黃昱瑄","20 郭貞纓","27 陳玟妤","29 簡雅珍"],
+  "第三組": ["01 楊宜靜","03 陳昱寧","13 莊芯卉","15 何婧湘","17 羅懿","19 廖慧蘭"],
+  "第四組": ["06 邱韻如","07 汪維嘉","22 薛佩𠊙","23 劉育均","24 徐皜軒","28 謝宛真"],
+  "第五組": ["02 吳欣珉","05 鍾涵茹","14 劉曉珊","16 薛席婷","25 陳怡芳","30 張語宸"],
+  "教師組": ["助教","老師"]
+};
 
-    function updateNameOptions() {
-      const groupSelect = document.getElementById("groupSelect");
-      const nameSelect = document.getElementById("nameSelect");
-      const selectedGroup = groupSelect.value;
-      nameSelect.innerHTML = "";
+let currentShop = '', menuItems = [], allOrders = [], allShopsList = [], adminToken = '';
+let isFetchingData = false, searchTimeout = null, modalCallback = null;
+const $ = id => document.getElementById(id);
 
-      if (!selectedGroup || !groupMembersData[selectedGroup]) {
-        nameSelect.innerHTML = '<option value="">-- 請先選擇組別 --</option>';
-        nameSelect.disabled = true;
-        return;
-      }
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t] || t));
+}
 
-      nameSelect.innerHTML = '<option value="">-- 請選擇座號姓名 --</option>';
-      groupMembersData[selectedGroup].forEach(member => {
-        const opt = document.createElement("option");
-        opt.value = member;
-        opt.textContent = member;
-        nameSelect.appendChild(opt);
+function updateNameOptions() {
+  const sel = $("nameSelect"), g = $("groupSelect").value;
+  sel.innerHTML = "";
+  if (!g || !groupMembersData[g]) {
+    sel.innerHTML = '<option value="">請先選擇組別</option>';
+    sel.disabled = true;
+    return;
+  }
+  sel.innerHTML = '<option value="">請選擇座號姓名</option>';
+  groupMembersData[g].forEach(m => {
+    const o = document.createElement("option");
+    o.value = m; o.textContent = m; sel.appendChild(o);
+  });
+  sel.disabled = false;
+}
+
+async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    return new Promise((resolve, reject) => {
+      let runner = google.script.run
+        .withSuccessHandler(res => resolve(res))
+        .withFailureHandler(err => reject(new Error(err.message || err)));
+      if (action === 'getInitialData') runner.getInitialData();
+      else if (action === 'getOrdersAndPaymentStatus') runner.getOrdersAndPaymentStatus();
+      else if (action === 'submitOrder') runner.submitOrder(data.payload ? JSON.parse(data.payload) : data);
+      else if (action === 'adminTogglePaid') runner.adminTogglePaid(data.password, data.rowIndex, data.newStatus);
+      else if (action === 'adminChangeShop') runner.adminChangeShop(data.password, data.newShop);
+      else if (action === 'adminClearAllOrders') runner.adminClearAllOrders(data.password);
+      else reject(new Error("未知的動作: " + action));
+    });
+  }
+  let lastErr = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      const response = await fetch(GAS_API_URL, {
+        method: 'POST', redirect: 'follow', cache: 'no-store',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: action, ...data }),
+        signal: controller.signal
       });
-      nameSelect.disabled = false;
-    }
-
-    // ====== 核心改動：apiRequest ======
-    // 1. timeout 拉長並可調整
-    // 2. cache: 'no-store'，避免行動網路的中繼快取（電信商 / 瀏覽器）快取住失敗回應
-    // 3. 重試改成「遞增退避」而非固定 1 秒
-    // 4. 偵測回傳內容若是 HTML（代表被導去 Google 登入頁，通常是部署權限問題）給出明確訊息
-    // 5. 連線失敗時觸發畫面上的紅色提示 banner
-    async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        return new Promise((resolve, reject) => {
-          let runner = google.script.run
-            .withSuccessHandler(res => resolve(res))
-            .withFailureHandler(err => reject(new Error(err.message || err)));
-
-          if (action === 'getInitialData') runner.getInitialData();
-          else if (action === 'getOrdersAndPaymentStatus') runner.getOrdersAndPaymentStatus();
-          else if (action === 'submitOrder') runner.submitOrder(data.payload ? JSON.parse(data.payload) : data);
-          else if (action === 'adminTogglePaid') runner.adminTogglePaid(data.password, data.rowIndex, data.newStatus);
-          else if (action === 'adminChangeShop') runner.adminChangeShop(data.password, data.newShop);
-          else if (action === 'adminClearAllOrders') runner.adminClearAllOrders(data.password);
-          else reject(new Error("未知的動作: " + action));
-        });
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
+      const trimmed = (await response.text()).trim();
+      if (trimmed.startsWith('<')) throw new Error("伺服器回傳了非預期的內容，請確認 Apps Script 部署權限設定為「任何人」，且已重新部署最新版本。");
+      let jsonResult;
+      try { jsonResult = JSON.parse(trimmed); } catch (e) { throw new Error("伺服器回傳格式異常，請稍後再試"); }
+      hideConnBanner();
+      return jsonResult;
+    } catch (err) {
+      lastErr = err;
+      if (attempt === retries) {
+        showConnBanner();
+        throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查手機網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
       }
-
-      let lastErr = null;
-
-      for (let attempt = 0; attempt <= retries; attempt++) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-          const response = await fetch(GAS_API_URL, {
-            method: 'POST',
-            redirect: 'follow',
-            cache: 'no-store',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: action, ...data }),
-            signal: controller.signal
-          });
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
-
-          const textResult = await response.text();
-
-          // 偵測是否被導向 Google 登入頁 / 權限頁（回傳的是 HTML 而非 JSON）
-          const trimmed = textResult.trim();
-          if (trimmed.startsWith('<')) {
-            throw new Error("伺服器回傳了非預期的內容，請確認 Apps Script 部署權限設定為「任何人」，且已重新部署最新版本。");
-          }
-
-          let jsonResult;
-          try {
-            jsonResult = JSON.parse(trimmed);
-          } catch (e) {
-            throw new Error("伺服器回傳格式異常，請稍後再試");
-          }
-
-          hideConnBanner();
-          return jsonResult;
-        } catch (err) {
-          lastErr = err;
-          if (attempt === retries) {
-            showConnBanner();
-            throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查手機網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
-          }
-          // 遞增退避：1.2s, 2.4s, 3.6s...
-          await new Promise(resolve => setTimeout(resolve, RETRY_BASE_DELAY_MS * (attempt + 1)));
-        }
-      }
-      throw lastErr || new Error('無法連線至伺服器。');
+      await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1)));
     }
+  }
+  throw lastErr || new Error('無法連線至伺服器。');
+}
+function showConnBanner() { $('connBanner').classList.add('show'); }
+function hideConnBanner() { $('connBanner').classList.remove('show'); }
 
-    function showConnBanner() {
-      const el = document.getElementById('connBanner');
-      if (el) el.classList.add('show');
+function showModal(title, msg, icon = '🎉', callback = null) {
+  $('modalTitle').innerText = title; $('modalMsg').innerText = msg; $('modalIcon').innerText = icon;
+  $('modalCancelBtn').style.display = 'none';
+  const b = $('modalConfirmBtn'); b.innerText = '賀哦，哇災！'; b.onclick = closeModal;
+  modalCallback = callback;
+  $('customModal').style.display = 'flex'; b.focus();
+}
+function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
+  $('modalTitle').innerText = title; $('modalMsg').innerText = msg; $('modalIcon').innerText = icon;
+  $('modalCancelBtn').style.display = 'inline-block';
+  const b = $('modalConfirmBtn'); b.innerText = '確定';
+  b.onclick = function() { closeModal(); if (onConfirm) onConfirm(); };
+  modalCallback = null;
+  $('customModal').style.display = 'flex';
+}
+function closeModal() {
+  $('customModal').style.display = 'none';
+  if (modalCallback) { modalCallback(); modalCallback = null; }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeAdminModal(); }
+});
+
+window.onload = function() {
+  const g = localStorage.getItem('lunchApp_group'), n = localStorage.getItem('lunchApp_name');
+  if (g) {
+    $('groupSelect').value = g; updateNameOptions();
+    if (n) $('nameSelect').value = n;
+  }
+  const cached = localStorage.getItem('lunchApp_cachedData');
+  if (cached) { try { applyDataToUI(JSON.parse(cached)); } catch (e) {} }
+  loadInitialData();
+};
+
+function applyDataToUI(res) {
+  currentShop = res.shop || '尚未設定店家';
+  menuItems = res.items || [];
+  allShopsList = res.allShops || [];
+  if (res.orders) allOrders = res.orders;
+  const st = $('currentShopText');
+  st.className = 'shop-badge'; st.innerText = currentShop;
+  renderMenuList();
+  if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows();
+  populateAdminShopsSelect();
+  renderOrders(allOrders);
+  if ($('tab-admin').style.display === 'block') renderAdminTable(allOrders);
+}
+
+function menuOptionsHTML() {
+  let o = '<option value="" data-price="0">請選擇餐點品項</option>';
+  menuItems.forEach(i => { o += `<option value="${escapeHTML(i.name)}" data-price="${i.price}">${escapeHTML(i.name)} ($${i.price})</option>`; });
+  return o;
+}
+function updateExistingItemRows() {
+  const options = menuOptionsHTML();
+  document.querySelectorAll('.item-row select').forEach(s => { const v = s.value; s.innerHTML = options; s.value = v; });
+  calculateTotal();
+}
+
+async function loadInitialData() {
+  if (isFetchingData) return;
+  isFetchingData = true;
+  try {
+    const res = await apiRequest('getInitialData');
+    if (res && res.success) {
+      localStorage.setItem('lunchApp_cachedData', JSON.stringify(res));
+      applyDataToUI(res);
+    } else if (res && !res.success) throw new Error(res.message || '讀取資料失敗');
+  } catch (err) {
+    if (menuItems.length === 0) {
+      const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '連線失敗';
+      $('menuList').innerHTML = '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) + '<br><button class="btn-action retry-btn" style="margin-top:12px" onclick="loadInitialData()">重新嘗試</button></div>';
     }
-    function hideConnBanner() {
-      const el = document.getElementById('connBanner');
-      if (el) el.classList.remove('show');
-    }
+  } finally { isFetchingData = false; }
+}
 
-    function showModal(title, msg, icon = '🎉', callback = null) {
-      document.getElementById('modalTitle').innerText = title;
-      document.getElementById('modalMsg').innerText = msg;
-      document.getElementById('modalIcon').innerText = icon;
-      document.getElementById('modalCancelBtn').style.display = 'none';
-      const confirmBtn = document.getElementById('modalConfirmBtn');
-      confirmBtn.innerText = '賀哦，哇災！';
-      confirmBtn.onclick = closeModal;
-      modalCallback = callback;
-      document.getElementById('customModal').style.display = 'flex';
-    }
+function switchTab(tabId) {
+  ['order', 'status', 'menu', 'admin'].forEach(t => $('tab-' + t).style.display = 'none');$('mainTabs').style.display = 'flex';
+  const btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  const idx = { order: 0, status: 1, menu: 2 }[tabId];
+  $('tab-' + tabId).style.display = 'block';
+  if (idx !== undefined) btns[idx].classList.add('active');
+  if (tabId === 'status') { renderOrders(allOrders); loadStatusData(false); }
+}
 
-    function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
-      document.getElementById('modalTitle').innerText = title;
-      document.getElementById('modalMsg').innerText = msg;
-      document.getElementById('modalIcon').innerText = icon;
-      document.getElementById('modalCancelBtn').style.display = 'inline-block';
-      const confirmBtn = document.getElementById('modalConfirmBtn');
-      confirmBtn.innerText = '確定';
-      confirmBtn.onclick = function() { closeModal(); if (onConfirm) onConfirm(); };
-      modalCallback = null;
-      document.getElementById('customModal').style.display = 'flex';
-    }
+function addItemRow() {
+  const c = $('itemList');
+  if (c.querySelectorAll('.item-row').length >= 5) return showModal('提醒', '最多只能點選 5 項餐點！', 'ℹ️');
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `<select onchange="calculateTotal()" aria-label="餐點品項">${menuOptionsHTML()}</select><span class="price-tag">$0</span><button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除此項" aria-label="移除此項">✕</button>`;
+  c.appendChild(row);
+  if (c.querySelectorAll('.item-row').length >= 5) $('btnAddItem').style.display = 'none';
+}
+function removeItemRow(btn) {
+  btn.parentElement.remove();
+  $('btnAddItem').style.display = 'block';
+  calculateTotal();
+}
+function calculateTotal() {
+  let total = 0;
+  document.querySelectorAll('.item-row').forEach(r => {
+    const s = r.querySelector('select');
+    const price = Number(s.options[s.selectedIndex]?.getAttribute('data-price')) || 0;
+    r.querySelector('.price-tag').innerText = '$' + price;
+    total += price;
+  });
+  const el = $('totalDisplay');
+  if (el.innerText !== '$' + total) {
+    el.innerText = '$' + total;
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  }
+  return total;
+}
 
-    let modalCallback = null;
-    function closeModal() {
-      document.getElementById('customModal').style.display = 'none';
-      if (modalCallback) { modalCallback(); modalCallback = null; }
-    }
-
-    window.onload = function() {
-      const savedGroup = localStorage.getItem('lunchApp_group');
-      const savedName = localStorage.getItem('lunchApp_name');
-
-      if (savedGroup) {
-        document.getElementById('groupSelect').value = savedGroup;
-        updateNameOptions();
-        if (savedName) document.getElementById('nameSelect').value = savedName;
-      }
-
-      const cachedData = localStorage.getItem('lunchApp_cachedData');
-      if (cachedData) {
-        try {
-          const res = JSON.parse(cachedData);
-          applyDataToUI(res);
-        } catch(e) {}
-      }
-
-      loadInitialData();
-    };
-
-    function applyDataToUI(res) {
-      currentShop = res.shop || '尚未設定店家';
-      menuItems = res.items || [];
-      allShopsList = res.allShops || [];
-      if (res.orders) allOrders = res.orders;
-
-      document.getElementById('currentShopText').innerText = '今日店家：' + currentShop;
-      renderMenuList();
-
-      if(document.getElementById('itemList').children.length === 0) {
-        addItemRow();
-      } else {
-        updateExistingItemRows();
-      }
-
-      populateAdminShopsSelect();
-      renderOrders(allOrders);
-      if (document.getElementById('tab-admin').style.display === 'block') {
-         renderAdminTable(allOrders);
-      }
-    }
-
-    function updateExistingItemRows() {
-      let options = '<option value="" data-price="0">-- 請選擇餐點品項 --</option>';
-      menuItems.forEach(item => {
-        options += `<option value="${escapeHTML(item.name)}" data-price="${item.price}">${escapeHTML(item.name)} ($${item.price})</option>`;
+async function handleOrderSubmit() {
+  const group = $('groupSelect').value, name =$('nameSelect').value;
+  if (!group || !name) return showModal('請確認', '請選擇組別與姓名！', '⚠️');
+  const selectedItems = [];
+  document.querySelectorAll('.item-row select').forEach(s => { if (s.value) selectedItems.push(s.value); });
+  if (selectedItems.length === 0) return showModal('請確認', '請至少選擇一項餐點！', '⚠️');
+  localStorage.setItem('lunchApp_group', group);
+  localStorage.setItem('lunchApp_name', name);
+  const btn = $('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-width:2px;width:18px;height:18px;border-top-color:#fff"></span>送出中…';
+  const payload = { shop: currentShop, group, name, note: $('orderNote').value.trim(), totalAmount: calculateTotal(), items: selectedItems };
+  try {
+    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
+    if (res && res.success) {
+      showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', function() {
+        $('orderNote').value = '';$('itemList').innerHTML = '';
+        addItemRow(); calculateTotal(); loadStatusData(true); switchTab('status');
       });
-      document.querySelectorAll('.item-row select').forEach(select => {
-        const val = select.value;
-        select.innerHTML = options;
-        select.value = val;
-      });
-      calculateTotal();
+    } else showModal('送出失敗', res ? res.message : '發生未知錯誤', '❌');
+  } catch (err) { showModal('系統錯誤', err.message, '❌'); }
+  finally { btn.disabled = false; btn.innerText = '送出點餐'; }
+}
+
+async function loadStatusData(forceRefresh = false) {
+  if (!forceRefresh && allOrders.length > 0) renderOrders(allOrders);
+  try {
+    const res = await apiRequest('getOrdersAndPaymentStatus');
+    if (res && res.success) { allOrders = res.data || []; updateCache('orders', allOrders); renderOrders(allOrders); }
+  } catch (err) {
+    if (allOrders.length === 0) {
+      $('statusList').innerHTML = '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) + '<br><button class="btn-action retry-btn" style="margin-top:12px" onclick="loadStatusData(true)">重新嘗試</button></div>';
     }
+  }
+}
 
-    // 載入初始資料：加上失敗重試按鈕、避免使用者卡在無限轉圈畫面
-    async function loadInitialData() {
-      if(isFetchingData) return;
-      isFetchingData = true;
-      try {
-        const res = await apiRequest('getInitialData');
-        if (res && res.success) {
-          localStorage.setItem('lunchApp_cachedData', JSON.stringify(res));
-          applyDataToUI(res);
-        } else if (res && !res.success) {
-          throw new Error(res.message || '讀取資料失敗');
-        }
-      } catch (err) {
-        if (menuItems.length === 0) {
-          document.getElementById('currentShopText').innerHTML = '⚠️ 連線失敗';
-          const menuDiv = document.getElementById('menuList');
-          if (menuDiv) {
-            menuDiv.innerHTML =
-              '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) +
-              '<br><button class="btn-action retry-btn" onclick="loadInitialData()">🔄 重新嘗試</button></div>';
-          }
-        }
-      } finally {
-        isFetchingData = false;
-      }
-    }
+function updateCache(key, value) {
+  try {
+    let c = JSON.parse(localStorage.getItem('lunchApp_cachedData') || '{}');
+    c[key] = value;
+    localStorage.setItem('lunchApp_cachedData', JSON.stringify(c));
+  } catch (e) {}
+}
 
-    function switchTab(tabId) {
-      document.getElementById('tab-order').style.display = 'none';
-      document.getElementById('tab-status').style.display = 'none';
-      document.getElementById('tab-menu').style.display = 'none';
-      document.getElementById('tab-admin').style.display = 'none';
-      document.getElementById('mainTabs').style.display = 'flex';
+function renderOrders(orders) {
+  const div = $('statusList');
+  div.className = '';
+  if (!orders || orders.length === 0) { div.innerHTML = '<div class="empty">還沒有人點餐，你可以是第一個！</div>'; return; }
+  div.innerHTML = orders.map((o, i) => {
+    const badge = o.paid ? '<span class="badge badge-paid">✔ 已繳費</span>' : '<span class="badge badge-unpaid">✖ 未繳費</span>';
+    const g = escapeHTML(o.group);
+    return `<div class="order-item ${o.paid ? 'is-paid' : ''}" style="--i:${Math.min(i, 12)}">
+      <div class="order-header"><span class="order-user">${g ? '[' + g + '] ' : ''}${escapeHTML(o.name)}</span>${badge}</div>
+      <div class="order-details"><strong>金額：</strong>$${o.total} ｜ <strong>時間：</strong>${escapeHTML(o.time) || '今日'}<br>
+      <strong>品項：</strong>${escapeHTML(o.itemsSummary) || '無'}${o.note ? '<br><strong>備註：</strong>' + escapeHTML(o.note) : ''}</div>
+    </div>`;
+  }).join('');
+}
 
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+function filterStatus() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    const kw = $('statusFilter').value.toLowerCase();
+    renderOrders(allOrders.filter(o => (o.name && o.name.toLowerCase().includes(kw)) || (o.group && o.group.toString().toLowerCase().includes(kw))));
+  }, 300);
+}
 
-      if (tabId === 'order') {
-        document.getElementById('tab-order').style.display = 'block';
-        document.querySelectorAll('.tab-btn')[0].classList.add('active');
-      } else if (tabId === 'status') {
-        document.getElementById('tab-status').style.display = 'block';
-        document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        renderOrders(allOrders);
-        loadStatusData(false); // 進入時背景靜默同步
-      } else if (tabId === 'menu') {
-        document.getElementById('tab-menu').style.display = 'block';
-        document.querySelectorAll('.tab-btn')[2].classList.add('active');
-      }
-    }
+function renderMenuList() {
+  const div = $('menuList');
+  div.className = '';
+  if (menuItems.length === 0) { div.innerHTML = '<div class="empty">查無今日店家的菜單資料</div>'; return; }
+  div.innerHTML = '<table class="menu-table">' + menuItems.map(i => `<tr><td>${escapeHTML(i.name)}</td><td>$${i.price}</td></tr>`).join('') + '</table>';
+}
 
-    function addItemRow() {
-      const container = document.getElementById('itemList');
-      const rows = container.querySelectorAll('.item-row');
-      if (rows.length >= 5) {
-        showModal('提醒', '最多只能點選 5 項餐點！', 'ℹ️');
-        return;
-      }
+function openAdminModal() {
+  $('adminPasswordInput').value = '';$('adminLoginModal').style.display = 'flex';
+  setTimeout(() => $('adminPasswordInput').focus(), 100);
+}
+function closeAdminModal() { $('adminLoginModal').style.display = 'none'; }
+function submitAdminLogin() {
+  const pwd = $('adminPasswordInput').value;
+  if (pwd !== ADMIN_PASSWORD) return showModal('毋對喔', '密碼錯誤，請再試一次', '❌');
+  adminToken = pwd; closeAdminModal(); enterAdminPanel();
+}
+function enterAdminPanel() {
+  ['order', 'status', 'menu'].forEach(t => $('tab-' + t).style.display = 'none');
+  $('mainTabs').style.display = 'none';$('tab-admin').style.display = 'block';
+  window.scrollTo(0, 0);
+  populateAdminShopsSelect();
+  renderAdminTable(allOrders);
+  loadAdminOrders(false);
+}
+function exitAdmin() { $('tab-admin').style.display = 'none'; switchTab('order'); }
 
-      const row = document.createElement('div');
-      row.className = 'item-row';
-      let options = '<option value="" data-price="0">-- 請選擇餐點品項 --</option>';
-      menuItems.forEach(item => {
-        options += `<option value="${escapeHTML(item.name)}" data-price="${item.price}">${escapeHTML(item.name)} ($${item.price})</option>`;
-      });
+function populateAdminShopsSelect() {
+  const sel = $('adminShopsSelect');
+  if (!sel) return;
+  sel.innerHTML = '';
+  allShopsList.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    if (s === currentShop) o.selected = true;
+    sel.appendChild(o);
+  });
+}
 
-      row.innerHTML = `
-        <select onchange="calculateTotal()">${options}</select>
-        <span class="price-tag">$0</span>
-        <button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除此項">✕</button>
-      `;
-      container.appendChild(row);
-      if (container.querySelectorAll('.item-row').length >= 5) {
-        document.getElementById('btnAddItem').style.display = 'none';
-      }
-    }
+function handleAdminChangeShop() {
+  const newShop = $('adminShopsSelect').value;
+  if (!newShop) return;
+  showConfirmModal('切換確認', `確定切換店家為【${newShop}】嗎？`, '🏪', async function() {
+    try {
+      const res = await apiRequest('adminChangeShop', { password: adminToken, newShop });
+      showModal(res && res.success ? '成功' : '失敗', res ? res.message : '', res && res.success ? '✅' : '❌', function() { if (res && res.success) loadInitialData(); });
+    } catch (err) { showModal('操作失敗', err.message, '❌'); }
+  });
+}
 
-    function removeItemRow(btn) {
-      btn.parentElement.remove();
-      document.getElementById('btnAddItem').style.display = 'block';
-      calculateTotal();
-    }
+async function handleTogglePaid(orderId, btn) {
+  if (btn.disabled) return;
+  const o = allOrders.find(x => x.rowIndex === orderId);
+  if (!o) return;
+  const original = o.paid, next = !original;
+  o.paid = next; updateBadgeUI(btn, next); updateAdminStatistics(allOrders); btn.disabled = true;
+  try {
+    const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex: orderId, newStatus: next });
+    if (!res || !res.success) throw new Error((res && res.message) || "同步更新失敗");
+    updateCache('orders', allOrders);
+  } catch (err) {
+    o.paid = original; updateBadgeUI(btn, original); updateAdminStatistics(allOrders);
+    showModal('更新失敗', err.message, '❌');
+  } finally { btn.disabled = false; }
+}
 
-    function calculateTotal() {
-      let total = 0;
-      document.querySelectorAll('.item-row').forEach(r => {
-        const select = r.querySelector('select');
-        const price = Number(select.options[select.selectedIndex]?.getAttribute('data-price')) || 0;
-        r.querySelector('.price-tag').innerText = '$' + price;
-        total += price;
-      });
-      document.getElementById('totalDisplay').innerText = '$' + total;
-      return total;
-    }
+function updateBadgeUI(btn, isPaid) {
+  btn.className = isPaid ? 'badge badge-paid' : 'badge badge-unpaid';
+  btn.innerText = isPaid ? '✔ 已付' : '✖ 未付';
+}
 
-    async function handleOrderSubmit() {
-      const group = document.getElementById('groupSelect').value;
-      const name = document.getElementById('nameSelect').value;
-      if (!group || !name) return showModal('請確認', '請選擇組別與姓名！', '⚠️');
+function renderAdminTable(orders) {
+  const c = $('adminOrdersContainer');
+  if (!orders || orders.length === 0) { c.innerHTML = '<div class="empty">今日尚無點餐紀錄</div>'; updateAdminStatistics([]); return; }
+  let h = '<table class="admin-table"><tr><th>時間</th><th>組別/姓名</th><th>金額</th><th>品項與備註</th><th>狀態(點擊更改)</th></tr>';
+  orders.forEach(o => {
+    h += `<tr>
+      <td style="white-space:nowrap;font-size:0.8rem;color:var(--text-muted)">${escapeHTML(o.time)}</td>
+      <td style="font-weight:700">${escapeHTML(o.group)}<br>${escapeHTML(o.name)}</td>
+      <td style="font-weight:900">$${o.total}</td>
+      <td style="font-size:0.85rem">${escapeHTML(o.itemsSummary)}${o.note ? '<br><span style="color:var(--danger)">備註: ' + escapeHTML(o.note) + '</span>' : ''}</td>
+      <td><button class="badge ${o.paid ? 'badge-paid' : 'badge-unpaid'}" onclick="handleTogglePaid(${o.rowIndex}, this)">${o.paid ? '✔ 已付' : '✖ 未付'}</button></td>
+    </tr>`;
+  });
+  c.innerHTML = h + '</table>';
+  updateAdminStatistics(orders);
+}
 
-      const selectedItems = [];
-      document.querySelectorAll('.item-row select').forEach(s => { if (s.value) selectedItems.push(s.value); });
-      if (selectedItems.length === 0) return showModal('請確認', '請至少選擇一項餐點！', '⚠️');
+function updateAdminStatistics(orders) {
+  let cnt = 0, tot = 0, pd = 0, un = 0;
+  orders.forEach(o => { cnt++; tot += o.total; if (o.paid) pd += o.total; else un += o.total; });
+  $('statOrderCount').innerText = cnt; $('statTotalAmount').innerText = '$' + tot;
+  $('statPaidAmount').innerText = '$' + pd; $('statUnpaidAmount').innerText = '$' + un;
+}
 
-      localStorage.setItem('lunchApp_group', group);
-      localStorage.setItem('lunchApp_name', name);
+async function loadAdminOrders(force) {
+  const btn = $('btnRefreshAdmin');
+  if (btn) { btn.disabled = true; btn.innerText = '整理中…'; }
+  try {
+    const res = await apiRequest('getOrdersAndPaymentStatus');
+    if (res && res.success) { allOrders = res.data || []; updateCache('orders', allOrders); renderAdminTable(allOrders); }
+    else throw new Error(res ? res.message : "讀取失敗");
+  } catch (err) { showModal('讀取失敗', err.message, '❌'); }
+  finally { if (btn) { btn.disabled = false; btn.innerText = '重新整理'; } }
+}
 
-      const btn = document.getElementById('submitBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;"></span> 送出處理中...';
-
-      const payload = {
-        shop: currentShop, group: group, name: name,
-        note: document.getElementById('orderNote').value.trim(),
-        totalAmount: calculateTotal(), items: selectedItems
-      };
-
-      try {
-        const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
-        if (res && res.success) {
-          showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', function() {
-            document.getElementById('orderNote').value = '';
-            document.getElementById('itemList').innerHTML = '';
-            addItemRow();
-            calculateTotal();
-            loadStatusData(true);
-            switchTab('status');
-          });
-        } else {
-          showModal('送出失敗', res ? res.message : '發生未知錯誤', '❌');
-        }
-      } catch (err) {
-        showModal('系統錯誤', err.message, '❌');
-      } finally {
-        btn.disabled = false;
-        btn.innerText = '確認送出點餐';
-      }
-    }
-
-    async function loadStatusData(forceRefresh = false) {
-      if (!forceRefresh && allOrders.length > 0) {
-        renderOrders(allOrders);
-      }
-
-      try {
-        const res = await apiRequest('getOrdersAndPaymentStatus');
-        if (res && res.success) {
-          allOrders = res.data || [];
-          updateCache('orders', allOrders);
-          renderOrders(allOrders);
-        }
-      } catch (err) {
-        // 靜默同步失敗時，若目前列表是空的，仍要讓使用者知道並可重試
-        if (allOrders.length === 0) {
-          const listDiv = document.getElementById('statusList');
-          if (listDiv) {
-            listDiv.innerHTML =
-              '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) +
-              '<br><button class="btn-action retry-btn" onclick="loadStatusData(true)">🔄 重新嘗試</button></div>';
-          }
-        }
-      }
-    }
-
-    function updateCache(key, value) {
-      try {
-        let cache = JSON.parse(localStorage.getItem('lunchApp_cachedData') || '{}');
-        cache[key] = value;
-        localStorage.setItem('lunchApp_cachedData', JSON.stringify(cache));
-      } catch(e) {}
-    }
-
-    function renderOrders(orders) {
-      const listDiv = document.getElementById('statusList');
-      if (!orders || orders.length === 0) {
-        listDiv.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">目前尚無點餐紀錄</div>';
-        return;
-      }
-      let html = '';
-      orders.forEach(o => {
-        const badge = o.paid ? '<span class="badge badge-paid">✔ 已繳費</span>' : '<span class="badge badge-unpaid">✖ 未繳費</span>';
-        const safeGroup = escapeHTML(o.group);
-        const safeName = escapeHTML(o.name);
-        html += `
-          <div class="order-item">
-            <div class="order-header">
-              <span class="order-user">${safeGroup ? '[' + safeGroup + '] ' : ''}${safeName}</span>${badge}
-            </div>
-            <div class="order-details">
-              <strong>金額：</strong>$${o.total} | <strong>時間：</strong>${escapeHTML(o.time) || '今日'}<br>
-              <strong>品項：</strong>${escapeHTML(o.itemsSummary) || '無'}<br>
-              ${o.note ? '<strong>備註：</strong>' + escapeHTML(o.note) : ''}
-            </div>
-          </div>`;
-      });
-      listDiv.innerHTML = html;
-    }
-
-    function filterStatus() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        const kw = document.getElementById('statusFilter').value.toLowerCase();
-        const filtered = allOrders.filter(o => (o.name && o.name.toLowerCase().includes(kw)) || (o.group && o.group.toString().toLowerCase().includes(kw)));
-        renderOrders(filtered);
-      }, 300);
-    }
-
-    function renderMenuList() {
-      const menuDiv = document.getElementById('menuList');
-      if (menuItems.length === 0) return menuDiv.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">查無今日店家的菜單資料</div>';
-
-      let html = '<table style="width:100%; border-collapse: collapse; font-size:0.9rem;">';
-      html += '<tr style="background:#f4f7f7; color:#1f4e5f; text-align:left;"><th style="padding:10px;">品項名稱</th><th style="padding:10px; text-align:right;">單價</th></tr>';
-      menuItems.forEach(item => {
-        html += `<tr style="border-bottom: 1px solid #eee;">
-          <td style="padding:10px;">${escapeHTML(item.name)}</td>
-          <td style="padding:10px; text-align:right; font-weight:bold; color:#1f4e5f;">$${item.price}</td>
-        </tr>`;
-      });
-      html += '</table>';
-      menuDiv.innerHTML = html;
-    }
-
-    function openAdminModal() {
-      document.getElementById('adminPasswordInput').value = '';
-      document.getElementById('adminLoginModal').style.display = 'flex';
-      setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
-    }
-    function closeAdminModal() { document.getElementById('adminLoginModal').style.display = 'none'; }
-    function submitAdminLogin() {
-      const pwd = document.getElementById('adminPasswordInput').value;
-      if (pwd !== ADMIN_PASSWORD) return showModal('毋對喔', '密碼錯誤，請再試一次', '❌');
-      adminToken = pwd;
-      closeAdminModal();
-      enterAdminPanel();
-    }
-
-    function enterAdminPanel() {
-      document.getElementById('tab-order').style.display = 'none';
-      document.getElementById('tab-status').style.display = 'none';
-      document.getElementById('tab-menu').style.display = 'none';
-      document.getElementById('mainTabs').style.display = 'none';
-      document.getElementById('tab-admin').style.display = 'block';
-      window.scrollTo(0, 0);
-      populateAdminShopsSelect();
-
-      // 秒開：直接用現有記憶體資料渲染，不等待網路
-      renderAdminTable(allOrders);
-      // 背景靜默更新最新對帳狀態
-      loadAdminOrders(false);
-    }
-
-    function exitAdmin() {
-      document.getElementById('tab-admin').style.display = 'none';
-      switchTab('order');
-    }
-
-    function populateAdminShopsSelect() {
-      const select = document.getElementById('adminShopsSelect');
-      if (!select) return;
-      select.innerHTML = '';
-      allShopsList.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = escapeHTML(s); opt.innerText = escapeHTML(s);
-        if (s === currentShop) opt.selected = true;
-        select.appendChild(opt);
-      });
-    }
-
-    function handleAdminChangeShop() {
-      const newShop = document.getElementById('adminShopsSelect').value;
-      if (!newShop) return;
-      showConfirmModal('切換確認', `確定切換店家為【${newShop}】嗎？`, '🏪', async function() {
-        try {
-          const res = await apiRequest('adminChangeShop', { password: adminToken, newShop: newShop });
-          showModal(res && res.success ? '成功' : '失敗', res ? res.message : '', res && res.success ? '✅' : '❌', function() {
-            if (res && res.success) loadInitialData();
-          });
-        } catch (err) { showModal('操作失敗', err.message, '❌'); }
-      });
-    }
-
-    async function handleTogglePaid(orderId, btnElement) {
-      if (btnElement.disabled) return;
-      const targetOrder = allOrders.find(o => o.rowIndex === orderId);
-      if (!targetOrder) return;
-
-      const originalStatus = targetOrder.paid;
-      const newStatus = !originalStatus;
-
-      targetOrder.paid = newStatus;
-      updateBadgeUI(btnElement, newStatus);
-      updateAdminStatistics(allOrders);
-      btnElement.disabled = true;
-
-      try {
-        const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex: orderId, newStatus: newStatus });
-        if (!res || !res.success) throw new Error((res && res.message) || "同步更新失敗");
-        updateCache('orders', allOrders);
-      } catch (err) {
-        targetOrder.paid = originalStatus;
-        updateBadgeUI(btnElement, originalStatus);
-        updateAdminStatistics(allOrders);
-        showModal('同步失敗', "無法連線更新，狀態已自動還原！\n(" + err.message + ")", '⚠️');
-      } finally {
-        btnElement.disabled = false;
-      }
-    }
-
-    function updateBadgeUI(btnElement, isPaid) {
-      if (isPaid) {
-        btnElement.innerText = "✔ 已付款"; btnElement.className = "badge badge-paid paid";
-      } else {
-        btnElement.innerText = "✖ 未付款"; btnElement.className = "badge badge-unpaid";
-      }
-    }
-
-    async function loadAdminOrders(forceRefresh = false) {
-      if (forceRefresh && allOrders.length === 0) {
-        document.getElementById('adminOrdersContainer').innerHTML = '<div class="loader"><span class="spinner"></span> 載入訂單中...</div>';
-      }
-
-      try {
-        const res = await apiRequest('getOrdersAndPaymentStatus');
-        if (res && res.success) {
-          allOrders = res.data || [];
-          updateCache('orders', allOrders);
-          renderAdminTable(allOrders);
-        }
-      } catch (err) {
-        if (allOrders.length === 0) {
-          document.getElementById('adminOrdersContainer').innerHTML =
-            '<div class="retry-box" style="color:var(--danger);">讀取失敗：' + escapeHTML(err.message) +
-            '<br><button class="btn-action retry-btn" onclick="loadAdminOrders(true)">🔄 重新嘗試</button></div>';
-        }
-      }
-    }
-
-    function renderAdminTable(orders) {
-      const container = document.getElementById('adminOrdersContainer');
-      updateAdminStatistics(orders);
-
-      if (!orders || orders.length === 0) {
-        container.innerHTML = '<div style="padding:15px; color:#888; text-align:center;">目前尚無任何點餐紀錄。</div>';
-        return;
-      }
-
-      let html = `<table class="admin-table"><thead><tr><th>組別</th><th>姓名</th><th>總額</th><th>點餐品項與備註</th><th>繳費狀態</th></tr></thead><tbody>`;
-      orders.forEach(r => {
-        const btnClass = r.paid ? "badge badge-paid paid" : "badge badge-unpaid";
-        const btnText = r.paid ? "✔ 已付款" : "✖ 未付款";
-        html += `<tr>
-          <td>${escapeHTML(r.group) || '-'}</td>
-          <td><strong>${escapeHTML(r.name)}</strong></td>
-          <td style="font-weight:bold; color:var(--primary);">$${r.total}</td>
-          <td>${escapeHTML(r.itemsSummary) || ''}${r.note ? '<br><small style="color:#777;">備註：' + escapeHTML(r.note) + '</small>' : ''}</td>
-          <td style="text-align:center;"><button class="${btnClass}" onclick="handleTogglePaid(${r.rowIndex}, this)">${btnText}</button></td>
-        </tr>`;
-      });
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    function updateAdminStatistics(orders) {
-      let total = 0, paid = 0;
-      if (orders) {
-        orders.forEach(o => {
-          const amt = Number(o.total) || 0;
-          total += amt;
-          if (o.paid) paid += amt;
-        });
-      }
-      document.getElementById('statOrderCount').innerText = (orders ? orders.length : 0) + ' 筆';
-      document.getElementById('statTotalAmount').innerText = '$' + total;
-      document.getElementById('statPaidAmount').innerText = '$' + paid;
-      document.getElementById('statUnpaidAmount').innerText = '$' + (total - paid);
-    }
-
-    function handleAdminClearOrders() {
-      showConfirmModal('清空警告', '確定要清空今日所有紀錄嗎？', '⚠️', async function() {
-        try {
-          const res = await apiRequest('adminClearAllOrders', { password: adminToken });
-          showModal(res && res.success ? '清空完成' : '清空失敗', res ? res.message : '', res && res.success ? '🗑️' : '❌', function() {
-            if (res && res.success) { allOrders = []; updateCache('orders', []); renderAdminTable([]); }
-          });
-        } catch (err) { showModal('清空失敗', err.message, '❌'); }
-      });
-    }
-  </script>
+function handleAdminClearOrders() {
+  showConfirmModal('危險操作確認', '確定要清空「今日」的所有點餐紀錄嗎？\n資料清除後無法復原！', '⚠️', async function() {
+    try {
+      const res = await apiRequest('adminClearAllOrders', { password: adminToken });
+      if (res && res.success) { showModal('已清空', '今日點餐紀錄已全部清除', '✅', () => loadAdminOrders(true)); }
+      else throw new Error(res ? res.message : "清除失敗");
+    } catch (err) { showModal('清除失敗', err.message, '❌'); }
+  });
+}
+</script>
 </body>
 </html>
