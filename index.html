@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#F4F6F8">
 <title>今天要吃什麼勒</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,15 +14,15 @@
  * 核心風格：Modern Bento, Glassmorphism, Soft Neumorphism, Spring Animations
  */
 :root {
-  --bg: #F4F6F9; /* 清新冷灰白底 */
-  --surface: rgba(255, 255, 255, 0.85); /* 毛玻璃主體 */
+  --bg: #F4F6F9;
+  --surface: rgba(255, 255, 255, 0.85);
   --surface-solid: #FFFFFF;
-  --text-main: #0F172A; /* 極致深藍 */
+  --text-main: #0F172A;
   --text-muted: #64748B;
-  --primary: #FF5A5F; /* 珊瑚紅 (主視覺) */
+  --primary: #FF5A5F;
   --primary-hover: #E0484D;
-  --secondary: #FFB320; /* 暖陽黃 */
-  --accent: #0EA5E9; /* 天際藍 */
+  --secondary: #FFB320;
+  --accent: #0EA5E9;
   --danger: #FF3B30;
   --danger-bg: #FFE5E5;
   --success: #10B981;
@@ -45,7 +45,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
 html { scroll-behavior: smooth; background-color: var(--bg); }
 
-/* 現代化點狀網格背景，增加空間感 */
 body {
   background-color: var(--bg);
   background-image: radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1px, transparent 0);
@@ -58,7 +57,6 @@ body {
   overflow-x: hidden;
 }
 
-/* 背景裝飾光暈 */
 body::before, body::after {
   content: ""; position: absolute; border-radius: 50%; filter: blur(80px); z-index: -1; pointer-events: none; opacity: 0.5;
 }
@@ -66,22 +64,19 @@ body::before { width: 400px; height: 400px; background: rgba(255, 179, 32, 0.2);
 body::after { width: 300px; height: 300px; background: rgba(255, 90, 95, 0.15); top: 20%; left: -100px; }
 
 button, select, input { font: inherit; color: inherit; }
+/* 防止 iOS 縮放問題 */
+input, select { font-size: 16px !important; }
 :focus-visible { outline: 3px solid var(--secondary); outline-offset: 2px; border-radius: 4px; }
 
-/* 頂部連線提示 */
-.conn-banner { display: none; background: var(--danger); color: #fff; font-size: 0.85rem; font-weight: 700; text-align: center; padding: 10px 16px; box-shadow: var(--shadow-sm); z-index: 9999; position: relative; }
+.conn-banner { display: none; background: var(--danger); color: #fff; font-size: 0.85rem; font-weight: 700; text-align: center; padding: 10px 16px; box-shadow: var(--shadow-sm); z-index: 9999; position: sticky; top: 0; }
 .conn-banner.show { display: block; animation: slideDown 0.4s var(--spring); }
 @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
 
-/* Header - 極簡玻璃風格 */
-header {
-  position: relative; padding: calc(40px + env(safe-area-inset-top)) 24px 72px; text-align: center; z-index: 1;
-}
+header { position: relative; padding: calc(40px + env(safe-area-inset-top)) 24px 72px; text-align: center; z-index: 1; }
 .head-inner { position: relative; max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
 header h1 { font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); background: rgba(255,255,255,0.6); padding: 6px 16px; border-radius: 99px; display: inline-block; box-shadow: var(--shadow-sm); border: 1px solid var(--glass-border); margin-bottom: 24px; }
 .shop-label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
 
-/* 華麗的今日店家標題 */
 .shop-badge {
   display: block; font-size: clamp(2.4rem, 9vw, 4rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.03em;
   background: linear-gradient(135deg, var(--text-main) 0%, #334155 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -89,7 +84,6 @@ header h1 { font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; color: var
 }
 .shop-badge.is-load, .shop-badge.is-err { font-size: 1.5rem; background: var(--text-muted); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: pulse 2s infinite ease-in-out; }
 
-/* 管理員按鈕 (右上角隱藏感設計) */
 .admin-entry-btn {
   position: absolute; top: 0; right: 0; background: rgba(255,255,255,0.7); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.3s var(--ease); backdrop-filter: blur(8px); box-shadow: var(--shadow-sm);
 }
@@ -98,7 +92,6 @@ header h1 { font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; color: var
 @keyframes floatUp { from { opacity: 0; transform: translateY(24px) scale(0.95); } to { opacity: 1; transform: none; } }
 @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 
-/* 玻璃質感導覽列 Tabs */
 .tabs {
   display: flex; gap: 6px; max-width: 480px; margin: -32px auto 0; padding: 6px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid var(--glass-border); border-radius: 99px; box-shadow: var(--shadow-md); position: sticky; top: 16px; z-index: 100; width: calc(100% - 32px); transition: 0.3s var(--ease);
 }
@@ -110,18 +103,15 @@ header h1 { font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; color: var
 .tab-btn.active::before { opacity: 1; transform: scale(1); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
 .tab-btn:not(.active):hover { color: var(--text-main); background: rgba(0,0,0,0.03); }
 
-/* 主容器 */
 .container { max-width: 680px; margin: 32px auto; padding: 0 16px; }
 .container > div { animation: slideIn 0.5s var(--spring) both; }
 @keyframes slideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
-/* 現代卡片 (Modern Bento) */
 .card {
   background: var(--surface); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1.5px solid var(--glass-border); border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-md); margin-bottom: 24px; transition: 0.3s var(--ease);
 }
 .card-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; letter-spacing: -0.02em; }
 
-/* 表單元件 */
 .form-group { margin-bottom: 22px; }
 label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
 input[type=text], input[type=password], select {
@@ -134,11 +124,10 @@ select {
 select:disabled { background-color: #F8FAFC; opacity: 0.6; cursor: not-allowed; }
 input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 4px rgba(255, 179, 32, 0.15), inset 0 2px 4px rgba(0,0,0,0.01); }
 
-/* 餐點列設計 */
 .item-row {
   display: flex; gap: 12px; align-items: center; margin-bottom: 12px; animation: slideIn 0.4s var(--spring) both; background: rgba(255,255,255,0.5); padding: 8px; border-radius: var(--r-md); border: 1px solid var(--border);
 }
-.item-row select { flex: 2; border: none; box-shadow: none; background-color: transparent; padding: 10px; min-height: 44px; }
+.item-row select { flex: 2; border: none; box-shadow: none; background-color: transparent; padding: 10px; min-height: 44px; text-overflow: ellipsis; }
 .item-row select:focus { box-shadow: none; background: #fff; border-radius: var(--r-sm); }
 .price-tag { width: 70px; text-align: right; font-weight: 900; font-size: 1.1rem; color: var(--text-main); font-variant-numeric: tabular-nums; }
 .btn-remove {
@@ -151,7 +140,6 @@ input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 4p
 }
 .btn-add-item:hover { background: rgba(15,23,42,0.02); border-color: var(--text-main); color: var(--text-main); }
 
-/* 總結區塊 */
 .summary-box {
   background: var(--surface-solid); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 20px 24px; margin: 32px 0 24px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
 }
@@ -160,7 +148,6 @@ input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 4p
 .total-price.bump { animation: springBump 0.5s var(--spring); }
 @keyframes springBump { 0% { transform: scale(1); } 40% { transform: scale(1.15) translateY(-2px); color: var(--primary); } 100% { transform: scale(1); } }
 
-/* 按鈕美學 */
 .btn-submit {
   background: var(--primary); color: #fff; border: none; padding: 18px; min-height: 60px; width: 100%; border-radius: 99px; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.05em; cursor: pointer; box-shadow: var(--shadow-glow); transition: 0.4s var(--spring); position: relative; overflow: hidden;
 }
@@ -181,7 +168,6 @@ input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 4p
 
 .search-box { margin-bottom: 20px; background: rgba(255,255,255,0.5) !important; border-radius: 99px !important; padding-left: 24px !important; }
 
-/* 訂單列表 (交錯出現動畫) */
 .order-item {
   position: relative; border: 1px solid var(--glass-border); border-radius: var(--r-md); padding: 18px 20px 18px 24px; margin-bottom: 16px; background: var(--surface-solid); overflow: hidden; animation: slideIn 0.5s var(--spring) both; animation-delay: calc(var(--i, 0) * 60ms); box-shadow: var(--shadow-sm); transition: 0.3s var(--ease);
 }
@@ -194,7 +180,6 @@ input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 4p
 .order-details { font-size: 0.9rem; line-height: 1.6; color: var(--text-muted); }
 .order-details strong { color: var(--text-main); }
 
-/* 現代 Badge */
 .badge { padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; white-space: nowrap; transition: 0.3s var(--spring); letter-spacing: 0.03em; }
 .badge-paid, .badge.paid { background: var(--success-bg); color: var(--success); }
 .badge-unpaid { background: var(--danger-bg); color: var(--danger); }
@@ -203,7 +188,6 @@ span.badge { cursor: default; }
 button.badge:hover:not(:disabled) { filter: brightness(0.95); transform: translateY(-1px); }
 button.badge:active:not(:disabled) { transform: scale(0.92); }
 
-/* 後台管理區塊 */
 .admin-badge { background: var(--secondary); color: var(--text-main); font-size: 0.72rem; font-weight: 900; padding: 4px 10px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
 .admin-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
 .stat-card { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; box-shadow: var(--shadow-sm); transition: 0.3s; }
@@ -214,10 +198,9 @@ button.badge:active:not(:disabled) { transform: scale(0.92); }
 .panel { border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px; margin-bottom: 20px; background: var(--surface-solid); box-shadow: var(--shadow-sm); }
 .panel.danger { border: 1px solid rgba(255,59,48,0.2); background: #FFF9F9; }
 
-/* 表格優化 */
 .admin-table, .menu-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; }
 .admin-table { min-width: 560px; }
-.admin-table th, .admin-table td { border-bottom: 1px solid var(--border); padding: 14px 10px; text-align: left; }
+.admin-table th, .admin-table td { border-bottom: 1px solid var(--border); padding: 14px 10px; text-align: left; vertical-align: middle; }
 .admin-table th { font-weight: 800; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; padding-bottom: 12px; }
 .admin-table tr:last-child td { border-bottom: none; }
 
@@ -228,7 +211,6 @@ button.badge:active:not(:disabled) { transform: scale(0.92); }
 .empty { text-align: center; padding: 40px 20px; font-weight: 700; color: var(--text-muted); background: rgba(255,255,255,0.4); border-radius: var(--r-md); border: 1px dashed var(--border); }
 .loader, .retry-box { text-align: center; padding: 40px 20px; font-weight: 700; color: var(--text-muted); }
 
-/* 現代漸層環形 Loading 動畫 */
 .spinner {
   display: inline-block; width: 22px; height: 22px; border: 3px solid rgba(15,23,42,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; vertical-align: middle; margin-right: 10px;
 }
@@ -236,7 +218,6 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
 .btn-submit .spinner { border-color: rgba(255,255,255,0.3); border-top-color: #fff; width: 18px; height: 18px; border-width: 2px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Glassmorphism Modals */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px;
 }
@@ -362,7 +343,7 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px">
           <label style="margin:0">對帳管理 <span style="font-size:0.75rem;font-weight:400;opacity:0.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
-          <button class="btn-action" id="btnRefreshAdmin" style="padding:6px 14px" onclick="loadAdminOrders(true)">重新整理</button>
+          <button class="btn-action" id="btnRefreshAdmin" style="padding:6px 14px" onclick="loadStatusData(true)">重新整理</button>
         </div>
         <div id="adminOrdersContainer" style="overflow-x:auto"><div class="loader"><span class="spinner"></span>載入訂單中…</div></div>
       </div>
@@ -399,13 +380,12 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
       <input type="password" id="adminPasswordInput" placeholder="請輸入後台密碼" onkeypress="if(event.key==='Enter')submitAdminLogin()">
     </div>
     <div class="modal-btn-group">
-      <button class="modal-btn modal-btn-cancel" onclick="closeAdminModal()">取消</button>
+      <button class="modal-btn modal-btn-cancel" style="display:inline-block" onclick="closeAdminModal()">取消</button>
       <button class="modal-btn" onclick="submitAdminLogin()">登入後台</button>
     </div>
   </div>
 </div>
 
-<!-- 原封不動的 JavaScript 邏輯 -->
 <script>
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
 const ADMIN_PASSWORD = "6767";
@@ -474,323 +454,164 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
       clearTimeout(timeoutId);
       if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
       const trimmed = (await response.text()).trim();
-      if (trimmed.startsWith('<')) throw new Error("伺服器回傳了非預期的內容，請確認 Apps Script 部署權限設定為「任何人」，且已重新部署最新版本。");
-      let jsonResult;
-      try { jsonResult = JSON.parse(trimmed); } catch (e) { throw new Error("伺服器回傳格式異常，請稍後再試"); }
-      hideConnBanner();
-      return jsonResult;
-    } catch (err) {
-      lastErr = err;
-      if (attempt === retries) {
-        showConnBanner();
-        throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查手機網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
-      }
-      await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1)));
-    }
-  }
-  throw lastErr || new Error('無法連線至伺服器。');
-}
-function showConnBanner() { $('connBanner').classList.add('show'); }
-function hideConnBanner() { $('connBanner').classList.remove('show'); }
-
-function showModal(title, msg, icon = '🎉', callback = null) {
-  $('modalTitle').innerText = title; $('modalMsg').innerText = msg; $('modalIcon').innerText = icon;
-  $('modalCancelBtn').style.display = 'none';
-  const b = $('modalConfirmBtn'); b.innerText = '賀哦，哇災！'; b.onclick = closeModal;
-  modalCallback = callback;
-  $('customModal').style.display = 'flex'; b.focus();
-}
-function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
-  $('modalTitle').innerText = title; $('modalMsg').innerText = msg; $('modalIcon').innerText = icon;
-  $('modalCancelBtn').style.display = 'inline-block';
-  const b = $('modalConfirmBtn'); b.innerText = '確定';
-  b.onclick = function() { closeModal(); if (onConfirm) onConfirm(); };
-  modalCallback = null;
-  $('customModal').style.display = 'flex';
-}
-function closeModal() {
-  $('customModal').style.display = 'none';
-  if (modalCallback) { modalCallback(); modalCallback = null; }
-}
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeAdminModal(); }
-});
-
-window.onload = function() {
-  const g = localStorage.getItem('lunchApp_group'), n = localStorage.getItem('lunchApp_name');
-  if (g) {
-    $('groupSelect').value = g; updateNameOptions();
-    if (n) $('nameSelect').value = n;
-  }
-  const cached = localStorage.getItem('lunchApp_cachedData');
-  if (cached) { try { applyDataToUI(JSON.parse(cached)); } catch (e) {} }
-  loadInitialData();
-};
-
-function applyDataToUI(res) {
-  currentShop = res.shop || '尚未設定店家';
-  menuItems = res.items || [];
-  allShopsList = res.allShops || [];
-  if (res.orders) allOrders = res.orders;
-  const st = $('currentShopText');
-  st.className = 'shop-badge'; st.innerText = currentShop;
-  renderMenuList();
-  if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows();
-  populateAdminShopsSelect();
-  renderOrders(allOrders);
-  if ($('tab-admin').style.display === 'block') renderAdminTable(allOrders);
+      if (trimmed.startsWith('<')) throw new Error("伺服器回傳了非預期的內容，請確認權限設定。");
+      ```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F4F6F8">
+<title>今天要吃什麼勒</title>
+<link rel="preconnect" href="[https://fonts.googleapis.com](https://fonts.googleapis.com)">
+<link rel="preconnect" href="[https://fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+<link href="[https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap](https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap)" rel="stylesheet">
+<style>
+/* 
+ * 🎨 現代化頂級 UI/UX 視覺重構 (Awwwards / Webby 級別)
+ * 核心風格：Modern Bento, Glassmorphism, Soft Neumorphism, Spring Animations
+ */
+:root {
+  --bg: #F4F6F9; /* 清新冷灰白底 */
+  --surface: rgba(255, 255, 255, 0.85); /* 毛玻璃主體 */
+  --surface-solid: #FFFFFF;
+  --text-main: #0F172A; /* 極致深藍 */
+  --text-muted: #64748B;
+  --primary: #FF5A5F; /* 珊瑚紅 (主視覺) */
+  --primary-hover: #E0484D;
+  --secondary: #FFB320; /* 暖陽黃 */
+  --accent: #0EA5E9; /* 天際藍 */
+  --danger: #FF3B30;
+  --danger-bg: #FFE5E5;
+  --success: #10B981;
+  --success-bg: #D1FAE5;
+  --border: rgba(15, 23, 42, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  
+  --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 8px 24px rgba(255, 90, 95, 0.3);
+  
+  --r-lg: 32px;
+  --r-md: 20px;
+  --r-sm: 14px;
+  --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-function menuOptionsHTML() {
-  let o = '<option value="" data-price="0">請選擇餐點品項</option>';
-  menuItems.forEach(i => { o += `<option value="${escapeHTML(i.name)}" data-price="${i.price}">${escapeHTML(i.name)} ($${i.price})</option>`; });
-  return o;
-}
-function updateExistingItemRows() {
-  const options = menuOptionsHTML();
-  document.querySelectorAll('.item-row select').forEach(s => { const v = s.value; s.innerHTML = options; s.value = v; });
-  calculateTotal();
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; background-color: var(--bg); }
+
+/* 現代化點狀網格背景，增加空間感 */
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1px, transparent 0);
+  background-size: 28px 28px;
+  color: var(--text-main);
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 }
 
-async function loadInitialData() {
-  if (isFetchingData) return;
-  isFetchingData = true;
-  try {
-    const res = await apiRequest('getInitialData');
-    if (res && res.success) {
-      localStorage.setItem('lunchApp_cachedData', JSON.stringify(res));
-      applyDataToUI(res);
-    } else if (res && !res.success) throw new Error(res.message || '讀取資料失敗');
-  } catch (err) {
-    if (menuItems.length === 0) {
-      const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '連線失敗';
-      $('menuList').innerHTML = '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) + '<br><button class="btn-action retry-btn" style="margin-top:12px" onclick="loadInitialData()">重新嘗試</button></div>';
-    }
-  } finally { isFetchingData = false; }
+/* 背景裝飾光暈 */
+body::before, body::after {
+  content: ""; position: absolute; border-radius: 50%; filter: blur(80px); z-index: -1; pointer-events: none; opacity: 0.5;
 }
+body::before { width: 400px; height: 400px; background: rgba(255, 179, 32, 0.2); top: -100px; right: -150px; }
+body::after { width: 300px; height: 300px; background: rgba(255, 90, 95, 0.15); top: 20%; left: -100px; }
 
-function switchTab(tabId) {
-  ['order', 'status', 'menu', 'admin'].forEach(t => $('tab-' + t).style.display = 'none');$('mainTabs').style.display = 'flex';
-  const btns = document.querySelectorAll('.tab-btn');
-  btns.forEach(b => b.classList.remove('active'));
-  const idx = { order: 0, status: 1, menu: 2 }[tabId];
-  $('tab-' + tabId).style.display = 'block';
-  if (idx !== undefined) btns[idx].classList.add('active');
-  if (tabId === 'status') { renderOrders(allOrders); loadStatusData(false); }
-}
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--secondary); outline-offset: 2px; border-radius: 4px; }
 
-function addItemRow() {
-  const c = $('itemList');
-  if (c.querySelectorAll('.item-row').length >= 5) return showModal('提醒', '最多只能點選 5 項餐點！', 'ℹ️');
-  const row = document.createElement('div');
-  row.className = 'item-row';
-  row.innerHTML = `<select onchange="calculateTotal()" aria-label="餐點品項">${menuOptionsHTML()}</select><span class="price-tag">$0</span><button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除此項" aria-label="移除此項">✕</button>`;
-  c.appendChild(row);
-  if (c.querySelectorAll('.item-row').length >= 5) $('btnAddItem').style.display = 'none';
-}
-function removeItemRow(btn) {
-  btn.parentElement.remove();
-  $('btnAddItem').style.display = 'block';
-  calculateTotal();
-}
-function calculateTotal() {
-  let total = 0;
-  document.querySelectorAll('.item-row').forEach(r => {
-    const s = r.querySelector('select');
-    const price = Number(s.options[s.selectedIndex]?.getAttribute('data-price')) || 0;
-    r.querySelector('.price-tag').innerText = '$' + price;
-    total += price;
-  });
-  const el = $('totalDisplay');
-  if (el.innerText !== '$' + total) {
-    el.innerText = '$' + total;
-    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
-  }
-  return total;
-}
+/* 頂部連線提示 */
+.conn-banner { display: none; background: var(--danger); color: #fff; font-size: 0.85rem; font-weight: 700; text-align: center; padding: 10px 16px; box-shadow: var(--shadow-sm); z-index: 9999; position: relative; }
+.conn-banner.show { display: block; animation: slideDown 0.4s var(--spring); }
+@keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
 
-async function handleOrderSubmit() {
-  const group = $('groupSelect').value, name =$('nameSelect').value;
-  if (!group || !name) return showModal('請確認', '請選擇組別與姓名！', '⚠️');
-  const selectedItems = [];
-  document.querySelectorAll('.item-row select').forEach(s => { if (s.value) selectedItems.push(s.value); });
-  if (selectedItems.length === 0) return showModal('請確認', '請至少選擇一項餐點！', '⚠️');
-  localStorage.setItem('lunchApp_group', group);
-  localStorage.setItem('lunchApp_name', name);
-  const btn = $('submitBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner" style="border-width:2px;width:18px;height:18px;border-top-color:#fff"></span>送出中…';
-  const payload = { shop: currentShop, group, name, note: $('orderNote').value.trim(), totalAmount: calculateTotal(), items: selectedItems };
-  try {
-    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
-    if (res && res.success) {
-      showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', function() {
-        $('orderNote').value = '';$('itemList').innerHTML = '';
-        addItemRow(); calculateTotal(); loadStatusData(true); switchTab('status');
-      });
-    } else showModal('送出失敗', res ? res.message : '發生未知錯誤', '❌');
-  } catch (err) { showModal('系統錯誤', err.message, '❌'); }
-  finally { btn.disabled = false; btn.innerText = '送出點餐'; }
+/* Header - 極簡玻璃風格 */
+header {
+  position: relative; padding: calc(40px + env(safe-area-inset-top)) 24px 72px; text-align: center; z-index: 1;
 }
+.head-inner { position: relative; max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+header h1 { font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; color: var(--text-muted); background: rgba(255,255,255,0.6); padding: 6px 16px; border-radius: 99px; display: inline-block; box-shadow: var(--shadow-sm); border: 1px solid var(--glass-border); margin-bottom: 24px; }
+.shop-label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
 
-async function loadStatusData(forceRefresh = false) {
-  if (!forceRefresh && allOrders.length > 0) renderOrders(allOrders);
-  try {
-    const res = await apiRequest('getOrdersAndPaymentStatus');
-    if (res && res.success) { allOrders = res.data || []; updateCache('orders', allOrders); renderOrders(allOrders); }
-  } catch (err) {
-    if (allOrders.length === 0) {
-      $('statusList').innerHTML = '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) + '<br><button class="btn-action retry-btn" style="margin-top:12px" onclick="loadStatusData(true)">重新嘗試</button></div>';
-    }
-  }
+/* 華麗的今日店家標題 */
+.shop-badge {
+  display: block; font-size: clamp(2.4rem, 9vw, 4rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--text-main) 0%, #334155 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: floatUp 0.8s var(--spring) both; word-break: break-word; text-shadow: 0 12px 24px rgba(0,0,0,0.04);
 }
+.shop-badge.is-load, .shop-badge.is-err { font-size: 1.5rem; background: var(--text-muted); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: pulse 2s infinite ease-in-out; }
 
-function updateCache(key, value) {
-  try {
-    let c = JSON.parse(localStorage.getItem('lunchApp_cachedData') || '{}');
-    c[key] = value;
-    localStorage.setItem('lunchApp_cachedData', JSON.stringify(c));
-  } catch (e) {}
+/* 管理員按鈕 (右上角隱藏感設計) */
+.admin-entry-btn {
+  position: absolute; top: 0; right: 0; background: rgba(255,255,255,0.7); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.3s var(--ease); backdrop-filter: blur(8px); box-shadow: var(--shadow-sm);
 }
+.admin-entry-btn:hover { background: var(--text-main); color: #fff; transform: translateY(-2px); }
 
-function renderOrders(orders) {
-  const div = $('statusList');
-  div.className = '';
-  if (!orders || orders.length === 0) { div.innerHTML = '<div class="empty">還沒有人點餐，你可以是第一個！</div>'; return; }
-  div.innerHTML = orders.map((o, i) => {
-    const badge = o.paid ? '<span class="badge badge-paid">✔ 已繳費</span>' : '<span class="badge badge-unpaid">✖ 未繳費</span>';
-    const g = escapeHTML(o.group);
-    return `<div class="order-item ${o.paid ? 'is-paid' : ''}" style="--i:${Math.min(i, 12)}">
-      <div class="order-header"><span class="order-user">${g ? '[' + g + '] ' : ''}${escapeHTML(o.name)}</span>${badge}</div>
-      <div class="order-details"><strong>金額：</strong>$${o.total} ｜ <strong>時間：</strong>${escapeHTML(o.time) || '今日'}<br>
-      <strong>品項：</strong>${escapeHTML(o.itemsSummary) || '無'}${o.note ? '<br><strong>備註：</strong>' + escapeHTML(o.note) : ''}</div>
-    </div>`;
-  }).join('');
-}
+@keyframes floatUp { from { opacity: 0; transform: translateY(24px) scale(0.95); } to { opacity: 1; transform: none; } }
+@keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 
-function filterStatus() {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    const kw = $('statusFilter').value.toLowerCase();
-    renderOrders(allOrders.filter(o => (o.name && o.name.toLowerCase().includes(kw)) || (o.group && o.group.toString().toLowerCase().includes(kw))));
-  }, 300);
+/* 玻璃質感導覽列 Tabs */
+.tabs {
+  display: flex; gap: 6px; max-width: 480px; margin: -32px auto 0; padding: 6px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid var(--glass-border); border-radius: 99px; box-shadow: var(--shadow-md); position: sticky; top: 16px; z-index: 100; width: calc(100% - 32px); transition: 0.3s var(--ease);
 }
+.tab-btn {
+  flex: 1; padding: 12px 8px; min-height: 44px; border: none; background: transparent; border-radius: 99px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.4s var(--spring); position: relative;
+}
+.tab-btn::before { content: ""; position: absolute; inset: 0; background: var(--text-main); border-radius: 99px; opacity: 0; transform: scale(0.8); transition: 0.4s var(--spring); z-index: -1; }
+.tab-btn.active { color: #fff; }
+.tab-btn.active::before { opacity: 1; transform: scale(1); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
+.tab-btn:not(.active):hover { color: var(--text-main); background: rgba(0,0,0,0.03); }
 
-function renderMenuList() {
-  const div = $('menuList');
-  div.className = '';
-  if (menuItems.length === 0) { div.innerHTML = '<div class="empty">查無今日店家的菜單資料</div>'; return; }
-  div.innerHTML = '<table class="menu-table">' + menuItems.map(i => `<tr><td>${escapeHTML(i.name)}</td><td>$${i.price}</td></tr>`).join('') + '</table>';
-}
+/* 主容器 */
+.container { max-width: 680px; margin: 32px auto; padding: 0 16px; }
+.container > div { animation: slideIn 0.5s var(--spring) both; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
-function openAdminModal() {
-  $('adminPasswordInput').value = '';$('adminLoginModal').style.display = 'flex';
-  setTimeout(() => $('adminPasswordInput').focus(), 100);
+/* 現代卡片 (Modern Bento) */
+.card {
+  background: var(--surface); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1.5px solid var(--glass-border); border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-md); margin-bottom: 24px; transition: 0.3s var(--ease);
 }
-function closeAdminModal() { $('adminLoginModal').style.display = 'none'; }
-function submitAdminLogin() {
-  const pwd = $('adminPasswordInput').value;
-  if (pwd !== ADMIN_PASSWORD) return showModal('毋對喔', '密碼錯誤，請再試一次', '❌');
-  adminToken = pwd; closeAdminModal(); enterAdminPanel();
-}
-function enterAdminPanel() {
-  ['order', 'status', 'menu'].forEach(t => $('tab-' + t).style.display = 'none');
-  $('mainTabs').style.display = 'none';$('tab-admin').style.display = 'block';
-  window.scrollTo(0, 0);
-  populateAdminShopsSelect();
-  renderAdminTable(allOrders);
-  loadAdminOrders(false);
-}
-function exitAdmin() { $('tab-admin').style.display = 'none'; switchTab('order'); }
+.card-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; letter-spacing: -0.02em; }
 
-function populateAdminShopsSelect() {
-  const sel = $('adminShopsSelect');
-  if (!sel) return;
-  sel.innerHTML = '';
-  allShopsList.forEach(s => {
-    const o = document.createElement('option');
-    o.value = s; o.textContent = s;
-    if (s === currentShop) o.selected = true;
-    sel.appendChild(o);
-  });
+/* 表單元件 */
+.form-group { margin-bottom: 22px; }
+label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
+input[type=text], input[type=password], select {
+  width: 100%; padding: 14px 16px; min-height: 52px; border: 1.5px solid rgba(15,23,42,0.1); border-radius: var(--r-sm); font-size: 1rem; background: var(--surface-solid); color: var(--text-main); outline: none; transition: 0.3s var(--ease); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
 }
+select {
+  appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='[http://www.w3.org/2000/svg'%3E%3Cpath](http://www.w3.org/2000/svg'%3E%3Cpath) d='M1 1.5L6 6.5L11 1.5' stroke='%230F172A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: calc(100% - 16px) center; background-size: 12px; background-repeat: no-repeat; padding-right: 40px; cursor: pointer;
+}
+select:disabled { background-color: #F8FAFC; opacity: 0.6; cursor: not-allowed; }
+input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 4px rgba(255, 179, 32, 0.15), inset 0 2px 4px rgba(0,0,0,0.01); }
 
-function handleAdminChangeShop() {
-  const newShop = $('adminShopsSelect').value;
-  if (!newShop) return;
-  showConfirmModal('切換確認', `確定切換店家為【${newShop}】嗎？`, '🏪', async function() {
-    try {
-      const res = await apiRequest('adminChangeShop', { password: adminToken, newShop });
-      showModal(res && res.success ? '成功' : '失敗', res ? res.message : '', res && res.success ? '✅' : '❌', function() { if (res && res.success) loadInitialData(); });
-    } catch (err) { showModal('操作失敗', err.message, '❌'); }
-  });
+/* 餐點列設計 */
+.item-row {
+  display: flex; gap: 12px; align-items: center; margin-bottom: 12px; animation: slideIn 0.4s var(--spring) both; background: rgba(255,255,255,0.5); padding: 8px; border-radius: var(--r-md); border: 1px solid var(--border);
 }
+.item-row select { flex: 2; border: none; box-shadow: none; background-color: transparent; padding: 10px; min-height: 44px; }
+.item-row select:focus { box-shadow: none; background: #fff; border-radius: var(--r-sm); }
+.price-tag { width: 70px; text-align: right; font-weight: 900; font-size: 1.1rem; color: var(--text-main); font-variant-numeric: tabular-nums; }
+.btn-remove {
+  width: 40px; height: 40px; flex: none; background: #fff; border: 1.5px solid var(--border); color: var(--text-muted); border-radius: 50%; font-weight: 900; cursor: pointer; transition: 0.3s var(--spring); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm);
+}
+.btn-remove:hover { background: var(--danger-bg); color: var(--danger); border-color: rgba(255,59,48,0.2); transform: rotate(90deg) scale(1.1); }
 
-async function handleTogglePaid(orderId, btn) {
-  if (btn.disabled) return;
-  const o = allOrders.find(x => x.rowIndex === orderId);
-  if (!o) return;
-  const original = o.paid, next = !original;
-  o.paid = next; updateBadgeUI(btn, next); updateAdminStatistics(allOrders); btn.disabled = true;
-  try {
-    const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex: orderId, newStatus: next });
-    if (!res || !res.success) throw new Error((res && res.message) || "同步更新失敗");
-    updateCache('orders', allOrders);
-  } catch (err) {
-    o.paid = original; updateBadgeUI(btn, original); updateAdminStatistics(allOrders);
-    showModal('更新失敗', err.message, '❌');
-  } finally { btn.disabled = false; }
+.btn-add-item {
+  background: transparent; border: 2px dashed rgba(15,23,42,0.15); color: var(--text-muted); padding: 14px; min-height: 52px; width: 100%; border-radius: var(--r-sm); cursor: pointer; font-weight: 700; transition: 0.3s var(--ease); margin-top: 8px;
 }
+.btn-add-item:hover { background: rgba(15,23,42,0.02); border-color: var(--text-main); color: var(--text-main); }
 
-function updateBadgeUI(btn, isPaid) {
-  btn.className = isPaid ? 'badge badge-paid' : 'badge badge-unpaid';
-  btn.innerText = isPaid ? '✔ 已付' : '✖ 未付';
+/* 總結區塊 */
+.summary-box {
+  background: var(--surface-solid); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 20px 24px; margin: 32px 0 24px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
 }
-
-function renderAdminTable(orders) {
-  const c = $('adminOrdersContainer');
-  if (!orders || orders.length === 0) { c.innerHTML = '<div class="empty">今日尚無點餐紀錄</div>'; updateAdminStatistics([]); return; }
-  let h = '<table class="admin-table"><tr><th>時間</th><th>組別/姓名</th><th>金額</th><th>品項與備註</th><th>狀態(點擊更改)</th></tr>';
-  orders.forEach(o => {
-    h += `<tr>
-      <td style="white-space:nowrap;font-size:0.8rem;color:var(--text-muted)">${escapeHTML(o.time)}</td>
-      <td style="font-weight:700">${escapeHTML(o.group)}<br>${escapeHTML(o.name)}</td>
-      <td style="font-weight:900">$${o.total}</td>
-      <td style="font-size:0.85rem">${escapeHTML(o.itemsSummary)}${o.note ? '<br><span style="color:var(--danger)">備註: ' + escapeHTML(o.note) + '</span>' : ''}</td>
-      <td><button class="badge ${o.paid ? 'badge-paid' : 'badge-unpaid'}" onclick="handleTogglePaid(${o.rowIndex}, this)">${o.paid ? '✔ 已付' : '✖ 未付'}</button></td>
-    </tr>`;
-  });
-  c.innerHTML = h + '</table>';
-  updateAdminStatistics(orders);
-}
-
-function updateAdminStatistics(orders) {
-  let cnt = 0, tot = 0, pd = 0, un = 0;
-  orders.forEach(o => { cnt++; tot += o.total; if (o.paid) pd += o.total; else un += o.total; });
-  $('statOrderCount').innerText = cnt; $('statTotalAmount').innerText = '$' + tot;
-  $('statPaidAmount').innerText = '$' + pd; $('statUnpaidAmount').innerText = '$' + un;
-}
-
-async function loadAdminOrders(force) {
-  const btn = $('btnRefreshAdmin');
-  if (btn) { btn.disabled = true; btn.innerText = '整理中…'; }
-  try {
-    const res = await apiRequest('getOrdersAndPaymentStatus');
-    if (res && res.success) { allOrders = res.data || []; updateCache('orders', allOrders); renderAdminTable(allOrders); }
-    else throw new Error(res ? res.message : "讀取失敗");
-  } catch (err) { showModal('讀取失敗', err.message, '❌'); }
-  finally { if (btn) { btn.disabled = false; btn.innerText = '重新整理'; } }
-}
-
-function handleAdminClearOrders() {
-  showConfirmModal('危險操作確認', '確定要清空「今日」的所有點餐紀錄嗎？\n資料清除後無法復原！', '⚠️', async function() {
-    try {
-      const res = await apiRequest('adminClearAllOrders', { password: adminToken });
-      if (res && res.success) { showModal('已清空', '今日點餐紀錄已全部清除', '✅', () => loadAdminOrders(true)); }
-      else throw new Error(res ? res.message : "清除失敗");
-    } catch (err) { showModal('清除失敗', err.message, '❌'); }
-  });
-}
-</script>
-</body>
-</html>
+.summary-box::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--secondary); }
+.total-price { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.02em; color: var(--text-main); font-variant-numeric: tabular-nums;
