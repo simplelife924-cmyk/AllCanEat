@@ -286,7 +286,7 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px;
 }
 .modal-card {
-  background: var(--surface-solid); border: 1px solid var(--glass-border); border-radius: var(--r-lg); padding: 32px 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: var(--shadow-lg); animation: modalPop 0.5s var(--spring); position: relative; overflow: hidden;
+  background: var(--surface-solid); border: 1.5px solid var(--glass-border); border-radius: var(--r-lg); padding: 32px 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: var(--shadow-lg); animation: modalPop 0.5s var(--spring); position: relative; overflow: hidden;
 }
 @keyframes modalPop { 0% { transform: scale(0.9) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 
@@ -477,6 +477,22 @@ function escapeHTML(str) {
   return String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t] || t));
 }
 
+function switchTab(tab) {
+  ['order', 'status', 'menu', 'admin'].forEach(t => {
+    const el = $('tab-' + t);
+    if (el) el.style.display = (t === tab) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+    const tabs = ['order', 'status', 'menu'];
+    if (tabs[idx] === tab) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+  if (tab === 'status') loadStatusData();
+  if (tab === 'menu') renderMenuList();
+  if (tab === 'admin') loadAdminOrders();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function updateNameOptions() {
   const sel = $("nameSelect"), g = $("groupSelect").value;
   sel.innerHTML = "";
@@ -492,6 +508,7 @@ function updateNameOptions() {
   });
   sel.disabled = false;
   localStorage.setItem('lunchApp_group', g);
+  saveUserSelection();
 }
 
 function saveUserSelection() {
@@ -499,6 +516,61 @@ function saveUserSelection() {
   const n = $('nameSelect').value;
   if (g) localStorage.setItem('lunchApp_group', g);
   if (n) localStorage.setItem('lunchApp_name', n);
+}
+
+function addItemRow() {
+  const list = $('itemList');
+  if (list.children.length >= 5) {
+    showModal('提示', '每筆訂單最多只能選擇 5 項餐點！', '⚠️');
+    return;
+  }
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `
+    <select onchange="updateRowPrice(this)"><option value="" data-price="0">請選擇餐點品項</option>${menuItems.map(i => `<option value="${escapeHTML(i.name)}" data-price="${i.price}">${escapeHTML(i.name)} ($${i.price})</option>`).join('')}</select>
+    <span class="price-tag">$0</span>
+    <button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除">✕</button>
+  `;
+  list.appendChild(row);
+  calculateTotal();
+}
+
+function removeItemRow(btn) {
+  const row = btn.closest('.item-row');
+  row.style.opacity = '0';
+  row.style.transform = 'scale(0.9)';
+  setTimeout(() => {
+    row.remove();
+    if ($('itemList').children.length === 0) {
+      addItemRow();
+    } else {
+      calculateTotal();
+    }
+  }, 200);
+}
+
+function updateRowPrice(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const price = parseInt(opt.getAttribute('data-price') || '0', 10);
+  const row = sel.closest('.item-row');
+  const priceTag = row.querySelector('.price-tag');
+  priceTag.textContent = '$' + price;
+  calculateTotal();
+}
+
+function calculateTotal() {
+  let total = 0;
+  document.querySelectorAll('.item-row').forEach(row => {
+    const sel = row.querySelector('select');
+    const opt = sel.options[sel.selectedIndex];
+    const price = parseInt(opt ? opt.getAttribute('data-price') || '0' : '0', 10);
+    total += price;
+  });
+  const display = $('totalDisplay');
+  display.textContent = '$' + total;
+  display.classList.remove('bump');
+  void display.offsetWidth;
+  display.classList.add('bump');
 }
 
 async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
@@ -539,7 +611,7 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
       lastErr = err;
       if (attempt === retries) {
         showConnBanner();
-        throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查手機網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
+        throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
       }
       await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1)));
     }
@@ -625,145 +697,10 @@ async function loadInitialData() {
     } else if (res && !res.success) throw new Error(res.message || '讀取資料失敗');
   } catch (err) {
     if (menuItems.length === 0) {
-      const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '連線失敗';
-      $('menuList').innerHTML = '<div class="retry-box">讀取失敗：' + escapeHTML(err.message) + '<br><button class="btn-action retry-btn" style="margin-top:12px" onclick="loadInitialData()">重新載入</button></div>';
+      $('currentShopText').className = 'shop-badge is-err';$('currentShopText').innerText = '載入失敗 (請檢查連線)';
     }
   } finally {
     isFetchingData = false;
-  }
-}
-
-function switchTab(tabName) {
-  document.querySelectorAll('.tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
-  ['order', 'status', 'menu', 'admin'].forEach(t => {
-    const el = $('tab-' + t);
-    if (el) el.style.display = (t === tabName) ? 'block' : 'none';
-  });
-  
-  if (tabName === 'order') {
-    document.querySelectorAll('.tabs .tab-btn')[0].classList.add('active');
-  } else if (tabName === 'status') {
-    document.querySelectorAll('.tabs .tab-btn')[1].classList.add('active');
-    loadStatusData();
-  } else if (tabName === 'menu') {
-    document.querySelectorAll('.tabs .tab-btn')[2].classList.add('active');
-  }
-}
-
-function addItemRow() {
-  const list = $('itemList');
-  if (list.children.length >= 5) {
-    showModal('提示', '每筆訂單最多只能點 5 項餐點喔！', '⚠️');
-    return;
-  }
-  const row = document.createElement('div');
-  row.className = 'item-row';
-  row.innerHTML = `
-    <select onchange="updateRowPrice(this)">${menuOptionsHTML()}</select>
-    <span class="price-tag">$0</span>
-    <button type="button" class="btn-remove" onclick="removeItemRow(this)" title="刪除品項">×</button>
-  `;
-  list.appendChild(row);
-  document.getElementById('btnAddItem').style.display = list.children.length >= 5 ? 'none' : 'block';
-}
-
-function removeItemRow(btn) {
-  const row = btn.closest('.item-row');
-  row.style.transform = 'scale(0.8)';
-  row.style.opacity = '0';
-  setTimeout(() => {
-    row.remove();
-    document.getElementById('btnAddItem').style.display = 'block';
-    calculateTotal();
-  }, 200);
-}
-
-function updateRowPrice(sel) {
-  const opt = sel.options[sel.selectedIndex];
-  const price = parseInt(opt.getAttribute('data-price')) || 0;
-  const tag = sel.parentElement.querySelector('.price-tag');
-  tag.textContent = '$' + price;
-  calculateTotal();
-}
-
-function calculateTotal() {
-  let total = 0;
-  document.querySelectorAll('.item-row').forEach(row => {
-    const sel = row.querySelector('select');
-    const opt = sel.options[sel.selectedIndex];
-    const price = parseInt(opt.getAttribute('data-price')) || 0;
-    total += price;
-  });
-  const totalEl = $('totalDisplay');
-  totalEl.textContent = '$' + total;
-  totalEl.classList.remove('bump');
-  void totalEl.offsetWidth;
-  totalEl.classList.add('bump');
-  return total;
-}
-
-async function handleOrderSubmit() {
-  const group = $('groupSelect').value;
-  const name = $('nameSelect').value;
-  const note = $('orderNote').value.trim();
-
-  if (!group) {
-    showModal('請選擇組別', '請先選擇您的所屬組別！', '⚠️');
-    return;
-  }
-  if (!name) {
-    showModal('請選擇姓名', '請先選擇您的座號與姓名！', '⚠️');
-    return;
-  }
-
-  const items = [];
-  document.querySelectorAll('.item-row').forEach(row => {
-    const sel = row.querySelector('select');
-    if (sel.value) {
-      const opt = sel.options[sel.selectedIndex];
-      items.push({
-        name: sel.value,
-        price: parseInt(opt.getAttribute('data-price')) || 0
-      });
-    }
-  });
-
-  if (items.length === 0) {
-    showModal('請選擇餐點', '請至少選擇一項想吃的餐點品項！', '⚠️');
-    return;
-  }
-
-  const submitBtn = $('submitBtn');
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spinner"></span>正在送出點餐…';
-
-  try {
-    saveUserSelection();
-    const payload = {
-      group: group,
-      name: name,
-      items: items,
-      note: note,
-      shop: currentShop
-    };
-    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
-    if (res && res.success) {
-      showModal('點餐成功！', `太棒了！已成功幫您送出 ${name} 的點餐紀錄。\n應付總金額：$${res.total || calculateTotal()}`, '🎉', () => {
-        // 清空餐點選擇
-        $('itemList').innerHTML = '';
-        addItemRow();
-        $('orderNote').value = '';
-        calculateTotal();
-        switchTab('status');
-      });
-    } else {
-      throw new Error(res.message || '送出失敗');
-    }
-  } catch (err) {
-    showModal('送出失敗', err.message || '網路異常，請稍後再試！', '❌');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = '送出點餐';
   }
 }
 
@@ -781,45 +718,33 @@ async function loadStatusData(force = false) {
       throw new Error(res.message || '載入失敗');
     }
   } catch (err) {
-    container.innerHTML = '<div class="empty">無法載入對帳資料：' + escapeHTML(err.message) + '</div>';
+    container.innerHTML = `<div class="empty">無法載入紀錄：${escapeHTML(err.message)}</div>`;
   }
-}
-
-function filterStatus() {
-  const keyword = $('statusFilter').value.trim().toLowerCase();
-  if (!keyword) {
-    renderOrders(allOrders);
-    return;
-  }
-  const filtered = allOrders.filter(o => 
-    (o.name && o.name.toLowerCase().includes(keyword)) ||
-    (o.group && o.group.toLowerCase().includes(keyword)) ||
-    (o.details && o.details.toLowerCase().includes(keyword))
-  );
-  renderOrders(filtered);
 }
 
 function renderOrders(orders) {
   const container = $('statusList');
-  if (!orders || orders.length === 0) {
-    container.innerHTML = '<div class="empty">目前還沒有人點餐，不如你先點？</div>';
+  const filter = ($('statusFilter') ?$('statusFilter').value : '').trim().toLowerCase();
+  let filtered = orders;
+  if (filter) {
+    filtered = orders.filter(o => String(o.group || '').toLowerCase().includes(filter) || String(o.name || '').toLowerCase().includes(filter) || String(o.details || '').toLowerCase().includes(filter));
+  }
+  if (!filtered || filtered.length === 0) {
+    container.innerHTML = '<div class="empty">目前沒有任何點餐紀錄</div>';
     return;
   }
   let html = '';
-  orders.forEach((o, index) => {
-    const isPaid = o.paid === true || o.paid === '已付';
-    const badgeClass = isPaid ? 'badge-paid' : 'badge-unpaid';
-    const badgeText = isPaid ? '已付 $ ' + (o.total \vert{}\vert{} 0) : '未付 $ ' + (o.total || 0);
+  filtered.forEach((o, index) => {
+    const isPaid = String(o.status || '').trim() === '已付';
     html += `
       <div class="order-item ${isPaid ? 'is-paid' : ''}" style="--i: ${index}">
         <div class="order-header">
           <div class="order-user">${escapeHTML(o.group)} - ${escapeHTML(o.name)}</div>
-          <span class="badge ${badgeClass}">${badgeText}</span>
+          <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${escapeHTML(o.status || '未付')}</span>
         </div>
         <div class="order-details">
           餐點：<strong>${escapeHTML(o.details)}</strong><br>
-          ${o.note ? '備註：' + escapeHTML(o.note) + '<br>' : ''}
-          時間：${escapeHTML(o.timestamp || '')}
+          總金額：<strong>$${escapeHTML(o.total)}</strong> ${o.note ? `| 備註：${escapeHTML(o.note)}` : ''}
         </div>
       </div>
     `;
@@ -827,28 +752,90 @@ function renderOrders(orders) {
   container.innerHTML = html;
 }
 
+function filterStatus() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    renderOrders(allOrders);
+  }, 200);
+}
+
 function renderMenuList() {
   const container = $('menuList');
   if (!menuItems || menuItems.length === 0) {
-    container.innerHTML = '<div class="empty">今日尚無菜單資料</div>';
+    container.innerHTML = '<div class="empty">目前尚無今日菜單</div>';
     return;
   }
-  let html = '<table class="menu-table"><tbody>';
+  let html = '<table class="menu-table">';
   menuItems.forEach(i => {
-    html += `<tr><td><strong>${escapeHTML(i.name)}</strong></td><td>$${escapeHTML(i.price)}</td></tr>`;
+    html += `<tr><td>${escapeHTML(i.name)}</td><td>$${escapeHTML(i.price)}</td></tr>`;
   });
-  html += '</tbody></table>';
+  html += '</table>';
   container.innerHTML = html;
 }
 
-function openAdminModal() {
-  if (adminToken === ADMIN_PASSWORD) {
-    switchTab('admin');
-    loadAdminOrders();
+async function handleOrderSubmit() {
+  saveUserSelection();
+  const group = $('groupSelect').value;
+  const name = $('nameSelect').value;
+  const note = $('orderNote').value;
+  if (!group || !name) {
+    showModal('提示', '請先選擇組別以及座號姓名！', '⚠️');
     return;
   }
-  $('adminPasswordInput').value = '';
-  $('adminLoginModal').style.display = 'flex';$('adminPasswordInput').focus();
+  const items = [];
+  let total = 0;
+  document.querySelectorAll('.item-row').forEach(row => {
+    const sel = row.querySelector('select');
+    const val = sel.value;
+    const opt = sel.options[sel.selectedIndex];
+    const price = parseInt(opt ? opt.getAttribute('data-price') || '0' : '0', 10);
+    if (val) {
+      items.push({ name: val, price: price });
+      total += price;
+    }
+  });
+  if (items.length === 0) {
+    showModal('提示', '請至少選擇一項餐點！', '⚠️');
+    return;
+  }
+
+  const btn = $('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>送出中…';
+
+  try {
+    const payload = {
+      group: group,
+      name: name,
+      items: items,
+      total: total,
+      note: note
+    };
+    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
+    if (res && res.success) {
+      showModal('成功', '點餐成功！', '🎉', () => {
+        $('orderNote').value = '';$('itemList').innerHTML = '';
+        addItemRow();
+        switchTab('status');
+      });
+    } else {
+      throw new Error(res.message || '送出失敗');
+    }
+  } catch (err) {
+    showModal('錯誤', err.message || '送出失敗，請再試一次。', '❌');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '送出點餐';
+  }
+}
+
+function openAdminModal() {
+  if (adminToken) {
+    switchTab('admin');
+  } else {
+    $('adminPasswordInput').value = '';$('adminLoginModal').style.display = 'flex';
+    setTimeout(() => $('adminPasswordInput').focus(), 100);
+  }
 }
 
 function closeAdminModal() {
@@ -858,12 +845,11 @@ function closeAdminModal() {
 function submitAdminLogin() {
   const pwd = $('adminPasswordInput').value;
   if (pwd === ADMIN_PASSWORD) {
-    adminToken = ADMIN_PASSWORD;
+    adminToken = pwd;
     closeAdminModal();
     switchTab('admin');
-    loadAdminOrders();
   } else {
-    showModal('密碼錯誤', '錯！你再猜猜？', '🔒');
+    showModal('錯誤', '管理密碼錯誤！', '❌');
   }
 }
 
@@ -881,55 +867,62 @@ async function loadAdminOrders(force = false) {
     if (res && res.success) {
       allOrders = res.orders || [];
       renderAdminTable(allOrders);
+      updateAdminStats(allOrders);
     } else {
       throw new Error(res.message || '載入失敗');
     }
   } catch (err) {
-    container.innerHTML = '<div class="empty">無法載入後台資料：' + escapeHTML(err.message) + '</div>';
+    container.innerHTML = `<div class="empty">無法載入訂單：${escapeHTML(err.message)}</div>`;
   }
 }
 
-function renderAdminTable(orders) {
-  let totalAmt = 0, paidAmt = 0, unpaidAmt = 0;
+function updateAdminStats(orders) {
+  let count = orders.length;
+  let totalAmount = 0;
+  let paidAmount = 0;
+  let unpaidAmount = 0;
   orders.forEach(o => {
-    const t = parseInt(o.total) || 0;
-    totalAmt += t;
-    if (o.paid === true || o.paid === '已付') paidAmt += t;
-    else unpaidAmt += t;
+    const t = parseInt(o.total || 0, 10);
+    totalAmount += t;
+    if (String(o.status || '').trim() === '已付') {
+      paidAmount += t;
+    } else {
+      unpaidAmount += t;
+    }
   });
+  $('statOrderCount').innerText = count;
+  $('statTotalAmount').innerText = '$' + totalAmount;
+  $('statPaidAmount').innerText = '$' + paidAmount;
+  $('statUnpaidAmount').innerText = '$' + unpaidAmount;
+}
 
-  $('statOrderCount').innerText = orders.length;
-  $('statTotalAmount').innerText = '$' + totalAmt;
-  $('statPaidAmount').innerText = '$' + paidAmt;
-  $('statUnpaidAmount').innerText = '$' + unpaidAmt;
-
+function renderAdminTable(orders) {
   const container = $('adminOrdersContainer');
   if (!orders || orders.length === 0) {
-    container.innerHTML = '<div class="empty">目前尚無任何訂單紀錄</div>';
+    container.innerHTML = '<div class="empty">目前沒有任何訂單</div>';
     return;
   }
-
   let html = `
     <table class="admin-table">
       <thead>
         <tr>
           <th>組別 / 姓名</th>
-          <th>餐點明細</th>
+          <th>餐點內容</th>
           <th>金額</th>
           <th>繳費狀態</th>
         </tr>
       </thead>
       <tbody>
   `;
-  orders.forEach(o => {
-    const isPaid = o.paid === true || o.paid === '已付';
+  orders.forEach((o, index) => {
+    const isPaid = String(o.status || '').trim() === '已付';
     html += `
       <tr>
         <td><strong>${escapeHTML(o.group)}</strong><br>${escapeHTML(o.name)}</td>
-        <td>${escapeHTML(o.details)}${o.note ? '<br><small style="color:var(--text-muted)">備註：' + escapeHTML(o.note) + '</small>' : ''}</td>
+        <td>${escapeHTML(o.details)} ${o.note ? `<br><small style="color:var(--text-muted)">備註：${escapeHTML(o.note)}</small>` : ''}</td>
         <td><strong>$${escapeHTML(o.total)}</strong></td>
         <td>
-          <button class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}" onclick="togglePaidStatus(${o.rowIndex}, ${!isPaid})">
+          <button class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}" onclick="toggleOrderStatus(${o.rowIndex !== undefined ? o.rowIndex : index}, '${isPaid ? '未付' : '已付'}')">
             ${isPaid ? '已付' : '未付'}
           </button>
         </td>
@@ -938,14 +931,15 @@ function renderAdminTable(orders) {
   });
   html += '</tbody></table>';
   container.innerHTML = html;
+  updateAdminStats(orders);
 }
 
-async function togglePaidStatus(rowIndex, newStatus) {
+async function toggleOrderStatus(rowIndex, newStatus) {
   try {
     const res = await apiRequest('adminTogglePaid', {
-      password: ADMIN_PASSWORD,
+      password: adminToken,
       rowIndex: rowIndex,
-      newStatus: newStatus ? '已付' : '未付'
+      newStatus: newStatus
     });
     if (res && res.success) {
       loadAdminOrders(true);
@@ -953,59 +947,59 @@ async function togglePaidStatus(rowIndex, newStatus) {
       throw new Error(res.message || '更新失敗');
     }
   } catch (err) {
-    showModal('更新失敗', err.message, '❌');
+    showModal('錯誤', err.message || '更新狀態失敗', '❌');
   }
 }
 
 function populateAdminShopsSelect() {
   const sel = $('adminShopsSelect');
-  if (!allShopsList || allShopsList.length === 0) {
-    sel.innerHTML = '<option value="">無可用店家</option>';
-    return;
-  }
+  if (!sel) return;
   let html = '';
   allShopsList.forEach(s => {
-    const selected = (s === currentShop) ? 'selected' : '';
-    html += `<option value="${escapeHTML(s)}" ${selected}>${escapeHTML(s)}</option>`;
+    html += `<option value="${escapeHTML(s)}" ${s === currentShop ? 'selected' : ''}>${escapeHTML(s)}</option>`;
   });
   sel.innerHTML = html;
 }
 
 async function handleAdminChangeShop() {
-  const newShop = $('adminShopsSelect').value;
+  const sel = $('adminShopsSelect');
+  const newShop = sel.value;
   if (!newShop) return;
-  showConfirmModal('確認更換店家', `確定要將今日店家切換為「${newShop}」嗎？`, '❓', async () => {
+  showConfirmModal('確認更換', `確定要將今日店家切換為「${newShop}」嗎？`, '❓', async () => {
     try {
       const res = await apiRequest('adminChangeShop', {
-        password: ADMIN_PASSWORD,
+        password: adminToken,
         newShop: newShop
       });
       if (res && res.success) {
-        showModal('更換成功', `今日店家已成功切換為：${newShop}`, '🎉', () => {
+        showModal('成功', '店家已成功更換！', '🎉', () => {
           loadInitialData();
         });
       } else {
         throw new Error(res.message || '更換失敗');
       }
     } catch (err) {
-      showModal('更換失敗', err.message, '❌');
+      showModal('錯誤', err.message || '更換店家失敗', '❌');
     }
   });
 }
 
-function handleAdminClearOrders() {
-  showConfirmModal('清空確認', '確定要清空今日所有的點餐紀錄嗎？此動作無法復原！', '⚠️', async () => {
+async function handleAdminClearOrders() {
+  showConfirmModal('危險操作', '確定要清空今日所有的點餐紀錄嗎？此動作無法復原！', '⚠️', async () => {
     try {
-      const res = await apiRequest('adminClearAllOrders', { password: ADMIN_PASSWORD });
+      const res = await apiRequest('adminClearAllOrders', {
+        password: adminToken
+      });
       if (res && res.success) {
-        showModal('已清空', '今日所有點餐紀錄已清空完成。', '🗑️', () => {
+        showModal('成功', '今日點餐紀錄已清空！', '🎉', () => {
+          loadInitialData();
           loadAdminOrders(true);
         });
       } else {
         throw new Error(res.message || '清空失敗');
       }
     } catch (err) {
-      showModal('清空失敗', err.message, '❌');
+      showModal('錯誤', err.message || '清空紀錄失敗', '❌');
     }
   });
 }
