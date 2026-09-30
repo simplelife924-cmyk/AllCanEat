@@ -662,9 +662,10 @@ window.onload = function() {
 
 function applyDataToUI(res) {
   currentShop = res.shop || '尚未設定店家';
-  menuItems = res.items || [];
-  allShopsList = res.allShops || [];
-  if (res.orders) allOrders = res.orders;
+  menuItems = Array.isArray(res.items) ? res.items : [];
+  allShopsList = Array.isArray(res.allShops) ? res.allShops : [];
+  if (Array.isArray(res.orders)) allOrders = res.orders;
+  else if (Array.isArray(res.data)) allOrders = res.data;
   const st = $('currentShopText');
   st.className = 'shop-badge'; st.innerText = currentShop;
   renderMenuList();
@@ -712,7 +713,7 @@ async function loadStatusData(force = false) {
   try {
     const res = await apiRequest('getOrdersAndPaymentStatus');
     if (res && res.success) {
-      allOrders = res.orders || [];
+      allOrders = res.orders || res.data || [];
       renderOrders(allOrders);
     } else {
       throw new Error(res.message || '載入失敗');
@@ -727,7 +728,12 @@ function renderOrders(orders) {
   const filter = ($('statusFilter') ?$('statusFilter').value : '').trim().toLowerCase();
   let filtered = orders;
   if (filter) {
-    filtered = orders.filter(o => String(o.group || '').toLowerCase().includes(filter) || String(o.name || '').toLowerCase().includes(filter) || String(o.details || '').toLowerCase().includes(filter));
+    filtered = orders.filter(o => {
+      const details = o.details !== undefined ? o.details : (o.itemsSummary || '');
+      return String(o.group || '').toLowerCase().includes(filter)
+        || String(o.name || '').toLowerCase().includes(filter)
+        || String(details).toLowerCase().includes(filter);
+    });
   }
   if (!filtered || filtered.length === 0) {
     container.innerHTML = '<div class="empty">目前沒有任何點餐紀錄</div>';
@@ -735,15 +741,20 @@ function renderOrders(orders) {
   }
   let html = '';
   filtered.forEach((o, index) => {
-    const isPaid = String(o.status || '').trim() === '已付';
+    const isPaid = o.status !== undefined
+      ? String(o.status).trim() === '已付'
+      : Boolean(o.paid);
+    const statusText = isPaid ? '已付' : '未付';
+    const details = o.details !== undefined ? o.details : (o.itemsSummary || '');
+
     html += `
       <div class="order-item ${isPaid ? 'is-paid' : ''}" style="--i: ${index}">
         <div class="order-header">
           <div class="order-user">${escapeHTML(o.group)} - ${escapeHTML(o.name)}</div>
-          <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${escapeHTML(o.status || '未付')}</span>
+          <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${statusText}</span>
         </div>
         <div class="order-details">
-          餐點：<strong>${escapeHTML(o.details)}</strong><br>
+          餐點：<strong>${escapeHTML(details)}</strong><br>
           總金額：<strong>$${escapeHTML(o.total)}</strong> ${o.note ? `| 備註：${escapeHTML(o.note)}` : ''}
         </div>
       </div>
@@ -808,7 +819,8 @@ async function handleOrderSubmit() {
       group: group,
       name: name,
       items: items,
-      total: total,
+      total: total,             // 舊欄位保留
+      totalAmount: total,       // 後端標準欄位
       note: note
     };
     const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
@@ -865,7 +877,7 @@ async function loadAdminOrders(force = false) {
   try {
     const res = await apiRequest('getOrdersAndPaymentStatus');
     if (res && res.success) {
-      allOrders = res.orders || [];
+      allOrders = res.orders || res.data || [];
       renderAdminTable(allOrders);
       updateAdminStats(allOrders);
     } else {
@@ -884,7 +896,12 @@ function updateAdminStats(orders) {
   orders.forEach(o => {
     const t = parseInt(o.total || 0, 10);
     totalAmount += t;
-    if (String(o.status || '').trim() === '已付') {
+
+    const isPaid = o.status !== undefined
+      ? String(o.status).trim() === '已付'
+      : Boolean(o.paid);
+
+    if (isPaid) {
       paidAmount += t;
     } else {
       unpaidAmount += t;
@@ -915,14 +932,20 @@ function renderAdminTable(orders) {
       <tbody>
   `;
   orders.forEach((o, index) => {
-    const isPaid = String(o.status || '').trim() === '已付';
+    const isPaid = o.status !== undefined
+      ? String(o.status).trim() === '已付'
+      : Boolean(o.paid);
+    const details = o.details !== undefined ? o.details : (o.itemsSummary || '');
+    const rowIndex = o.rowIndex !== undefined ? o.rowIndex : index;
+    const nextStatus = !isPaid;
+
     html += `
       <tr>
         <td><strong>${escapeHTML(o.group)}</strong><br>${escapeHTML(o.name)}</td>
-        <td>${escapeHTML(o.details)} ${o.note ? `<br><small style="color:var(--text-muted)">備註：${escapeHTML(o.note)}</small>` : ''}</td>
+        <td>${escapeHTML(details)} ${o.note ? `<br><small style="color:var(--text-muted)">備註：${escapeHTML(o.note)}</small>` : ''}</td>
         <td><strong>$${escapeHTML(o.total)}</strong></td>
         <td>
-          <button class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}" onclick="toggleOrderStatus(${o.rowIndex !== undefined ? o.rowIndex : index}, '${isPaid ? '未付' : '已付'}')">
+          <button class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}" onclick="toggleOrderStatus(${Number(rowIndex)}, ${nextStatus})">
             ${isPaid ? '已付' : '未付'}
           </button>
         </td>
@@ -939,10 +962,11 @@ async function toggleOrderStatus(rowIndex, newStatus) {
     const res = await apiRequest('adminTogglePaid', {
       password: adminToken,
       rowIndex: rowIndex,
-      newStatus: newStatus
+      newStatus: Boolean(newStatus)
     });
     if (res && res.success) {
-      loadAdminOrders(true);
+      await loadAdminOrders(true);
+      await loadStatusData();
     } else {
       throw new Error(res.message || '更新失敗');
     }
