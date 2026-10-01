@@ -2,317 +2,132 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#F4F6F8">
 <title>今天要吃什麼勒</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-/* 
- * 🎨 現代化頂級 UI/UX 視覺重構 (Awwwards / Webby 級別)
- * 核心風格：Modern Bento, Glassmorphism, Soft Neumorphism, Spring Animations
- */
-:root {
-  --bg: #F4F6F9;
-  --surface: rgba(255, 255, 255, 0.85);
-  --surface-solid: #FFFFFF;
-  --text-main: #0F172A;
-  --text-muted: #64748B;
-  --primary: #FF5A5F;
-  --primary-hover: #E0484D;
-  --secondary: #FFB320;
-  --accent: #0EA5E9;
-  --danger: #FF3B30;
-  --danger-bg: #FFE5E5;
-  --success: #10B981;
-  --success-bg: #D1FAE5;
-  --border: rgba(15, 23, 42, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  
-  --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
-  --shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.08);
-  --shadow-glow: 0 8px 24px rgba(255, 90, 95, 0.3);
-  
-  --r-lg: 32px;
-  --r-md: 20px;
-  --r-sm: 14px;
-  --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
-
-/* 修正手機版左右滑動白邊問題：確保最外層不產生溢出 */
-html, body {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-html { scroll-behavior: smooth; background-color: var(--bg); }
-
-body {
-  background-color: var(--bg);
-  background-image: radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1px, transparent 0);
-  background-size: 28px 28px;
-  color: var(--text-main);
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
-  line-height: 1.6;
-  min-height: 100vh;
-  position: relative;
-}
-
-/* 修正背景光暈溢出導致的水平滾動，將其封裝在 fixed 容器內 */
-.bg-glow {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: -1;
-}
-.bg-glow::before, .bg-glow::after {
-  content: ""; position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5;
-}
-.bg-glow::before { width: 400px; height: 400px; background: rgba(255, 179, 32, 0.2); top: -100px; right: -10vw; }
-.bg-glow::after { width: 300px; height: 300px; background: rgba(255, 90, 95, 0.15); top: 20%; left: -10vw; }
-
-button, select, input { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--secondary); outline-offset: 2px; border-radius: 4px; }
-
-/* 頂部連線提示 */
-.conn-banner { display: none; background: var(--danger); color: #fff; font-size: 0.85rem; font-weight: 700; text-align: center; padding: 10px 16px; box-shadow: var(--shadow-sm); z-index: 9999; position: relative; }
-.conn-banner.show { display: block; animation: slideDown 0.4s var(--spring); }
-@keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
-
-/* Header - 極簡玻璃風格 */
-header {
-  position: relative; padding: calc(40px + env(safe-area-inset-top)) 24px 72px; text-align: center; z-index: 1;
-}
-.head-inner { position: relative; max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
-
-/* 根據附圖實作的 Header 行動按鈕群組 (Pill Group) */
-.header-action-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.title-pill, .admin-pill {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  padding: 10px 20px;
-  border-radius: 99px;
-  box-shadow: var(--shadow-sm);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  letter-spacing: 0.02em;
-}
-
-.admin-pill {
-  cursor: pointer;
-  transition: 0.3s var(--ease);
-  font-size: 1rem;
-}
-
-.admin-pill:hover {
-  background: var(--text-main);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.shop-label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
-
-/* 華麗的今日店家標題 */
-.shop-badge {
-  display: block; font-size: clamp(2.4rem, 9vw, 4rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.03em;
-  background: linear-gradient(135deg, var(--text-main) 0%, #334155 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: floatUp 0.8s var(--spring) both; word-break: break-word; text-shadow: 0 12px 24px rgba(0,0,0,0.04);
-}
-.shop-badge.is-load, .shop-badge.is-err { font-size: 1.5rem; background: var(--text-muted); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: pulse 2s infinite ease-in-out; }
-
-@keyframes floatUp { from { opacity: 0; transform: translateY(24px) scale(0.95); } to { opacity: 1; transform: none; } }
-@keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-
-/* 玻璃質感導覽列 Tabs */
-.tabs {
-  display: flex; gap: 6px; max-width: 480px; margin: -32px auto 0; padding: 6px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid var(--glass-border); border-radius: 99px; box-shadow: var(--shadow-md); position: sticky; top: 16px; z-index: 100; width: calc(100% - 32px); transition: 0.3s var(--ease);
-}
-.tab-btn {
-  flex: 1; padding: 12px 8px; min-height: 44px; border: none; background: transparent; border-radius: 99px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.4s var(--spring); position: relative;
-}
-.tab-btn::before { content: ""; position: absolute; inset: 0; background: var(--text-main); border-radius: 99px; opacity: 0; transform: scale(0.8); transition: 0.4s var(--spring); z-index: -1; }
-.tab-btn.active { color: #fff; }
-.tab-btn.active::before { opacity: 1; transform: scale(1); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
-.tab-btn:not(.active):hover { color: var(--text-main); background: rgba(0,0,0,0.03); }
-
-/* 主容器 */
-.container { max-width: 680px; margin: 32px auto; padding: 0 16px; }
-.container > div { animation: slideIn 0.5s var(--spring) both; }
-@keyframes slideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-
-/* 現代卡片 (Modern Bento) */
-.card {
-  background: var(--surface); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1.5px solid var(--glass-border); border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-md); margin-bottom: 24px; transition: 0.3s var(--ease);
-}
-.card-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; letter-spacing: -0.02em; }
-
-/* 表單元件 */
-.form-group { margin-bottom: 22px; }
-label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
-input[type=text], input[type=password], select {
-  width: 100%; padding: 14px 16px; min-height: 52px; border: 1.5px solid rgba(15,23,42,0.1); border-radius: var(--r-sm); font-size: 1rem; background: var(--surface-solid); color: var(--text-main); outline: none; transition: 0.3s var(--ease); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-}
-select {
-  appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%230F172A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-position: calc(100% - 16px) center; background-size: 12px; background-repeat: no-repeat; padding-right: 40px; cursor: pointer;
-}
-select:disabled { background-color: #F8FAFC; opacity: 0.6; cursor: not-allowed; }
-input:focus, select:focus { border-color: var(--secondary); box-shadow: 0 0 0 4px rgba(255, 179, 32, 0.15), inset 0 2px 4px rgba(0,0,0,0.01); }
-
-/* 餐點列設計 */
-.item-row {
-  display: flex; gap: 12px; align-items: center; margin-bottom: 12px; animation: slideIn 0.4s var(--spring) both; background: rgba(255,255,255,0.5); padding: 8px; border-radius: var(--r-md); border: 1px solid var(--border);
-}
-.item-row select { flex: 2; border: none; box-shadow: none; background-color: transparent; padding: 10px; min-height: 44px; }
-.item-row select:focus { box-shadow: none; background: #fff; border-radius: var(--r-sm); }
-.price-tag { width: 70px; text-align: right; font-weight: 900; font-size: 1.1rem; color: var(--text-main); font-variant-numeric: tabular-nums; }
-.btn-remove {
-  width: 40px; height: 40px; flex: none; background: #fff; border: 1.5px solid var(--border); color: var(--text-muted); border-radius: 50%; font-weight: 900; cursor: pointer; transition: 0.3s var(--spring); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm);
-}
-.btn-remove:hover { background: var(--danger-bg); color: var(--danger); border-color: rgba(255,59,48,0.2); transform: rotate(90deg) scale(1.1); }
-
-.btn-add-item {
-  background: transparent; border: 2px dashed rgba(15,23,42,0.15); color: var(--text-muted); padding: 14px; min-height: 52px; width: 100%; border-radius: var(--r-sm); cursor: pointer; font-weight: 700; transition: 0.3s var(--ease); margin-top: 8px;
-}
-.btn-add-item:hover { background: rgba(15,23,42,0.02); border-color: var(--text-main); color: var(--text-main); }
-
-/* 總結區塊 */
-.summary-box {
-  background: var(--surface-solid); border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 20px 24px; margin: 32px 0 24px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
-}
-.summary-box::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--secondary); }
-.total-price { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.02em; color: var(--text-main); font-variant-numeric: tabular-nums; display: inline-block; line-height: 1; }
-.total-price.bump { animation: springBump 0.5s var(--spring); }
-@keyframes springBump { 0% { transform: scale(1); } 40% { transform: scale(1.15) translateY(-2px); color: var(--primary); } 100% { transform: scale(1); } }
-
-/* 按鈕美學 */
-.btn-submit {
-  background: var(--primary); color: #fff; border: none; padding: 18px; min-height: 60px; width: 100%; border-radius: 99px; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.05em; cursor: pointer; box-shadow: var(--shadow-glow); transition: 0.4s var(--spring); position: relative; overflow: hidden;
-}
-.btn-submit::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(255,255,255,0.2), transparent); opacity: 0; transition: 0.3s; }
-.btn-submit:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(255, 90, 95, 0.4); }
-.btn-submit:hover:not(:disabled)::after { opacity: 1; }
-.btn-submit:active:not(:disabled) { transform: translateY(1px) scale(0.98); box-shadow: 0 4px 12px rgba(255, 90, 95, 0.2); }
-.btn-submit:disabled { background: #CBD5E1; color: #94A3B8; box-shadow: none; cursor: not-allowed; }
-
-.btn-action { background: var(--text-main); color: #fff; border: none; padding: 10px 18px; min-height: 40px; border-radius: 99px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.3s var(--spring); box-shadow: var(--shadow-sm); }
-.btn-action:hover { background: var(--secondary); color: var(--text-main); transform: translateY(-2px); }
-
-.btn-danger { background: var(--danger); color: #fff; border: none; padding: 14px; min-height: 48px; border-radius: var(--r-sm); font-weight: 900; cursor: pointer; width: 100%; transition: 0.3s var(--spring); }
-.btn-danger:hover { background: #E03329; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(255,59,48,0.2); }
-
-.btn-back { background: var(--surface-solid); color: var(--text-main); border: 1.5px solid var(--border); padding: 14px; min-height: 48px; border-radius: 99px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 12px; transition: 0.3s var(--spring); }
-.btn-back:hover { background: var(--bg); transform: translateY(-2px); }
-
-.search-box { margin-bottom: 20px; background: rgba(255,255,255,0.5) !important; border-radius: 99px !important; padding-left: 24px !important; }
-
-/* 訂單列表 (交錯出現動畫) */
-.order-item {
-  position: relative; border: 1px solid var(--glass-border); border-radius: var(--r-md); padding: 18px 20px 18px 24px; margin-bottom: 16px; background: var(--surface-solid); overflow: hidden; animation: slideIn 0.5s var(--spring) both; animation-delay: calc(var(--i, 0) * 60ms); box-shadow: var(--shadow-sm); transition: 0.3s var(--ease);
-}
-.order-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: rgba(15,23,42,0.1); }
-.order-item::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--danger); transition: 0.4s ease; }
-.order-item.is-paid::before { background: var(--success); }
-
-.order-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
-.order-user { font-weight: 900; font-size: 1.1rem; color: var(--text-main); letter-spacing: -0.01em; }
-.order-details { font-size: 0.9rem; line-height: 1.6; color: var(--text-muted); }
-.order-details strong { color: var(--text-main); }
-
-/* 現代 Badge */
-.badge { padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; white-space: nowrap; transition: 0.3s var(--spring); letter-spacing: 0.03em; }
-.badge-paid, .badge.paid { background: var(--success-bg); color: var(--success); }
-.badge-unpaid { background: var(--danger-bg); color: var(--danger); }
-span.badge { cursor: default; }
-.badge:disabled { opacity: 0.5; cursor: wait; }
-button.badge:hover:not(:disabled) { filter: brightness(0.95); transform: translateY(-1px); }
-button.badge:active:not(:disabled) { transform: scale(0.92); }
-
-/* 後台管理區塊 */
-.admin-badge { background: var(--secondary); color: var(--text-main); font-size: 0.72rem; font-weight: 900; padding: 4px 10px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
-.admin-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-.stat-card { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; box-shadow: var(--shadow-sm); transition: 0.3s; }
-.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.stat-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
-.stat-num { font-size: 1.8rem; font-weight: 900; margin-top: 4px; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-
-.panel { border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px; margin-bottom: 20px; background: var(--surface-solid); box-shadow: var(--shadow-sm); }
-.panel.danger { border: 1px solid rgba(255,59,48,0.2); background: #FFF9F9; }
-
-/* 表格優化 */
-.admin-table, .menu-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; }
-.admin-table { min-width: 560px; }
-.admin-table th, .admin-table td { border-bottom: 1px solid var(--border); padding: 14px 10px; text-align: left; }
-.admin-table th { font-weight: 800; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; padding-bottom: 12px; }
-.admin-table tr:last-child td { border-bottom: none; }
-
-.menu-table td { padding: 16px 8px; border-bottom: 1px dashed rgba(15,23,42,0.1); }
-.menu-table tr:last-child td { border-bottom: none; }
-.menu-table td:last-child { text-align: right; font-weight: 900; font-size: 1.1rem; color: var(--text-main); font-variant-numeric: tabular-nums; }
-
-.empty { text-align: center; padding: 40px 20px; font-weight: 700; color: var(--text-muted); background: rgba(255,255,255,0.4); border-radius: var(--r-md); border: 1px dashed var(--border); }
-.loader, .retry-box { text-align: center; padding: 40px 20px; font-weight: 700; color: var(--text-muted); }
-
-/* 現代漸層環形 Loading 動畫 */
-.spinner {
-  display: inline-block; width: 22px; height: 22px; border: 3px solid rgba(15,23,42,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; vertical-align: middle; margin-right: 10px;
-}
-header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
-.btn-submit .spinner { border-color: rgba(255,255,255,0.3); border-top-color: #fff; width: 18px; height: 18px; border-width: 2px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Glassmorphism Modals */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px;
-}
-.modal-card {
-  background: var(--surface-solid); border: 1.5px solid var(--glass-border); border-radius: var(--r-lg); padding: 32px 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: var(--shadow-lg); animation: modalPop 0.5s var(--spring); position: relative; overflow: hidden;
-}
-@keyframes modalPop { 0% { transform: scale(0.9) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-
-.modal-icon { font-size: 3.2rem; margin-bottom: 12px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.1)); animation: floatUp 0.6s var(--spring) 0.1s both; }
-.modal-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 10px; color: var(--text-main); }
-.modal-msg { font-size: 0.95rem; margin-bottom: 28px; color: var(--text-muted); white-space: pre-line; line-height: 1.6; }
-.modal-btn-group { display: flex; gap: 12px; }
-.modal-btn {
-  flex: 1; background: var(--text-main); color: #fff; border: none; padding: 14px; min-height: 52px; border-radius: 99px; font-weight: 800; cursor: pointer; transition: 0.3s var(--spring); box-shadow: var(--shadow-sm);
-}
-.modal-btn:hover { background: var(--secondary); color: var(--text-main); transform: translateY(-2px); }
-.modal-btn-cancel { background: var(--bg); color: var(--text-main); }
-.modal-btn-cancel:hover { background: #E2E8F0; }
-
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
-@media (max-width: 480px) {
-  header { padding: calc(32px + env(safe-area-inset-top)) 20px 60px; }
-  .shop-badge { font-size: 2.2rem; }
-  .card { padding: 24px 20px; }
-}
+:root{--bg:#F4F6F9;--surface:rgba(255,255,255,.85);--solid:#fff;--text:#0F172A;--muted:#64748B;--primary:#FF5A5F;--secondary:#FFB320;--danger:#FF3B30;--danger-bg:#FFE5E5;--success:#10B981;--success-bg:#D1FAE5;--border:rgba(15,23,42,.08);--glass:rgba(255,255,255,.6);--sh-sm:0 4px 12px rgba(15,23,42,.03);--sh-md:0 12px 32px rgba(15,23,42,.06),0 2px 6px rgba(15,23,42,.03);--sh-lg:0 24px 48px rgba(15,23,42,.08);--glow:0 8px 24px rgba(255,90,95,.3);--r-lg:32px;--r-md:20px;--r-sm:14px;--spring:cubic-bezier(.175,.885,.32,1.275);--ease:cubic-bezier(.16,1,.3,1)}
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;-webkit-tap-highlight-color:transparent}
+html{width:100%;scroll-behavior:smooth;background:var(--bg)}
+body{width:100%;overflow-x:clip;background:var(--bg) radial-gradient(circle at 1px 1px,rgba(15,23,42,.08) 1px,transparent 0) 0 0/28px 28px;color:var(--text);padding-bottom:calc(80px + env(safe-area-inset-bottom));line-height:1.6;min-height:100vh}
+.bg-glow{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
+.bg-glow::before,.bg-glow::after{content:"";position:absolute;border-radius:50%;filter:blur(80px);opacity:.5}
+.bg-glow::before{width:400px;height:400px;background:rgba(255,179,32,.2);top:-100px;right:-10vw}
+.bg-glow::after{width:300px;height:300px;background:rgba(255,90,95,.15);top:20%;left:-10vw}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--secondary);outline-offset:2px;border-radius:4px}
+.conn-banner{display:none;background:var(--danger);color:#fff;font-size:.85rem;font-weight:700;text-align:center;padding:10px 16px;position:relative;z-index:9999}
+.conn-banner.show{display:block;animation:slideDown .4s var(--spring)}
+@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:none;opacity:1}}
+header{position:relative;padding:calc(40px + env(safe-area-inset-top)) 24px 72px;text-align:center;z-index:1}
+.head-inner{max-width:680px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.header-action-group{display:flex;align-items:center;gap:8px;margin-bottom:24px;flex-wrap:wrap;justify-content:center}
+.title-pill,.admin-pill{background:rgba(255,255,255,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass);padding:10px 20px;border-radius:99px;box-shadow:var(--sh-sm);font-size:1.1rem;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:8px}
+.admin-pill{cursor:pointer;transition:.3s var(--ease);font-size:1rem}
+.admin-pill:hover{background:var(--text);color:#fff;transform:translateY(-2px);box-shadow:var(--sh-md)}
+.shop-label{font-size:.85rem;font-weight:500;color:var(--muted);margin-bottom:4px}
+.shop-badge{display:block;font-size:clamp(2.2rem,9vw,4rem);font-weight:900;line-height:1.2;letter-spacing:-.03em;background:linear-gradient(135deg,var(--text),#334155);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:floatUp .8s var(--spring) both;word-break:break-word}
+.shop-badge.is-load,.shop-badge.is-err{font-size:1.5rem;background:var(--muted);-webkit-background-clip:text;background-clip:text;animation:pulse 2s infinite ease-in-out}
+@keyframes floatUp{from{opacity:0;transform:translateY(24px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.tabs{display:flex;gap:6px;max-width:480px;margin:-32px auto 0;padding:6px;background:rgba(255,255,255,.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1.5px solid var(--glass);border-radius:99px;box-shadow:var(--sh-md);position:sticky;top:16px;z-index:100;width:calc(100% - 32px)}
+.tab-btn{flex:1;padding:12px 8px;min-height:44px;border:none;background:transparent;border-radius:99px;font-size:.9rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.4s var(--spring);position:relative}
+.tab-btn::before{content:"";position:absolute;inset:0;background:var(--text);border-radius:99px;opacity:0;transform:scale(.8);transition:.4s var(--spring);z-index:-1}
+.tab-btn.active{color:#fff}
+.tab-btn.active::before{opacity:1;transform:scale(1);box-shadow:0 4px 12px rgba(15,23,42,.2)}
+.tab-btn:not(.active):hover{color:var(--text);background:rgba(0,0,0,.03)}
+.container{max-width:680px;margin:32px auto;padding:0 16px}
+.container>div{animation:slideIn .5s var(--spring) both}
+@keyframes slideIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.card{background:var(--surface);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1.5px solid var(--glass);border-radius:var(--r-lg);padding:32px;box-shadow:var(--sh-md);margin-bottom:24px}
+.card-title{font-size:1.4rem;font-weight:900;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:12px;letter-spacing:-.02em}
+.form-group{margin-bottom:22px}
+label{display:block;font-size:.9rem;font-weight:700;margin-bottom:8px}
+input[type=text],input[type=password],select{width:100%;padding:14px 16px;min-height:52px;border:1.5px solid rgba(15,23,42,.1);border-radius:var(--r-sm);font-size:1rem;background:var(--solid);outline:none;transition:.3s var(--ease);box-shadow:inset 0 2px 4px rgba(0,0,0,.02)}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%230F172A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-position:calc(100% - 16px) center;background-size:12px;background-repeat:no-repeat;padding-right:40px;cursor:pointer}
+select:disabled{background-color:#F8FAFC;opacity:.6;cursor:not-allowed}
+input:focus,select:focus{border-color:var(--secondary);box-shadow:0 0 0 4px rgba(255,179,32,.15)}
+.item-row{display:flex;gap:12px;align-items:center;margin-bottom:12px;animation:slideIn .4s var(--spring) both;background:rgba(255,255,255,.5);padding:8px;border-radius:var(--r-md);border:1px solid var(--border);transition:.2s}
+.item-row select{flex:2;min-width:0;border:none;box-shadow:none;background-color:transparent;padding:10px 36px 10px 10px;min-height:44px}
+.item-row select:focus{box-shadow:none;background-color:#fff;border-radius:var(--r-sm)}
+.price-tag{width:70px;text-align:right;font-weight:900;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.btn-remove{width:40px;height:40px;flex:none;background:#fff;border:1.5px solid var(--border);color:var(--muted);border-radius:50%;font-weight:900;cursor:pointer;transition:.3s var(--spring);display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-sm)}
+.btn-remove:hover{background:var(--danger-bg);color:var(--danger);border-color:rgba(255,59,48,.2);transform:rotate(90deg) scale(1.1)}
+.btn-add-item{background:transparent;border:2px dashed rgba(15,23,42,.15);color:var(--muted);padding:14px;min-height:52px;width:100%;border-radius:var(--r-sm);cursor:pointer;font-weight:700;transition:.3s var(--ease);margin-top:8px}
+.btn-add-item:hover{background:rgba(15,23,42,.02);border-color:var(--text);color:var(--text)}
+.summary-box{background:var(--solid);border:1.5px solid var(--border);border-radius:var(--r-md);padding:20px 24px;margin:32px 0 24px;display:flex;justify-content:space-between;align-items:center;font-weight:700;box-shadow:var(--sh-sm);position:relative;overflow:hidden}
+.summary-box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--secondary)}
+.total-price{font-size:2.4rem;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;display:inline-block;line-height:1}
+.total-price.bump{animation:springBump .5s var(--spring)}
+@keyframes springBump{40%{transform:scale(1.15) translateY(-2px);color:var(--primary)}}
+.btn-submit{background:var(--primary);color:#fff;border:none;padding:18px;min-height:60px;width:100%;border-radius:99px;font-size:1.1rem;font-weight:900;letter-spacing:.05em;cursor:pointer;box-shadow:var(--glow);transition:.4s var(--spring)}
+.btn-submit:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 12px 28px rgba(255,90,95,.4)}
+.btn-submit:active:not(:disabled){transform:translateY(1px) scale(.98)}
+.btn-submit:disabled{background:#CBD5E1;color:#94A3B8;box-shadow:none;cursor:wait}
+.btn-action{background:var(--text);color:#fff;border:none;padding:10px 18px;min-height:40px;border-radius:99px;font-size:.85rem;font-weight:700;cursor:pointer;transition:.3s var(--spring);box-shadow:var(--sh-sm)}
+.btn-action:hover{background:var(--secondary);color:var(--text);transform:translateY(-2px)}
+.btn-danger{background:var(--danger);color:#fff;border:none;padding:14px;min-height:48px;border-radius:var(--r-sm);font-weight:900;cursor:pointer;width:100%;transition:.3s var(--spring)}
+.btn-danger:hover{background:#E03329;transform:translateY(-2px);box-shadow:0 8px 16px rgba(255,59,48,.2)}
+.btn-back{background:var(--solid);border:1.5px solid var(--border);padding:14px;min-height:48px;border-radius:99px;width:100%;font-weight:700;cursor:pointer;margin-top:12px;transition:.3s var(--spring)}
+.btn-back:hover{background:var(--bg);transform:translateY(-2px)}
+.search-box{margin-bottom:20px;background:rgba(255,255,255,.5)!important;border-radius:99px!important;padding-left:24px!important}
+.order-item{position:relative;border:1px solid var(--glass);border-radius:var(--r-md);padding:18px 20px 18px 24px;margin-bottom:16px;background:var(--solid);overflow:hidden;animation:slideIn .5s var(--spring) both;animation-delay:calc(var(--i,0)*60ms);box-shadow:var(--sh-sm);transition:.3s var(--ease)}
+.order-item:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.order-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--danger)}
+.order-item.is-paid::before{background:var(--success)}
+.order-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.order-user{font-weight:900;font-size:1.1rem;letter-spacing:-.01em}
+.order-details{font-size:.9rem;line-height:1.7;color:var(--muted)}
+.order-details strong{color:var(--text)}
+.badge{padding:6px 14px;border-radius:99px;font-size:.75rem;font-weight:800;border:none;cursor:pointer;white-space:nowrap;transition:.3s var(--spring);letter-spacing:.03em}
+.badge-paid{background:var(--success-bg);color:var(--success)}
+.badge-unpaid{background:var(--danger-bg);color:var(--danger)}
+span.badge{cursor:default}
+.badge:disabled{opacity:.5;cursor:wait}
+button.badge:hover:not(:disabled){filter:brightness(.95);transform:translateY(-1px)}
+button.badge:active:not(:disabled){transform:scale(.92)}
+.admin-badge{background:var(--secondary);font-size:.72rem;font-weight:900;padding:4px 10px;border-radius:99px;margin-left:8px;vertical-align:middle}
+.admin-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--solid);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;box-shadow:var(--sh-sm)}
+.stat-label{font-size:.8rem;font-weight:700;color:var(--muted)}
+.stat-num{font-size:1.8rem;font-weight:900;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.panel{border:1px solid var(--border);border-radius:var(--r-md);padding:20px;margin-bottom:20px;background:var(--solid);box-shadow:var(--sh-sm)}
+.panel.danger{border-color:rgba(255,59,48,.2);background:#FFF9F9}
+.admin-table,.menu-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.9rem}
+.admin-table{min-width:560px}
+.admin-table th,.admin-table td{border-bottom:1px solid var(--border);padding:14px 10px;text-align:left}
+.admin-table th{font-weight:800;color:var(--muted);font-size:.8rem;letter-spacing:.05em}
+.admin-table tr:last-child td,.menu-table tr:last-child td{border-bottom:none}
+.menu-table td{padding:16px 8px;border-bottom:1px dashed rgba(15,23,42,.1)}
+.menu-table td:last-child{text-align:right;font-weight:900;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.empty{text-align:center;padding:40px 20px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.4);border-radius:var(--r-md);border:1px dashed var(--border)}
+.loader,.retry-box{text-align:center;padding:40px 20px;font-weight:700;color:var(--muted)}
+.retry-btn{margin-top:14px}
+.spinner{display:inline-block;width:22px;height:22px;border:3px solid rgba(15,23,42,.1);border-top-color:var(--primary);border-radius:50%;animation:spin .8s cubic-bezier(.4,0,.2,1) infinite;vertical-align:middle;margin-right:10px}
+.btn-submit .spinner{border-color:rgba(255,255,255,.3);border-top-color:#fff;width:18px;height:18px;border-width:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center;z-index:3000;padding:20px}
+#adminLoginModal{z-index:2100}
+.modal-card{background:var(--solid);border:1.5px solid var(--glass);border-radius:var(--r-lg);padding:32px 24px;max-width:360px;width:100%;text-align:center;box-shadow:var(--sh-lg);animation:modalPop .5s var(--spring)}
+@keyframes modalPop{0%{transform:scale(.9) translateY(20px);opacity:0}100%{transform:none;opacity:1}}
+.modal-icon{font-size:3.2rem;margin-bottom:12px;animation:floatUp .6s var(--spring) .1s both}
+.modal-title{font-size:1.3rem;font-weight:900;margin-bottom:10px}
+.modal-msg{font-size:.95rem;margin-bottom:28px;color:var(--muted);white-space:pre-line}
+.modal-btn-group{display:flex;gap:12px}
+.modal-btn{flex:1;background:var(--text);color:#fff;border:none;padding:14px;min-height:52px;border-radius:99px;font-weight:800;cursor:pointer;transition:.3s var(--spring);box-shadow:var(--sh-sm)}
+.modal-btn:hover{background:var(--secondary);color:var(--text);transform:translateY(-2px)}
+.modal-btn:disabled{opacity:.5;cursor:wait}
+.modal-btn-cancel{background:var(--bg);color:var(--text)}
+.modal-btn-cancel:hover{background:#E2E8F0}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media (max-width:480px){header{padding:calc(32px + env(safe-area-inset-top)) 20px 60px}.card{padding:24px 18px}.price-tag{width:56px;font-size:1rem}}
 </style>
 </head>
 <body>
 <div class="bg-glow"></div>
-
-<div class="conn-banner" id="connBanner">修但幾勒，正在重新連線…</div>
+<div class="conn-banner" id="connBanner">連線不穩，資料可能不是最新，正在重新連線…</div>
 
 <header>
   <div class="head-inner">
@@ -332,7 +147,6 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
 </div>
 
 <div class="container">
-  <!-- 點餐頁籤 -->
   <div id="tab-order">
     <div class="card">
       <div class="card-title">填寫訂購資訊</div>
@@ -340,17 +154,13 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
         <label for="groupSelect">組別 *</label>
         <select id="groupSelect" onchange="updateNameOptions()">
           <option value="">請選擇組別</option>
-          <option value="第一組">第一組</option>
-          <option value="第二組">第二組</option>
-          <option value="第三組">第三組</option>
-          <option value="第四組">第四組</option>
-          <option value="第五組">第五組</option>
-          <option value="教師組">教師組</option>
+          <option value="第一組">第一組</option><option value="第二組">第二組</option><option value="第三組">第三組</option>
+          <option value="第四組">第四組</option><option value="第五組">第五組</option><option value="教師組">教師組</option>
         </select>
       </div>
       <div class="form-group">
         <label for="nameSelect">座號與姓名 *</label>
-        <select id="nameSelect" disabled><option value="">請先選擇組別</option></select>
+        <select id="nameSelect" disabled onchange="saveUserSelection()"><option value="">請先選擇組別</option></select>
       </div>
       <div class="form-group">
         <label>餐點品項（最多 5 項）</label>
@@ -359,29 +169,21 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
       </div>
       <div class="form-group">
         <label for="orderNote">備註</label>
-        <input type="text" id="orderNote" placeholder="（不一定要填）">
+        <input type="text" id="orderNote" maxlength="100" placeholder="（不一定要填）">
       </div>
-      <div class="summary-box">
-        <span>應付總金額</span>
-        <span class="total-price" id="totalDisplay">$0</span>
-      </div>
+      <div class="summary-box"><span>應付總金額</span><span class="total-price" id="totalDisplay">$0</span></div>
       <button class="btn-submit" id="submitBtn" onclick="handleOrderSubmit()">送出點餐</button>
     </div>
   </div>
 
-  <!-- 狀態查詢頁籤 -->
   <div id="tab-status" style="display:none;">
     <div class="card">
-      <div class="card-title">
-        <span>點餐與繳費狀態</span>
-        <button class="btn-action" id="btnRefreshStatus" onclick="loadStatusData(true)">重新整理</button>
-      </div>
-      <input type="text" id="statusFilter" class="search-box" placeholder="輸入姓名或組別搜尋" oninput="filterStatus()">
+      <div class="card-title"><span>點餐與繳費狀態</span><button class="btn-action" id="btnRefreshStatus" onclick="loadStatusData(true)">重新整理</button></div>
+      <input type="text" id="statusFilter" class="search-box" placeholder="輸入姓名、組別或餐點搜尋" oninput="filterStatus()">
       <div id="statusList" class="loader"><span class="spinner"></span>載入紀錄中…</div>
     </div>
   </div>
 
-  <!-- 菜單頁籤 -->
   <div id="tab-menu" style="display:none;">
     <div class="card">
       <div class="card-title">今日菜單</div>
@@ -389,12 +191,9 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
     </div>
   </div>
 
-  <!-- 後台管理頁籤 -->
   <div id="tab-admin" style="display:none;">
     <div class="card">
-      <div class="card-title">
-        <div>管理員控制台<span class="admin-badge">已登入</span></div>
-      </div>
+      <div class="card-title"><div>管理員控制台<span class="admin-badge">已登入</span></div></div>
       <div class="admin-stats-grid">
         <div class="stat-card"><div class="stat-label">今日訂單數</div><div class="stat-num" id="statOrderCount">0</div></div>
         <div class="stat-card"><div class="stat-label">訂單總金額</div><div class="stat-num" id="statTotalAmount">$0</div></div>
@@ -402,63 +201,56 @@ header .spinner { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
         <div class="stat-card"><div class="stat-label">未收金額</div><div class="stat-num" style="color:var(--danger)" id="statUnpaidAmount">$0</div></div>
       </div>
       <div class="panel">
-        <label>切換今日店家</label>
-        <div style="display:flex;gap:12px;margin-top:8px">
-          <select id="adminShopsSelect"></select>
-          <button class="btn-action" style="white-space:nowrap; height: 52px" onclick="handleAdminChangeShop()">確認更換</button>
-        </div>
+        <label for="adminShopsSelect">切換今日店家</label>
+        <div style="display:flex;gap:12px;margin-top:8px"><select id="adminShopsSelect"></select><button class="btn-action" style="white-space:nowrap;height:52px" onclick="handleAdminChangeShop()">確認更換</button></div>
       </div>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px">
-          <label style="margin:0">對帳管理 <span style="font-size:0.75rem;font-weight:400;opacity:0.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
+          <label style="margin:0">對帳管理 <span style="font-size:.75rem;font-weight:400;opacity:.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
           <button class="btn-action" id="btnRefreshAdmin" style="padding:6px 14px" onclick="loadAdminOrders(true)">重新整理</button>
         </div>
         <div id="adminOrdersContainer" style="overflow-x:auto"><div class="loader"><span class="spinner"></span>載入訂單中…</div></div>
       </div>
       <div class="panel danger">
         <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
-        <p style="font-size:0.85rem;margin-bottom:16px;color:var(--text-muted)">會清除「今日誰點餐」的所有訂購資料，標題列會保留。</p>
+        <p style="font-size:.85rem;margin-bottom:16px;color:var(--muted)">會清除「今日誰點餐」的所有訂購資料，標題列會保留。</p>
         <button class="btn-danger" onclick="handleAdminClearOrders()">清空今日紀錄</button>
       </div>
-      <button class="btn-back" onclick="exitAdmin()">返回點餐頁面</button>
+      <button class="btn-back" onclick="switchTab('order')">返回點餐頁面</button>
     </div>
   </div>
 </div>
 
-<!-- 提示彈窗 -->
 <div class="modal-overlay" id="customModal" role="dialog" aria-modal="true">
   <div class="modal-card">
     <div class="modal-icon" id="modalIcon">🎉</div>
     <div class="modal-title" id="modalTitle">提示</div>
     <div class="modal-msg" id="modalMsg"></div>
     <div class="modal-btn-group">
-      <button class="modal-btn modal-btn-cancel" id="modalCancelBtn" style="display:none" onclick="closeModal()">取消</button>
+      <button class="modal-btn modal-btn-cancel" id="modalCancelBtn" style="display:none" onclick="closeModal(true)">取消</button>
       <button class="modal-btn" id="modalConfirmBtn" onclick="closeModal()">賀哦，哇災！</button>
     </div>
   </div>
 </div>
 
-<!-- 後台登入彈窗 -->
-<div class="modal-overlay" id="adminLoginModal" style="z-index:2100" role="dialog" aria-modal="true">
+<div class="modal-overlay" id="adminLoginModal" role="dialog" aria-modal="true">
   <div class="modal-card">
     <div class="modal-icon">🔐</div>
     <div class="modal-title">管理員驗證</div>
     <div class="form-group" style="margin-top:20px;text-align:left">
       <label for="adminPasswordInput">管理密碼</label>
-      <input type="password" id="adminPasswordInput" placeholder="請輸入後台密碼" onkeypress="if(event.key==='Enter')submitAdminLogin()">
+      <input type="password" id="adminPasswordInput" autocomplete="current-password" placeholder="請輸入後台密碼" onkeypress="if(event.key==='Enter')submitAdminLogin()">
     </div>
     <div class="modal-btn-group">
       <button class="modal-btn modal-btn-cancel" onclick="closeAdminModal()">取消</button>
-      <button class="modal-btn" onclick="submitAdminLogin()">登入後台</button>
+      <button class="modal-btn" id="adminLoginBtn" onclick="submitAdminLogin()">登入後台</button>
     </div>
   </div>
 </div>
 
 <script>
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
-const ADMIN_PASSWORD = "6767";
-const REQUEST_TIMEOUT_MS = 30000, MAX_RETRIES = 2, RETRY_BASE_DELAY_MS = 1200;
-
+const REQUEST_TIMEOUT_MS = 30000, MAX_RETRIES = 2, RETRY_BASE_DELAY_MS = 1200, POLL_MS = 30000;
 const groupMembersData = {
   "第一組": ["04 舒香雅","10 施美美","12 王麗敏","18 江珈宜","21 林彩葳","26 林瑋妮"],
   "第二組": ["08 吳同祐","09 劉靜文","11 黃昱瑄","20 郭貞纓","27 陳玟妤","29 簡雅珍"],
@@ -467,146 +259,63 @@ const groupMembersData = {
   "第五組": ["02 吳欣珉","05 鍾涵茹","14 劉曉珊","16 薛席婷","25 陳怡芳","30 張語宸"],
   "教師組": ["助教","老師"]
 };
-
 let currentShop = '', menuItems = [], allOrders = [], allShopsList = [], adminToken = '';
-let isFetchingData = false, searchTimeout = null, modalCallback = null;
+let isFetchingData = false, searchTimeout = null, modalCallback = null, currentTab = 'order';
 const $ = id => document.getElementById(id);
-
-function escapeHTML(str) {
-  if (str === null || str === undefined) return '';
-  return String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t] || t));
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+function escapeHTML(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
 }
+const isPaid = o => o.status !== undefined ? String(o.status).trim() === '已付' : Boolean(o.paid);
+const setPaid = (o, v) => { o.paid = v; o.status = v ? '已付' : '未付'; };
+const orderDetails = o => o.details !== undefined ? o.details : (o.itemsSummary || '');
+const loaderHTML = t => `<div class="loader"><span class="spinner"></span>${t}</div>`;
+const retryHTML = (msg, fn) => `<div class="retry-box">讀取失敗：${escapeHTML(msg)}<br><button class="btn-action retry-btn" onclick="${fn}">重新嘗試</button></div>`;
 
-function switchTab(tab) {
-  ['order', 'status', 'menu', 'admin'].forEach(t => {
-    const el = $('tab-' + t);
-    if (el) el.style.display = (t === tab) ? 'block' : 'none';
-  });
-  document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-    const tabs = ['order', 'status', 'menu'];
-    if (tabs[idx] === tab) btn.classList.add('active');
-    else btn.classList.remove('active');
-  });
-  if (tab === 'status') loadStatusData();
-  if (tab === 'menu') renderMenuList();
-  if (tab === 'admin') loadAdminOrders();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function updateNameOptions() {
-  const sel = $("nameSelect"), g = $("groupSelect").value;
-  sel.innerHTML = "";
-  if (!g || !groupMembersData[g]) {
-    sel.innerHTML = '<option value="">請先選擇組別</option>';
-    sel.disabled = true;
-    return;
-  }
-  sel.innerHTML = '<option value="">請選擇座號姓名</option>';
-  groupMembersData[g].forEach(m => {
-    const o = document.createElement("option");
-    o.value = m; o.textContent = m; sel.appendChild(o);
-  });
-  sel.disabled = false;
-  localStorage.setItem('lunchApp_group', g);
-  saveUserSelection();
-}
-
-function saveUserSelection() {
-  const g = $('groupSelect').value;
-  const n = $('nameSelect').value;
-  if (g) localStorage.setItem('lunchApp_group', g);
-  if (n) localStorage.setItem('lunchApp_name', n);
-}
-
-function addItemRow() {
-  const list = $('itemList');
-  if (list.children.length >= 5) {
-    showModal('提示', '每筆訂單最多只能選擇 5 項餐點！', '⚠️');
-    return;
-  }
-  const row = document.createElement('div');
-  row.className = 'item-row';
-  row.innerHTML = `
-    <select onchange="updateRowPrice(this)"><option value="" data-price="0">請選擇餐點品項</option>${menuItems.map(i => `<option value="${escapeHTML(i.name)}" data-price="${i.price}">${escapeHTML(i.name)} ($${i.price})</option>`).join('')}</select>
-    <span class="price-tag">$0</span>
-    <button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除">✕</button>
-  `;
-  list.appendChild(row);
-  calculateTotal();
-}
-
-function removeItemRow(btn) {
-  const row = btn.closest('.item-row');
-  row.style.opacity = '0';
-  row.style.transform = 'scale(0.9)';
-  setTimeout(() => {
-    row.remove();
-    if ($('itemList').children.length === 0) {
-      addItemRow();
-    } else {
-      calculateTotal();
-    }
-  }, 200);
-}
-
-function updateRowPrice(sel) {
-  const opt = sel.options[sel.selectedIndex];
-  const price = parseInt(opt.getAttribute('data-price') || '0', 10);
-  const row = sel.closest('.item-row');
-  const priceTag = row.querySelector('.price-tag');
-  priceTag.textContent = '$' + price;
-  calculateTotal();
-}
-
-function calculateTotal() {
-  let total = 0;
-  document.querySelectorAll('.item-row').forEach(row => {
-    const sel = row.querySelector('select');
-    const opt = sel.options[sel.selectedIndex];
-    const price = parseInt(opt ? opt.getAttribute('data-price') || '0' : '0', 10);
-    total += price;
-  });
-  const display = $('totalDisplay');
-  display.textContent = '$' + total;
-  display.classList.remove('bump');
-  void display.offsetWidth;
-  display.classList.add('bump');
-}
-
+// ---------- API ----------
 async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
   if (typeof google !== 'undefined' && google.script && google.script.run) {
     return new Promise((resolve, reject) => {
-      let runner = google.script.run
-        .withSuccessHandler(res => resolve(res))
-        .withFailureHandler(err => reject(new Error(err.message || err)));
-      if (action === 'getInitialData') runner.getInitialData();
-      else if (action === 'getOrdersAndPaymentStatus') runner.getOrdersAndPaymentStatus();
-      else if (action === 'submitOrder') runner.submitOrder(data.payload ? JSON.parse(data.payload) : data);
-      else if (action === 'adminTogglePaid') runner.adminTogglePaid(data.password, data.rowIndex, data.newStatus);
-      else if (action === 'adminChangeShop') runner.adminChangeShop(data.password, data.newShop);
-      else if (action === 'adminClearAllOrders') runner.adminClearAllOrders(data.password);
-      else reject(new Error("未知的動作: " + action));
+      const r = google.script.run
+        .withSuccessHandler(res => {
+          // 後端 getOrdersAndPaymentStatus() 直接回傳陣列，這裡統一成 {success, orders, data}
+          if (action === 'getOrdersAndPaymentStatus' && Array.isArray(res)) res = { success: true, orders: res, data: res };
+          hideConnBanner(); resolve(res);
+        })
+        .withFailureHandler(err => reject(new Error((err && err.message) || String(err))));
+      switch (action) {
+        case 'getInitialData': r.getInitialData(); break;
+        case 'getOrdersAndPaymentStatus': r.getOrdersAndPaymentStatus(); break;
+        case 'submitOrder': r.submitOrder(data.payload ? JSON.parse(data.payload) : data); break;
+        case 'adminVerify': r.adminVerify(data.password); break;
+        case 'adminTogglePaid': r.adminTogglePaid(data.password, data.rowIndex, data.newStatus); break;
+        case 'adminChangeShop': r.adminChangeShop(data.password, data.newShop); break;
+        case 'adminClearAllOrders': r.adminClearAllOrders(data.password); break;
+        default: reject(new Error('未知的動作: ' + action));
+      }
     });
   }
   let lastErr = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
       const response = await fetch(GAS_API_URL, {
         method: 'POST', redirect: 'follow', cache: 'no-store',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: action, ...data }),
-        signal: controller.signal
+        body: JSON.stringify({ action, ...data }), signal: controller.signal
       });
-      clearTimeout(timeoutId);
       if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
-      const trimmed = (await response.text()).trim();
-      if (trimmed.startsWith('<')) throw new Error("伺服器回傳了非預期的內容，請確認 Apps Script 部署權限設定為「任何人」，且已重新部署最新版本。");
-      let jsonResult;
-      try { jsonResult = JSON.parse(trimmed); } catch (e) { throw new Error("伺服器回傳格式異常，請稍後再試"); }
+      const text = (await response.text()).trim();
+      if (text.startsWith('<')) throw new Error('伺服器回傳了非預期的內容，請確認 Apps Script 部署權限為「任何人」，且已重新部署最新版本。');
+      let json;
+      try { json = JSON.parse(text); } catch (e) { throw new Error('伺服器回傳格式異常，請稍後再試'); }
       hideConnBanner();
-      return jsonResult;
+      return json;
     } catch (err) {
       lastErr = err;
       if (attempt === retries) {
@@ -614,77 +323,66 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
         throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
       }
       await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1)));
-    }
+    } finally { clearTimeout(timeoutId); }
   }
   throw lastErr || new Error('無法連線至伺服器。');
 }
-
 function showConnBanner() { $('connBanner').classList.add('show'); }
 function hideConnBanner() { $('connBanner').classList.remove('show'); }
 
+// ---------- Modal ----------
 function showModal(title, msg, icon = '🎉', callback = null) {
   $('modalTitle').innerText = title; $('modalMsg').innerText = msg; $('modalIcon').innerText = icon;
   $('modalCancelBtn').style.display = 'none';
-  const b = $('modalConfirmBtn'); b.innerText = '賀哦，哇災！'; b.onclick = closeModal;
+  const b = $('modalConfirmBtn'); b.innerText = '賀哦，哇災！'; b.onclick = () => closeModal();
   modalCallback = callback;
   $('customModal').style.display = 'flex'; b.focus();
 }
-
 function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
   $('modalTitle').innerText = title; $('modalMsg').innerText = msg; $('modalIcon').innerText = icon;
   $('modalCancelBtn').style.display = 'inline-block';
   const b = $('modalConfirmBtn'); b.innerText = '確定';
-  b.onclick = function() { closeModal(); if (onConfirm) onConfirm(); };
+  b.onclick = () => { closeModal(true); if (onConfirm) onConfirm(); };
   modalCallback = null;
   $('customModal').style.display = 'flex';
 }
-
-function closeModal() {
+function closeModal(skipCallback) {
   $('customModal').style.display = 'none';
-  if (modalCallback) { modalCallback(); modalCallback = null; }
+  const cb = modalCallback; modalCallback = null;
+  if (cb && !skipCallback) cb();
 }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(true); closeAdminModal(); } });
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeAdminModal(); }
-});
-
+// ---------- 初始化 ----------
 window.onload = function() {
-  const g = localStorage.getItem('lunchApp_group'), n = localStorage.getItem('lunchApp_name');
-  if (g) {
+  const g = store.get('lunchApp_group'), n = store.get('lunchApp_name');
+  if (g && groupMembersData[g]) {
     $('groupSelect').value = g; updateNameOptions();
     if (n) $('nameSelect').value = n;
   }
-  const cached = localStorage.getItem('lunchApp_cachedData');
+  const cached = store.get('lunchApp_cachedData');
   if (cached) { try { applyDataToUI(JSON.parse(cached)); } catch (e) {} }
-  loadInitialData();
   if ($('itemList').children.length === 0) addItemRow();
+  loadInitialData();
+  setInterval(pollOrders, POLL_MS);
 };
+function pollOrders() {
+  if (document.hidden) return;
+  if (currentTab === 'status') loadStatusData();
+  else if (currentTab === 'admin') loadAdminOrders();
+}
 
 function applyDataToUI(res) {
   currentShop = res.shop || '尚未設定店家';
   menuItems = Array.isArray(res.items) ? res.items : [];
   allShopsList = Array.isArray(res.allShops) ? res.allShops : [];
   if (Array.isArray(res.orders)) allOrders = res.orders;
-  else if (Array.isArray(res.data)) allOrders = res.data;
-  const st = $('currentShopText');
-  st.className = 'shop-badge'; st.innerText = currentShop;
+  const st = $('currentShopText'); st.className = 'shop-badge'; st.innerText = currentShop;
   renderMenuList();
   if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows();
   populateAdminShopsSelect();
   renderOrders(allOrders);
-  if ($('tab-admin').style.display === 'block') renderAdminTable(allOrders);
-}
-
-function menuOptionsHTML() {
-  let o = '<option value="" data-price="0">請選擇餐點品項</option>';
-  menuItems.forEach(i => { o += `<option value="${escapeHTML(i.name)}" data-price="${i.price}">${escapeHTML(i.name)} ($${i.price})</option>`; });
-  return o;
-}
-
-function updateExistingItemRows() {
-  const options = menuOptionsHTML();
-  document.querySelectorAll('.item-row select').forEach(s => { const v = s.value; s.innerHTML = options; s.value = v; });
-  calculateTotal();
+  if (currentTab === 'admin') renderAdminTable(allOrders);
 }
 
 async function loadInitialData() {
@@ -692,339 +390,262 @@ async function loadInitialData() {
   isFetchingData = true;
   try {
     const res = await apiRequest('getInitialData');
-    if (res && res.success) {
-      localStorage.setItem('lunchApp_cachedData', JSON.stringify(res));
-      applyDataToUI(res);
-    } else if (res && !res.success) throw new Error(res.message || '讀取資料失敗');
+    if (!res || !res.success) throw new Error((res && res.message) || '讀取資料失敗');
+    store.set('lunchApp_cachedData', JSON.stringify(res));
+    applyDataToUI(res);
   } catch (err) {
     if (menuItems.length === 0) {
-      $('currentShopText').className = 'shop-badge is-err';$('currentShopText').innerText = '載入失敗 (請檢查連線)';
+      const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '載入失敗，請檢查連線';
+      $('menuList').className = '';
+      $('menuList').innerHTML = retryHTML(err.message, 'loadInitialData()');
     }
-  } finally {
-    isFetchingData = false;
-  }
+  } finally { isFetchingData = false; }
 }
 
-async function loadStatusData(force = false) {
-  const container = $('statusList');
-  if (force || allOrders.length === 0) {
-    container.innerHTML = '<div class="loader"><span class="spinner"></span>載入紀錄中…</div>';
-  }
-  try {
-    const res = await apiRequest('getOrdersAndPaymentStatus');
-    if (res && res.success) {
-      allOrders = res.orders || res.data || [];
-      renderOrders(allOrders);
-    } else {
-      throw new Error(res.message || '載入失敗');
-    }
-  } catch (err) {
-    container.innerHTML = `<div class="empty">無法載入紀錄：${escapeHTML(err.message)}</div>`;
-  }
+// ---------- 分頁 ----------
+function switchTab(tab) {
+  currentTab = tab;
+  ['order', 'status', 'menu', 'admin'].forEach(t => { $('tab-' + t).style.display = t === tab ? 'block' : 'none'; });
+  $('mainTabs').style.display = tab === 'admin' ? 'none' : 'flex';
+  const tabs = ['order', 'status', 'menu'];
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
+  if (tab === 'status') loadStatusData();
+  if (tab === 'menu') renderMenuList();
+  if (tab === 'admin') { renderAdminTable(allOrders); loadAdminOrders(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function renderOrders(orders) {
-  const container = $('statusList');
-  const filter = ($('statusFilter') ?$('statusFilter').value : '').trim().toLowerCase();
-  let filtered = orders;
-  if (filter) {
-    filtered = orders.filter(o => {
-      const details = o.details !== undefined ? o.details : (o.itemsSummary || '');
-      return String(o.group || '').toLowerCase().includes(filter)
-        || String(o.name || '').toLowerCase().includes(filter)
-        || String(details).toLowerCase().includes(filter);
-    });
+// ---------- 組別 / 姓名 ----------
+function updateNameOptions() {
+  const sel = $('nameSelect'), g = $('groupSelect').value;
+  if (!g || !groupMembersData[g]) {
+    sel.innerHTML = '<option value="">請先選擇組別</option>'; sel.disabled = true; return;
   }
-  if (!filtered || filtered.length === 0) {
-    container.innerHTML = '<div class="empty">目前沒有任何點餐紀錄</div>';
-    return;
-  }
-  let html = '';
-  filtered.forEach((o, index) => {
-    const isPaid = o.status !== undefined
-      ? String(o.status).trim() === '已付'
-      : Boolean(o.paid);
-    const statusText = isPaid ? '已付' : '未付';
-    const details = o.details !== undefined ? o.details : (o.itemsSummary || '');
-
-    html += `
-      <div class="order-item ${isPaid ? 'is-paid' : ''}" style="--i: ${index}">
-        <div class="order-header">
-          <div class="order-user">${escapeHTML(o.group)} - ${escapeHTML(o.name)}</div>
-          <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${statusText}</span>
-        </div>
-        <div class="order-details">
-          餐點：<strong>${escapeHTML(details)}</strong><br>
-          總金額：<strong>$${escapeHTML(o.total)}</strong> ${o.note ? `| 備註：${escapeHTML(o.note)}` : ''}
-        </div>
-      </div>
-    `;
-  });
-  container.innerHTML = html;
+  sel.innerHTML = '<option value="">請選擇座號姓名</option>' + groupMembersData[g].map(m => `<option value="${escapeHTML(m)}">${escapeHTML(m)}</option>`).join('');
+  sel.disabled = false;
+  store.set('lunchApp_group', g);
+}
+function saveUserSelection() {
+  const g = $('groupSelect').value, n = $('nameSelect').value;
+  if (g) store.set('lunchApp_group', g);
+  if (n) store.set('lunchApp_name', n);
 }
 
-function filterStatus() {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    renderOrders(allOrders);
+// ---------- 餐點與價格（價格唯一來源：選項的 data-price） ----------
+function menuOptionsHTML() {
+  return '<option value="" data-price="0">請選擇餐點品項</option>' +
+    menuItems.map(i => `<option value="${escapeHTML(i.name)}" data-price="${Number(i.price) || 0}">${escapeHTML(i.name)} ($${Number(i.price) || 0})</option>`).join('');
+}
+function addItemRow() {
+  const list = $('itemList');
+  if (list.querySelectorAll('.item-row').length >= 5) return showModal('提示', '每筆訂單最多只能選擇 5 項餐點！', '⚠️');
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `<select onchange="calculateTotal()" aria-label="餐點品項">${menuOptionsHTML()}</select><span class="price-tag">$0</span><button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除" aria-label="移除此項">✕</button>`;
+  list.appendChild(row);
+  calculateTotal();
+}
+function removeItemRow(btn) {
+  const row = btn.closest('.item-row');
+  row.style.opacity = '0'; row.style.transform = 'scale(.9)';
+  setTimeout(() => {
+    row.remove();
+    if ($('itemList').children.length === 0) addItemRow(); else calculateTotal();
   }, 200);
 }
-
-function renderMenuList() {
-  const container = $('menuList');
-  if (!menuItems || menuItems.length === 0) {
-    container.innerHTML = '<div class="empty">目前尚無今日菜單</div>';
-    return;
-  }
-  let html = '<table class="menu-table">';
-  menuItems.forEach(i => {
-    html += `<tr><td>${escapeHTML(i.name)}</td><td>$${escapeHTML(i.price)}</td></tr>`;
+// 菜單更新（切換店家 / 載入完成）後，保留仍存在的選擇，其餘重設，並重新計價
+function updateExistingItemRows() {
+  const options = menuOptionsHTML();
+  document.querySelectorAll('.item-row select').forEach(s => {
+    const v = s.value;
+    s.innerHTML = options;
+    s.value = v;
+    if (s.selectedIndex < 0) s.selectedIndex = 0;
   });
-  html += '</table>';
-  container.innerHTML = html;
+  calculateTotal();
+}
+function readItems() {
+  const items = [];
+  document.querySelectorAll('.item-row select').forEach(s => {
+    if (!s.value) return;
+    const o = s.options[s.selectedIndex];
+    items.push({ name: s.value, price: Number(o && o.dataset.price) || 0 });
+  });
+  return items;
+}
+function calculateTotal() {
+  let total = 0;
+  document.querySelectorAll('.item-row').forEach(row => {
+    const s = row.querySelector('select'), o = s.options[s.selectedIndex];
+    const p = o ? Number(o.dataset.price) || 0 : 0;
+    row.querySelector('.price-tag').textContent = '$' + p;
+    total += p;
+  });
+  const d = $('totalDisplay'), txt = '$' + total;
+  if (d.textContent !== txt) {
+    d.textContent = txt;
+    d.classList.remove('bump'); void d.offsetWidth; d.classList.add('bump');
+  }
+  return total;
 }
 
 async function handleOrderSubmit() {
   saveUserSelection();
-  const group = $('groupSelect').value;
-  const name = $('nameSelect').value;
-  const note = $('orderNote').value;
-  if (!group || !name) {
-    showModal('提示', '請先選擇組別以及座號姓名！', '⚠️');
-    return;
-  }
-  const items = [];
-  let total = 0;
-  document.querySelectorAll('.item-row').forEach(row => {
-    const sel = row.querySelector('select');
-    const val = sel.value;
-    const opt = sel.options[sel.selectedIndex];
-    const price = parseInt(opt ? opt.getAttribute('data-price') || '0' : '0', 10);
-    if (val) {
-      items.push({ name: val, price: price });
-      total += price;
-    }
-  });
-  if (items.length === 0) {
-    showModal('提示', '請至少選擇一項餐點！', '⚠️');
-    return;
-  }
+  const group = $('groupSelect').value, name = $('nameSelect').value;
+  if (!group || !name) return showModal('提示', '請先選擇組別以及座號姓名！', '⚠️');
+  const items = readItems();
+  if (items.length === 0) return showModal('提示', '請至少選擇一項餐點！', '⚠️');
+  const total = items.reduce((a, i) => a + i.price, 0);
 
   const btn = $('submitBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>送出中…';
-
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>送出中…';
   try {
-    const payload = {
-      group: group,
-      name: name,
-      items: items,
-      total: total,             // 舊欄位保留
-      totalAmount: total,       // 後端標準欄位
-      note: note
-    };
-    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) });
+    // 金額僅供顯示；後端會依菜單重新計算並以後端為準
+    const payload = { group, name, items, total, totalAmount: total, note: $('orderNote').value.trim() };
+    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) }, 0);
     if (res && res.success) {
-      showModal('成功', '點餐成功！', '🎉', () => {
-        $('orderNote').value = '';$('itemList').innerHTML = '';
-        addItemRow();
+      showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', () => {
+        $('orderNote').value = ''; $('itemList').innerHTML = ''; addItemRow();
         switchTab('status');
       });
     } else {
-      throw new Error(res.message || '送出失敗');
+      if (res && res.code === 'MENU_CHANGED') loadInitialData();
+      throw new Error((res && res.message) || '送出失敗');
     }
   } catch (err) {
-    showModal('錯誤', err.message || '送出失敗，請再試一次。', '❌');
+    showModal('送出失敗', err.message || '送出失敗，請再試一次。', '❌');
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '送出點餐';
+    btn.disabled = false; btn.innerHTML = '送出點餐';
   }
 }
 
+// ---------- 訂單資料 ----------
+async function fetchOrders() {
+  const res = await apiRequest('getOrdersAndPaymentStatus');
+  if (!res || !res.success) throw new Error((res && res.message) || '載入失敗');
+  allOrders = res.orders || res.data || [];
+  return allOrders;
+}
+async function loadStatusData(force = false) {
+  const box = $('statusList');
+  if (allOrders.length) renderOrders(allOrders);
+  else if (force) { box.className = 'loader'; box.innerHTML = loaderHTML('載入紀錄中…'); }
+  try { await fetchOrders(); renderOrders(allOrders); }
+  catch (err) { if (!allOrders.length) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
+}
+function renderOrders(orders) {
+  const box = $('statusList');
+  box.className = '';
+  const kw = $('statusFilter').value.trim().toLowerCase();
+  const list = !kw ? orders : orders.filter(o =>
+    [o.group, o.name, orderDetails(o)].some(v => String(v || '').toLowerCase().includes(kw)));
+  if (!list.length) { box.innerHTML = '<div class="empty">' + (kw ? '找不到符合的紀錄' : '還沒有人點餐，你可以是第一個！') + '</div>'; return; }
+  box.innerHTML = list.map((o, i) => {
+    const paid = isPaid(o);
+    return `<div class="order-item ${paid ? 'is-paid' : ''}" style="--i:${Math.min(i, 12)}">
+      <div class="order-header"><div class="order-user">${escapeHTML(o.group)} - ${escapeHTML(o.name)}</div>
+      <span class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}">${paid ? '已付' : '未付'}</span></div>
+      <div class="order-details">餐點：<strong>${escapeHTML(orderDetails(o)) || '無'}</strong><br>
+      總金額：<strong>$${escapeHTML(o.total)}</strong>${o.time ? ' | 時間：' + escapeHTML(o.time) : ''}${o.note ? '<br>備註：' + escapeHTML(o.note) : ''}</div>
+    </div>`;
+  }).join('');
+}
+function filterStatus() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => renderOrders(allOrders), 200);
+}
+function renderMenuList() {
+  const box = $('menuList');
+  box.className = '';
+  if (!menuItems.length) { box.innerHTML = '<div class="empty">目前尚無今日菜單</div>'; return; }
+  box.innerHTML = '<table class="menu-table">' + menuItems.map(i => `<tr><td>${escapeHTML(i.name)}</td><td>$${Number(i.price) || 0}</td></tr>`).join('') + '</table>';
+}
+
+// ---------- 管理員 ----------
 function openAdminModal() {
-  if (adminToken) {
-    switchTab('admin');
-  } else {
-    $('adminPasswordInput').value = '';$('adminLoginModal').style.display = 'flex';
-    setTimeout(() => $('adminPasswordInput').focus(), 100);
-  }
+  if (adminToken) return switchTab('admin');
+  $('adminPasswordInput').value = '';
+  $('adminLoginModal').style.display = 'flex';
+  setTimeout(() => $('adminPasswordInput').focus(), 100);
 }
-
-function closeAdminModal() {
-  $('adminLoginModal').style.display = 'none';
-}
-
-function submitAdminLogin() {
+function closeAdminModal() { $('adminLoginModal').style.display = 'none'; }
+async function submitAdminLogin() {
   const pwd = $('adminPasswordInput').value;
-  if (pwd === ADMIN_PASSWORD) {
-    adminToken = pwd;
-    closeAdminModal();
-    switchTab('admin');
-  } else {
-    showModal('錯誤', '管理密碼錯誤！', '❌');
-  }
+  if (!pwd) return;
+  const btn = $('adminLoginBtn'); btn.disabled = true;
+  try {
+    const res = await apiRequest('adminVerify', { password: pwd }, 1);   // 由後端驗證，前端不存密碼
+    if (res && res.success) { adminToken = pwd; closeAdminModal(); switchTab('admin'); }
+    else showModal('錯誤', '管理密碼錯誤！', '❌');
+  } catch (err) { showModal('錯誤', err.message, '❌'); }
+  finally { btn.disabled = false; }
 }
-
-function exitAdmin() {
-  switchTab('order');
-}
-
 async function loadAdminOrders(force = false) {
-  const container = $('adminOrdersContainer');
-  if (force || allOrders.length === 0) {
-    container.innerHTML = '<div class="loader"><span class="spinner"></span>載入訂單中…</div>';
-  }
-  try {
-    const res = await apiRequest('getOrdersAndPaymentStatus');
-    if (res && res.success) {
-      allOrders = res.orders || res.data || [];
-      renderAdminTable(allOrders);
-      updateAdminStats(allOrders);
-    } else {
-      throw new Error(res.message || '載入失敗');
-    }
-  } catch (err) {
-    container.innerHTML = `<div class="empty">無法載入訂單：${escapeHTML(err.message)}</div>`;
-  }
+  const box = $('adminOrdersContainer');
+  if (!allOrders.length && force) box.innerHTML = loaderHTML('載入訂單中…');
+  try { await fetchOrders(); renderAdminTable(allOrders); renderOrders(allOrders); }
+  catch (err) { if (!allOrders.length) box.innerHTML = retryHTML(err.message, 'loadAdminOrders(true)'); }
 }
-
 function updateAdminStats(orders) {
-  let count = orders.length;
-  let totalAmount = 0;
-  let paidAmount = 0;
-  let unpaidAmount = 0;
-  orders.forEach(o => {
-    const t = parseInt(o.total || 0, 10);
-    totalAmount += t;
-
-    const isPaid = o.status !== undefined
-      ? String(o.status).trim() === '已付'
-      : Boolean(o.paid);
-
-    if (isPaid) {
-      paidAmount += t;
-    } else {
-      unpaidAmount += t;
-    }
-  });
-  $('statOrderCount').innerText = count;
-  $('statTotalAmount').innerText = '$' + totalAmount;
-  $('statPaidAmount').innerText = '$' + paidAmount;
-  $('statUnpaidAmount').innerText = '$' + unpaidAmount;
+  let total = 0, paid = 0;
+  orders.forEach(o => { const t = Number(o.total) || 0; total += t; if (isPaid(o)) paid += t; });
+  $('statOrderCount').innerText = orders.length + ' 筆';
+  $('statTotalAmount').innerText = '$' + total;
+  $('statPaidAmount').innerText = '$' + paid;
+  $('statUnpaidAmount').innerText = '$' + (total - paid);
 }
-
 function renderAdminTable(orders) {
-  const container = $('adminOrdersContainer');
-  if (!orders || orders.length === 0) {
-    container.innerHTML = '<div class="empty">目前沒有任何訂單</div>';
-    return;
-  }
-  let html = `
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>組別 / 姓名</th>
-          <th>餐點內容</th>
-          <th>金額</th>
-          <th>繳費狀態</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-  orders.forEach((o, index) => {
-    const isPaid = o.status !== undefined
-      ? String(o.status).trim() === '已付'
-      : Boolean(o.paid);
-    const details = o.details !== undefined ? o.details : (o.itemsSummary || '');
-    const rowIndex = o.rowIndex !== undefined ? o.rowIndex : index;
-    const nextStatus = !isPaid;
-
-    html += `
-      <tr>
-        <td><strong>${escapeHTML(o.group)}</strong><br>${escapeHTML(o.name)}</td>
-        <td>${escapeHTML(details)} ${o.note ? `<br><small style="color:var(--text-muted)">備註：${escapeHTML(o.note)}</small>` : ''}</td>
-        <td><strong>$${escapeHTML(o.total)}</strong></td>
-        <td>
-          <button class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}" onclick="toggleOrderStatus(${Number(rowIndex)}, ${nextStatus})">
-            ${isPaid ? '已付' : '未付'}
-          </button>
-        </td>
-      </tr>
-    `;
-  });
-  html += '</tbody></table>';
-  container.innerHTML = html;
-  updateAdminStats(orders);
+  updateAdminStats(orders || []);
+  const box = $('adminOrdersContainer');
+  if (!orders || !orders.length) { box.innerHTML = '<div class="empty">目前沒有任何訂單</div>'; return; }
+  box.innerHTML = '<table class="admin-table"><thead><tr><th>組別 / 姓名</th><th>餐點內容</th><th>金額</th><th>繳費狀態</th></tr></thead><tbody>' +
+    orders.map(o => {
+      const paid = isPaid(o), ok = Number(o.rowIndex) > 1;
+      return `<tr><td><strong>${escapeHTML(o.group)}</strong><br>${escapeHTML(o.name)}</td>
+      <td>${escapeHTML(orderDetails(o))}${o.note ? `<br><small style="color:var(--muted)">備註：${escapeHTML(o.note)}</small>` : ''}</td>
+      <td><strong>$${escapeHTML(o.total)}</strong></td>
+      <td><button class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}" ${ok ? '' : 'disabled'} onclick="toggleOrderStatus(${Number(o.rowIndex)}, this)">${paid ? '已付' : '未付'}</button></td></tr>`;
+    }).join('') + '</tbody></table>';
 }
-
-async function toggleOrderStatus(rowIndex, newStatus) {
+// 樂觀更新：先改畫面，失敗再還原
+async function toggleOrderStatus(rowIndex, btn) {
+  const o = allOrders.find(x => x.rowIndex === rowIndex);
+  if (!o || btn.disabled) return;
+  const prev = isPaid(o), next = !prev;
+  const paint = v => { btn.textContent = v ? '已付' : '未付'; btn.className = 'badge ' + (v ? 'badge-paid' : 'badge-unpaid'); };
+  setPaid(o, next); paint(next); updateAdminStats(allOrders); btn.disabled = true;
   try {
-    const res = await apiRequest('adminTogglePaid', {
-      password: adminToken,
-      rowIndex: rowIndex,
-      newStatus: Boolean(newStatus)
-    });
-    if (res && res.success) {
-      await loadAdminOrders(true);
-      await loadStatusData();
-    } else {
-      throw new Error(res.message || '更新失敗');
-    }
+    const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex, newStatus: next });
+    if (!res || !res.success) throw new Error((res && res.message) || '更新失敗');
+    renderOrders(allOrders);
   } catch (err) {
-    showModal('錯誤', err.message || '更新狀態失敗', '❌');
-  }
+    setPaid(o, prev); paint(prev); updateAdminStats(allOrders);
+    showModal('同步失敗', '狀態已還原。\n(' + err.message + ')', '⚠️');
+  } finally { btn.disabled = false; }
 }
-
 function populateAdminShopsSelect() {
   const sel = $('adminShopsSelect');
-  if (!sel) return;
-  let html = '';
-  allShopsList.forEach(s => {
-    html += `<option value="${escapeHTML(s)}" ${s === currentShop ? 'selected' : ''}>${escapeHTML(s)}</option>`;
-  });
-  sel.innerHTML = html;
+  sel.innerHTML = allShopsList.map(s => `<option value="${escapeHTML(s)}" ${s === currentShop ? 'selected' : ''}>${escapeHTML(s)}</option>`).join('');
 }
-
-async function handleAdminChangeShop() {
-  const sel = $('adminShopsSelect');
-  const newShop = sel.value;
+function handleAdminChangeShop() {
+  const newShop = $('adminShopsSelect').value;
   if (!newShop) return;
   showConfirmModal('確認更換', `確定要將今日店家切換為「${newShop}」嗎？`, '❓', async () => {
     try {
-      const res = await apiRequest('adminChangeShop', {
-        password: adminToken,
-        newShop: newShop
-      });
-      if (res && res.success) {
-        showModal('成功', '店家已成功更換！', '🎉', () => {
-          loadInitialData();
-        });
-      } else {
-        throw new Error(res.message || '更換失敗');
-      }
-    } catch (err) {
-      showModal('錯誤', err.message || '更換店家失敗', '❌');
-    }
+      const res = await apiRequest('adminChangeShop', { password: adminToken, newShop }, 0);
+      if (!res || !res.success) throw new Error((res && res.message) || '更換失敗');
+      showModal('成功', res.message || '店家已成功更換！', '🎉', () => loadInitialData());
+    } catch (err) { showModal('錯誤', err.message || '更換店家失敗', '❌'); }
   });
 }
-
-async function handleAdminClearOrders() {
+function handleAdminClearOrders() {
   showConfirmModal('危險操作', '確定要清空今日所有的點餐紀錄嗎？此動作無法復原！', '⚠️', async () => {
     try {
-      const res = await apiRequest('adminClearAllOrders', {
-        password: adminToken
-      });
-      if (res && res.success) {
-        showModal('成功', '今日點餐紀錄已清空！', '🎉', () => {
-          loadInitialData();
-          loadAdminOrders(true);
-        });
-      } else {
-        throw new Error(res.message || '清空失敗');
-      }
-    } catch (err) {
-      showModal('錯誤', err.message || '清空紀錄失敗', '❌');
-    }
+      const res = await apiRequest('adminClearAllOrders', { password: adminToken }, 0);
+      if (!res || !res.success) throw new Error((res && res.message) || '清空失敗');
+      allOrders = [];
+      showModal('成功', '今日點餐紀錄已清空！', '🎉', () => { renderAdminTable([]); renderOrders([]); loadInitialData(); });
+    } catch (err) { showModal('錯誤', err.message || '清空紀錄失敗', '❌'); }
   });
 }
 </script>
