@@ -28,15 +28,15 @@ header{position:relative;padding:calc(40px + env(safe-area-inset-top)) 24px 72px
 .admin-pill{cursor:pointer;transition:.3s var(--ease);font-size:1rem}
 .admin-pill:hover{background:var(--text);color:#fff;transform:translateY(-2px);box-shadow:var(--sh-md)}
 .shop-label{font-size:.85rem;font-weight:500;color:var(--muted);margin-bottom:4px}
-.shop-badge{display:block;font-size:clamp(2.2rem,9vw,4rem);font-weight:900;line-height:1.2;letter-spacing:-.03em;background:linear-gradient(135deg,var(--text),#334155);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:floatUp .8s var(--spring) both;word-break:break-word}
-.shop-badge.is-load,.shop-badge.is-err{font-size:1.5rem;background:var(--muted);-webkit-background-clip:text;background-clip:text;animation:pulse 2s infinite ease-in-out}
+.shop-badge{display:block;font-size:clamp(2.2rem,9vw,4rem);font-weight:900;line-height:1.3;letter-spacing:-.03em;color:var(--text);word-break:break-word}.hl{background:linear-gradient(transparent 62%,rgba(255,179,32,.7) 0) no-repeat 0 0/0 100%;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .08em;animation:swipe .9s .25s var(--ease) forwards}@keyframes swipe{to{background-size:100% 100%}}
+.shop-badge.is-load,.shop-badge.is-err{font-size:1.5rem;color:var(--muted);animation:pulse 2s infinite ease-in-out}
 @keyframes floatUp{from{opacity:0;transform:translateY(24px) scale(.95)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
 .tabs{display:flex;gap:6px;max-width:480px;margin:-32px auto 0;padding:6px;background:rgba(255,255,255,.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1.5px solid var(--glass);border-radius:99px;box-shadow:var(--sh-md);position:sticky;top:16px;z-index:100;width:calc(100% - 32px)}
-.tab-btn{flex:1;padding:12px 8px;min-height:44px;border:none;background:transparent;border-radius:99px;font-size:.9rem;font-weight:700;color:var(--muted);cursor:pointer;transition:.4s var(--spring);position:relative}
-.tab-btn::before{content:"";position:absolute;inset:0;background:var(--text);border-radius:99px;opacity:0;transform:scale(.8);transition:.4s var(--spring);z-index:-1}
+.tab-btn{flex:1;padding:12px 8px;min-height:44px;border:none;background:transparent;border-radius:99px;font-size:.9rem;font-weight:700;color:var(--muted);cursor:pointer;transition:color .3s;position:relative;z-index:1}
+.tab-thumb{position:absolute;top:6px;bottom:6px;left:0;width:0;background:var(--text);border-radius:99px;box-shadow:0 4px 12px rgba(15,23,42,.2);transition:transform .5s var(--spring),width .5s var(--spring);z-index:0}
 .tab-btn.active{color:#fff}
-.tab-btn.active::before{opacity:1;transform:scale(1);box-shadow:0 4px 12px rgba(15,23,42,.2)}
+
 .tab-btn:not(.active):hover{color:var(--text);background:rgba(0,0,0,.03)}
 .container{max-width:680px;margin:32px auto;padding:0 16px}
 .container>div{animation:slideIn .5s var(--spring) both}
@@ -60,7 +60,7 @@ input:focus,select:focus{border-color:var(--secondary);box-shadow:0 0 0 4px rgba
 .summary-box{background:var(--solid);border:1.5px solid var(--border);border-radius:var(--r-md);padding:20px 24px;margin:32px 0 24px;display:flex;justify-content:space-between;align-items:center;font-weight:700;box-shadow:var(--sh-sm);position:relative;overflow:hidden}
 .summary-box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--secondary)}
 .total-price{font-size:2.4rem;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;display:inline-block;line-height:1}
-.total-price.bump{animation:springBump .5s var(--spring)}
+.total-price{display:inline-flex;align-items:flex-start}.dg{display:inline-block;height:1em;overflow:hidden;vertical-align:top;line-height:1}.col{display:block;transition:transform .8s var(--ease)}
 @keyframes springBump{40%{transform:scale(1.15) translateY(-2px);color:var(--primary)}}
 .btn-submit{background:var(--primary);color:#fff;border:none;padding:18px;min-height:60px;width:100%;border-radius:99px;font-size:1.1rem;font-weight:900;letter-spacing:.05em;cursor:pointer;box-shadow:var(--glow);transition:.4s var(--spring)}
 .btn-submit:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 12px 28px rgba(255,90,95,.4)}
@@ -107,7 +107,7 @@ button.badge:active:not(:disabled){transform:scale(.92)}
 .retry-btn{margin-top:14px}
 .spinner{display:inline-block;width:22px;height:22px;border:3px solid rgba(15,23,42,.1);border-top-color:var(--primary);border-radius:50%;animation:spin .8s cubic-bezier(.4,0,.2,1) infinite;vertical-align:middle;margin-right:10px}
 .btn-submit .spinner{border-color:rgba(255,255,255,.3);border-top-color:#fff;width:18px;height:18px;border-width:2px}
-@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}.sk-wrap{display:grid;gap:14px;padding:4px 0}.sk{height:88px;border-radius:var(--r-md);background:linear-gradient(100deg,rgba(15,23,42,.05) 30%,rgba(15,23,42,.1) 50%,rgba(15,23,42,.05) 70%) 0 0/200% 100%;animation:shimmer 1.3s linear infinite}@keyframes shimmer{to{background-position:-200% 0}}
 .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center;z-index:3000;padding:20px}
 #adminLoginModal{z-index:2100}
 .modal-card{background:var(--solid);border:1.5px solid var(--glass);border-radius:var(--r-lg);padding:32px 24px;max-width:360px;width:100%;text-align:center;box-shadow:var(--sh-lg);animation:modalPop .5s var(--spring)}
@@ -127,7 +127,7 @@ button.badge:active:not(:disabled){transform:scale(.92)}
 </head>
 <body>
 <div class="bg-glow"></div>
-<div class="conn-banner" id="connBanner">連線不穩，資料可能不是最新，正在重新連線…</div>
+<div class="conn-banner" id="connBanner" role="status">連線不穩，資料可能不是最新，正在重新連線…</div>
 
 <header>
   <div class="head-inner">
@@ -140,10 +140,10 @@ button.badge:active:not(:disabled){transform:scale(.92)}
   </div>
 </header>
 
-<div class="tabs" id="mainTabs">
-  <button class="tab-btn active" onclick="switchTab('order')">我要點餐</button>
-  <button class="tab-btn" onclick="switchTab('status')">對帳與查詢</button>
-  <button class="tab-btn" onclick="switchTab('menu')">今日菜單</button>
+<div class="tabs" id="mainTabs" role="tablist"><span class="tab-thumb" id="tabThumb" aria-hidden="true"></span>
+  <button role="tab" class="tab-btn active" onclick="switchTab('order')">我要點餐</button>
+  <button role="tab" class="tab-btn" onclick="switchTab('status')">對帳與查詢</button>
+  <button role="tab" class="tab-btn" onclick="switchTab('menu')">今日菜單</button>
 </div>
 
 <div class="container">
@@ -171,7 +171,7 @@ button.badge:active:not(:disabled){transform:scale(.92)}
         <label for="orderNote">備註</label>
         <input type="text" id="orderNote" maxlength="100" placeholder="（不一定要填）">
       </div>
-      <div class="summary-box"><span>應付總金額</span><span class="total-price" id="totalDisplay">$0</span></div>
+      <div class="summary-box"><span>應付總金額</span><span class="total-price" id="totalDisplay" role="img" aria-label="$0">$0</span></div>
       <button class="btn-submit" id="submitBtn" onclick="handleOrderSubmit()">送出點餐</button>
     </div>
   </div>
@@ -180,14 +180,14 @@ button.badge:active:not(:disabled){transform:scale(.92)}
     <div class="card">
       <div class="card-title"><span>點餐與繳費狀態</span><button class="btn-action" id="btnRefreshStatus" onclick="loadStatusData(true)">重新整理</button></div>
       <input type="text" id="statusFilter" class="search-box" placeholder="輸入姓名、組別或餐點搜尋" oninput="filterStatus()">
-      <div id="statusList" class="loader"><span class="spinner"></span>載入紀錄中…</div>
+      <div id="statusList"><div class="sk-wrap"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
     </div>
   </div>
 
   <div id="tab-menu" style="display:none;">
     <div class="card">
       <div class="card-title">今日菜單</div>
-      <div id="menuList" class="loader"><span class="spinner"></span>載入菜單中…</div>
+      <div id="menuList"><div class="sk-wrap"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
     </div>
   </div>
 
@@ -209,7 +209,7 @@ button.badge:active:not(:disabled){transform:scale(.92)}
           <label style="margin:0">對帳管理 <span style="font-size:.75rem;font-weight:400;opacity:.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
           <button class="btn-action" id="btnRefreshAdmin" style="padding:6px 14px" onclick="loadAdminOrders(true)">重新整理</button>
         </div>
-        <div id="adminOrdersContainer" style="overflow-x:auto"><div class="loader"><span class="spinner"></span>載入訂單中…</div></div>
+        <div id="adminOrdersContainer" style="overflow-x:auto"><div class="sk-wrap"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
       </div>
       <div class="panel danger">
         <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
@@ -260,7 +260,7 @@ const groupMembersData = {
   "教師組": ["助教","老師"]
 };
 let currentShop = '', menuItems = [], allOrders = [], allShopsList = [], adminToken = '';
-let isFetchingData = false, searchTimeout = null, modalCallback = null, currentTab = 'order';
+let isFetchingData = false, searchTimeout = null, modalCallback = null, currentTab = 'order', lastFocus = null;
 const $ = id => document.getElementById(id);
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -273,7 +273,7 @@ function escapeHTML(s) {
 const isPaid = o => o.status !== undefined ? String(o.status).trim() === '已付' : Boolean(o.paid);
 const setPaid = (o, v) => { o.paid = v; o.status = v ? '已付' : '未付'; };
 const orderDetails = o => o.details !== undefined ? o.details : (o.itemsSummary || '');
-const loaderHTML = t => `<div class="loader"><span class="spinner"></span>${t}</div>`;
+const loaderHTML = t => '<div class="sk-wrap" role="status" aria-label="' + t + '">' + '<div class="sk"></div>'.repeat(3) + '</div>';
 const retryHTML = (msg, fn) => `<div class="retry-box">讀取失敗：${escapeHTML(msg)}<br><button class="btn-action retry-btn" onclick="${fn}">重新嘗試</button></div>`;
 
 // ---------- API ----------
@@ -336,7 +336,7 @@ function showModal(title, msg, icon = '🎉', callback = null) {
   $('modalCancelBtn').style.display = 'none';
   const b = $('modalConfirmBtn'); b.innerText = '賀哦，哇災！'; b.onclick = () => closeModal();
   modalCallback = callback;
-  $('customModal').style.display = 'flex'; b.focus();
+  lastFocus = document.activeElement; $('customModal').style.display = 'flex'; b.focus();
 }
 function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
   $('modalTitle').innerText = title; $('modalMsg').innerText = msg; $('modalIcon').innerText = icon;
@@ -344,11 +344,12 @@ function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
   const b = $('modalConfirmBtn'); b.innerText = '確定';
   b.onclick = () => { closeModal(true); if (onConfirm) onConfirm(); };
   modalCallback = null;
-  $('customModal').style.display = 'flex';
+  lastFocus = document.activeElement; $('customModal').style.display = 'flex';
 }
 function closeModal(skipCallback) {
   $('customModal').style.display = 'none';
   const cb = modalCallback; modalCallback = null;
+  if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
   if (cb && !skipCallback) cb();
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(true); closeAdminModal(); } });
@@ -363,6 +364,7 @@ window.onload = function() {
   const cached = store.get('lunchApp_cachedData');
   if (cached) { try { applyDataToUI(JSON.parse(cached)); } catch (e) {} }
   if ($('itemList').children.length === 0) addItemRow();
+  moveThumb(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveThumb);
   loadInitialData();
   setInterval(pollOrders, POLL_MS);
 };
@@ -377,7 +379,8 @@ function applyDataToUI(res) {
   menuItems = Array.isArray(res.items) ? res.items : [];
   allShopsList = Array.isArray(res.allShops) ? res.allShops : [];
   if (Array.isArray(res.orders)) allOrders = res.orders;
-  const st = $('currentShopText'); st.className = 'shop-badge'; st.innerText = currentShop;
+  const st = $('currentShopText'); st.className = 'shop-badge';
+  if (st.dataset.shop !== currentShop) { st.dataset.shop = currentShop; st.innerHTML = '<span class="hl">' + escapeHTML(currentShop) + '</span>'; }
   renderMenuList();
   if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows();
   populateAdminShopsSelect();
@@ -395,7 +398,7 @@ async function loadInitialData() {
     applyDataToUI(res);
   } catch (err) {
     if (menuItems.length === 0) {
-      const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '載入失敗，請檢查連線';
+      const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '載入失敗，請檢查連線'; delete st.dataset.shop;
       $('menuList').className = '';
       $('menuList').innerHTML = retryHTML(err.message, 'loadInitialData()');
     }
@@ -403,12 +406,18 @@ async function loadInitialData() {
 }
 
 // ---------- 分頁 ----------
+function moveThumb() {
+  const a = document.querySelector('.tab-btn.active'), t = $('tabThumb');
+  if (a && t && a.offsetWidth) { t.style.width = a.offsetWidth + 'px'; t.style.transform = 'translateX(' + a.offsetLeft + 'px)'; }
+}
+window.addEventListener('resize', moveThumb);
 function switchTab(tab) {
   currentTab = tab;
   ['order', 'status', 'menu', 'admin'].forEach(t => { $('tab-' + t).style.display = t === tab ? 'block' : 'none'; });
   $('mainTabs').style.display = tab === 'admin' ? 'none' : 'flex';
   const tabs = ['order', 'status', 'menu'];
-  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
+  document.querySelectorAll('.tab-btn').forEach((b, i) => { b.classList.toggle('active', tabs[i] === tab); b.setAttribute('aria-selected', tabs[i] === tab); });
+  moveThumb();
   if (tab === 'status') loadStatusData();
   if (tab === 'menu') renderMenuList();
   if (tab === 'admin') { renderAdminTable(allOrders); loadAdminOrders(); }
@@ -473,6 +482,16 @@ function readItems() {
   });
   return items;
 }
+function rollTotal(n) {
+  const d = $('totalDisplay'), s = String(n);
+  if (d.dataset.v === s) return;
+  d.dataset.v = s; d.setAttribute('aria-label', '$' + s);
+  if (d.querySelectorAll('.dg').length !== s.length) {
+    d.innerHTML = '<span aria-hidden="true">$</span>' + [...s].map(() => '<span class="dg" aria-hidden="true"><span class="col">0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</span></span>').join('');
+    void d.offsetWidth;
+  }
+  d.querySelectorAll('.col').forEach((c, i) => { c.style.transform = 'translateY(-' + s[i] + 'em)'; });
+}
 function calculateTotal() {
   let total = 0;
   document.querySelectorAll('.item-row').forEach(row => {
@@ -481,14 +500,24 @@ function calculateTotal() {
     row.querySelector('.price-tag').textContent = '$' + p;
     total += p;
   });
-  const d = $('totalDisplay'), txt = '$' + total;
-  if (d.textContent !== txt) {
-    d.textContent = txt;
-    d.classList.remove('bump'); void d.offsetWidth; d.classList.add('bump');
-  }
+  rollTotal(total);
   return total;
 }
 
+function burst(el) {
+  if (matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, cols = ['#FF5A5F', '#FFB320', '#10B981', '#0EA5E9', '#0F172A'];
+  for (let i = 0; i < 22; i++) {
+    const p = document.createElement('i'), a = Math.random() * Math.PI * 2, v = 90 + Math.random() * 150;
+    p.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;width:8px;height:12px;border-radius:2px;pointer-events:none;z-index:4000;background:' + cols[i % 5];
+    document.body.appendChild(p);
+    p.animate([
+      { transform: 'translate(0,0) rotate(0)', opacity: 1 },
+      { transform: 'translate(' + Math.cos(a) * v + 'px,' + (Math.sin(a) * v - 80) + 'px) rotate(' + Math.random() * 540 + 'deg)', opacity: 1, offset: .6 },
+      { transform: 'translate(' + Math.cos(a) * v * 1.1 + 'px,' + (Math.sin(a) * v + 120) + 'px) rotate(720deg)', opacity: 0 }
+    ], { duration: 1100 + Math.random() * 400, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => p.remove();
+  }
+}
 async function handleOrderSubmit() {
   saveUserSelection();
   const group = $('groupSelect').value, name = $('nameSelect').value;
@@ -504,7 +533,7 @@ async function handleOrderSubmit() {
     const payload = { group, name, items, total, totalAmount: total, note: $('orderNote').value.trim() };
     const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) }, 0);
     if (res && res.success) {
-      showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', () => {
+      burst(btn); showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', () => {
         $('orderNote').value = ''; $('itemList').innerHTML = ''; addItemRow();
         switchTab('status');
       });
@@ -529,7 +558,7 @@ async function fetchOrders() {
 async function loadStatusData(force = false) {
   const box = $('statusList');
   if (allOrders.length) renderOrders(allOrders);
-  else if (force) { box.className = 'loader'; box.innerHTML = loaderHTML('載入紀錄中…'); }
+  else if (force) { box.innerHTML = loaderHTML('載入紀錄中…'); }
   try { await fetchOrders(); renderOrders(allOrders); }
   catch (err) { if (!allOrders.length) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
 }
