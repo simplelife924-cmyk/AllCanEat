@@ -539,7 +539,7 @@ function renderOrders(orders) {
   const kw = $('statusFilter').value.trim().toLowerCase();
   const list = !kw ? orders : orders.filter(o =>
     [o.group, o.name, orderDetails(o)].some(v => String(v || '').toLowerCase().includes(kw)));
-  if (!list.length) { box.innerHTML = '<div class="empty">' + (kw ? '找不到符合的紀錄' : '還沒有人點餐，你可以是第一個！') + '</div>'; return; }
+  if (!list.length) { box.innerHTML = '<div class="empty">' + (kw ? '找不到符合的紀錄' : '還沒有人點餐，不如你先？') + '</div>'; return; }
   box.innerHTML = list.map((o, i) => {
     const paid = isPaid(o);
     return `<div class="order-item ${paid ? 'is-paid' : ''}" style="--i:${Math.min(i, 12)}">
@@ -576,7 +576,7 @@ async function submitAdminLogin() {
   try {
     const res = await apiRequest('adminVerify', { password: pwd }, 1);   // 由後端驗證，前端不存密碼
     if (res && res.success) { adminToken = pwd; closeAdminModal(); switchTab('admin'); }
-    else showModal('錯誤', '管理密碼錯誤！', '❌');
+    else showModal('登登', '你再猜猜看？', '❌');
   } catch (err) { showModal('錯誤', err.message, '❌'); }
   finally { btn.disabled = false; }
 }
@@ -639,7 +639,7 @@ function handleAdminChangeShop() {
   });
 }
 function handleAdminClearOrders() {
-  showConfirmModal('危險操作', '確定要清空今日所有的點餐紀錄嗎？此動作無法復原！', '⚠️', async () => {
+  showConfirmModal('危險操作', '確定要清空今日所有的點餐紀錄嗎？按了就回不去囉瑞煩:)', '⚠️', async () => {
     try {
       const res = await apiRequest('adminClearAllOrders', { password: adminToken }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '清空失敗');
