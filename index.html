@@ -120,6 +120,8 @@ button.badge:active:not(:disabled){transform:scale(.92)}
 .modal-btn:disabled{opacity:.5;cursor:wait}
 .modal-btn-cancel{background:var(--bg);color:var(--text)}
 .modal-btn-cancel:hover{background:#D6CFBF}
+.seg{display:flex;gap:6px;margin-bottom:12px}.seg button{flex:1;min-height:42px;border:1.5px solid var(--border);background:var(--solid);border-radius:99px;font-weight:700;font-size:.82rem;color:var(--muted);cursor:pointer;transition:background .2s,color .2s}.seg button.on{background:var(--forest);border-color:var(--forest);color:#fff}
+.adm-list{display:grid;gap:10px}.adm-card{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border:1px solid var(--border);border-left:5px solid var(--danger);border-radius:var(--r-md);background:var(--solid)}.adm-card.is-paid{border-left-color:var(--success)}.adm-main{flex:1;min-width:0}.adm-who{display:flex;gap:8px;align-items:baseline;justify-content:space-between;font-size:.95rem;font-weight:700}.adm-amt{font-weight:900;white-space:nowrap}.adm-items{font-size:.85rem;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}.adm-card .badge{flex:none;min-width:88px;min-height:52px;font-size:.92rem;border-radius:var(--r-sm)}
 .order-item{content-visibility:auto;contain-intrinsic-size:auto 130px}.order-item:nth-child(n+9){animation:none}
 .lite .container>div,.lite .item-row,.lite .order-item,.lite .modal-icon,.lite .sk,.lite .modal-card{animation:none}.lite .hl{animation-duration:.4s;animation-delay:0s}.lite .col{transition-duration:.3s}.lite .card,.lite .order-item,.lite .stat-card,.lite .panel,.lite .tabs{box-shadow:none}
 @media (hover:none){.order-item:hover{transform:none;box-shadow:var(--sh-sm)}}
@@ -211,7 +213,8 @@ button.badge:active:not(:disabled){transform:scale(.92)}
           <label style="margin:0">對帳管理 <span style="font-size:.75rem;font-weight:400;opacity:.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
           <button class="btn-action" id="btnRefreshAdmin" style="padding:6px 14px" onclick="loadAdminOrders(true)">重新整理</button>
         </div>
-        <div id="adminOrdersContainer" style="overflow-x:auto"><div class="sk-wrap"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
+        <div class="seg" id="adminSeg" role="group" aria-label="篩選"><button id="segAll" data-f="all" class="on" onclick="setAdminFilter('all')">全部</button><button id="segUnpaid" data-f="unpaid" onclick="setAdminFilter('unpaid')">未付</button><button id="segPaid" data-f="paid" onclick="setAdminFilter('paid')">已付</button></div>
+        <div id="adminOrdersContainer"><div class="sk-wrap"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
       </div>
       <div class="panel danger">
         <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
@@ -266,7 +269,7 @@ let isFetchingData = false, searchTimeout = null, modalCallback = null, currentT
 const $ = id => document.getElementById(id);
 const LITE = (navigator.deviceMemory || 4) <= 2 || (navigator.hardwareConcurrency || 8) <= 2 || !!(navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || '')));
 if (LITE) document.documentElement.classList.add('lite');
-let toggling = 0, ordersPromise = null;
+let toggling = 0, ordersPromise = null, adminFilter = 'all';
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -635,29 +638,39 @@ function updateAdminStats(orders) {
   $('statTotalAmount').innerText = '$' + total;
   $('statPaidAmount').innerText = '$' + paid;
   $('statUnpaidAmount').innerText = '$' + (total - paid);
+  const np = orders.filter(o => !isPaid(o)).length;
+  $('segAll').textContent = '全部 ' + orders.length; $('segUnpaid').textContent = '未付 ' + np; $('segPaid').textContent = '已付 ' + (orders.length - np);
 }
 function renderAdminTable(orders) {
-  updateAdminStats(orders || []);
+  orders = orders || [];
+  updateAdminStats(orders);
   const box = $('adminOrdersContainer');
-  const sig = JSON.stringify(orders || []);
-  if (sig === box.dataset.sig && box.querySelector('.admin-table,.empty')) return;
+  const list = adminFilter === 'unpaid' ? orders.filter(o => !isPaid(o)) : adminFilter === 'paid' ? orders.filter(o => isPaid(o)) : orders;
+  const sig = adminFilter + '|' + JSON.stringify(orders);
+  if (sig === box.dataset.sig && box.querySelector('.adm-list,.empty')) return;
   box.dataset.sig = sig;
-  if (!orders || !orders.length) { box.innerHTML = '<div class="empty">目前沒有任何訂單</div>'; return; }
-  box.innerHTML = '<table class="admin-table"><thead><tr><th>組別 / 姓名</th><th>餐點內容</th><th>金額</th><th>繳費狀態</th></tr></thead><tbody>' +
-    orders.map(o => {
-      const paid = isPaid(o), ok = Number(o.rowIndex) > 1;
-      return `<tr><td><strong>${escapeHTML(o.group)}</strong><br>${escapeHTML(o.name)}</td>
-      <td>${escapeHTML(orderDetails(o))}${o.note ? `<br><small style="color:var(--muted)">備註：${escapeHTML(o.note)}</small>` : ''}</td>
-      <td><strong>$${escapeHTML(o.total)}</strong></td>
-      <td><button class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}" ${ok ? '' : 'disabled'} onclick="toggleOrderStatus(${Number(o.rowIndex)}, this)">${paid ? '已付' : '未付'}</button></td></tr>`;
-    }).join('') + '</tbody></table>';
+  if (!list.length) { box.innerHTML = '<div class="empty">' + (orders.length ? '這個分類目前沒有訂單' : '目前沒有任何訂單') + '</div>'; return; }
+  box.innerHTML = '<div class="adm-list">' + list.map(o => {
+    const paid = isPaid(o), ok = Number(o.rowIndex) > 1;
+    return `<div class="adm-card ${paid ? 'is-paid' : ''}"><div class="adm-main">
+      <div class="adm-who"><span>${escapeHTML(o.group)} ${escapeHTML(o.name)}</span><span class="adm-amt">$${escapeHTML(o.total)}</span></div>
+      <div class="adm-items">${escapeHTML(orderDetails(o)) || '無'}${o.note ? ' ｜ 備註：' + escapeHTML(o.note) : ''}</div></div>
+      <button class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}" ${ok ? '' : 'disabled'} onclick="toggleOrderStatus(${Number(o.rowIndex)}, this)" aria-label="${escapeHTML(o.name)} 繳費狀態，點擊切換">${paid ? '✔ 已付' : '○ 未付'}</button></div>`;
+  }).join('') + '</div>';
+}
+function setAdminFilter(f) {
+  adminFilter = f;
+  document.querySelectorAll('#adminSeg button').forEach(b => b.classList.toggle('on', b.dataset.f === f));
+  renderAdminTable(allOrders);
 }
 // 樂觀更新：先改畫面，失敗再還原
 async function toggleOrderStatus(rowIndex, btn) {
   const o = allOrders.find(x => x.rowIndex === rowIndex);
   if (!o || btn.disabled) return;
   const prev = isPaid(o), next = !prev;
-  const paint = v => { btn.textContent = v ? '已付' : '未付'; btn.className = 'badge ' + (v ? 'badge-paid' : 'badge-unpaid'); };
+  const card = btn.closest('.adm-card');
+  const paint = v => { btn.textContent = v ? '✔ 已付' : '○ 未付'; btn.className = 'badge ' + (v ? 'badge-paid' : 'badge-unpaid'); if (card) card.classList.toggle('is-paid', v); };
+  if (navigator.vibrate) navigator.vibrate(12);
   toggling++; setPaid(o, next); paint(next); updateAdminStats(allOrders); btn.disabled = true;
   try {
     const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex, newStatus: next });
