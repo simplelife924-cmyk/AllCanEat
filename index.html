@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
 <meta name="theme-color" content="#36453A">
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
@@ -14,6 +15,8 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei","Heiti TC",sans-serif;-webkit-tap-highlight-color:transparent}
 html{width:100%;background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{width:100%;overflow-x:hidden;overflow-x:clip;background:var(--bg) url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAJ0lEQVR42mNgGAWjYBSMAuoCcVExFXFRMRVS9DCNBtsoGAWjYBAAANhrAM/6yuJKAAAAAElFTkSuQmCC) 0 0/24px 24px;color:var(--text);padding-bottom:80px;padding-bottom:calc(80px + env(safe-area-inset-bottom));line-height:1.6;min-height:100vh;min-height:100dvh}
+[hidden]{display:none!important}
+.order-item,.adm-card{contain:layout style}
 button,select,input{font:inherit;color:inherit;touch-action:manipulation;border-radius:0}
 :focus-visible{outline:3px dashed var(--primary);outline-offset:2px}
 .i-warn{width:0.406em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAgCAYAAADJ2fKUAAABnUlEQVR42pWUTUvDQBCGn9nUW/FQEMSzEBA8+rsK/SGF0p/lvVDwLIFCxSJebPJ62EmabDZ+zKGd7Mw7H+/OrOGyAgHUQMNQAlAAazDwnyWoNOMJuI7YgZwwnoEXiTWYrYB7M5XAHRAyoAbjFdhHoIUaVAK3iXMTi+j+bxFlNCkAHIBPbJAloA6A2w+trchET/VUQj1gSSM912OY6qPxcqOuaVCYICMkpc6Y6GmcxYaZjsAJ+JhgDrcf+5kqiYVFp3mGuQpjD+wlNmBhA/bWi9Jk2PqRvb/KLHf4W7YuUyV149SXdnwqicIpDABb72sncRqtRez3Le7T/3oKOb1VDolzW9pUAGsvuvK+Kozj5dJtBNoA72B9QtosX27PUl541J0EdslyxZDS0aatfKXnDqjBNolPdj1bIGDrv4xRC6hjFq0yIEsBc9CDGTdO907iI8nYgZZAaaYF8IiYAefhWnS9hcuQxil99GE9+3nvPVS2p0rqLra/gCTv+2g1Dl71tX/vM2M0CLuMF6x7MxZ+9iMRfWDj73UBfIFtE59vR82vtyxBSZ0AAAAASUVORK5CYII=)}.i-x{width:0.875em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAgCAYAAAABtRhCAAADAUlEQVR42r1Xv2/aQBT+Dl8qGDpUTAkrLF4YPcVRPDQKQyoxNf8AM/9AFCEPzcjMXCkMlaV6sMTQDHRiTKTSIewVgzNilDN6HYzN+Rex0x8nWcDd8b5733v3vWeG/YPwusFKL4RgE9MshXR2dVXEdhqMKwpxRaEH2ybf9198Nr5P3nIZ/a8MOxQCCiEKgfliB+r7Po0NIwSkQmBjwwg8E9mGi3g6Mc1M0EoyZmPDgNrvo6VpEE8uhOuCiIJVRomjST+JIFwXz64LADhst+X4Uy6NoWdjw6AV57TiPD+OIvAo9Crcv+I8N6aRh1xR4K3XUDudVH7Nh0PMHSczxwnAD8fB18vLlAcH9Tq89RqfT05ilEbuMrZDend6Gn2/mE7R7HYxd5yAXsnq3HEwHw5xMZ1G09+vryOrLH56AgCamGYmbQ+2HaNpxTl5yyUJIUgIkaJRpn8j2ZGTiIfQ6nlndwYWfKrnHcBb47lW3R2x0cBPywIANLvdGI0Hngd1y5KcJQf1ekaWsgwN2s4tLCugaTua3W4MzNZ1LCwroI/2C2MlwW6mIKmdDg7bbdi6nlqzdR1qv79LNrZfOPmL0sp2oC1NAzUaseUPt7d4U68X1rEKCkqtcF08zmap+cfZLLrsKSr3UppzRrZdmo5GqSQJ4zkdjeIgLN+JykuVigj4cvYex4NBNLewLCy2mQoAx4MBnmvV4I6yopTm0Pjt5lPsUi8sCy1NQ0vTYqAAcHdzk61ISSei6pC4rMmLPzaMeMlKaO6Kc5qYJnnLZUpApJKVXf+yDOWVpIlppg4WKo0QQhZvqsjBq1WrmDtOKgwLy4Le6+VSpPd6KXoJgc7WqtVYDrK8eggAv+7vI4OyPOXFezoaRbUwrDIf7+72ZuX+il+wt0nEjEr1NPKT1WYk9wghSoGlQMNnYpqppio0Lu+TEwR/MIgrSuxavLYlLA0qhIji9BpPeMn2nfynp7gBRWH+ZlPYSKXsO8Pbo6Mo/QGgDFjp/l/yiiQwhv80/lmy/NXXud/CrI3bAIiakAAAAABJRU5ErkJggg==)}.i-cat{width:1.290em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAfCAYAAACVgY94AAAE2klEQVR42r1Yy28aRxz+ZgAbdlm2VBb4gdYQW7UihVbgIqWyc2p8y7m3HnLopY1UVar6R1SWLEdNLjn40FvPvbU91ZbaUMkHR4p8MkL4AbJkYR6Lecz0ADPdXRZYaNOfhBCzw/LN9/0e30IwQ4RVlRNKQSkh1ertuH0AwAmlqNVqZJbf8k+zORaPoVlvQAmrYonrgCtITdMQUkJcj0VRrdyAMwaf34dxB3ILOs3mZr0BQinXY1Gk02kAQK/b4yO2cwAw4gnosSgAcMb4u2XQGWurWVybZ6gUL3mv25PrPr8PMWMJC6EUgA4AgFCKdy6xM957H1C6CVQrN0PXjHgCc34ACGBA3/8LcM4fkO+bmaxcb3c7tusiCKUzgfQMUNcjmA8G+SCfJgK3xkIoBSSBauWGE0pJrVb77wEyxmXSTxtKpAMjksBJPxU4APKvAGqaxiklqFZvx94olVkBAJwdnw9JvJFLymtWVkfJHFZVPhGgrkfQ6/awmFzuLxQBxjickjhlbHc7tpwUIN3CWc2apoEzZu2tAIC7Vgu9bs/eBxnj3Of38Z0n2zDiCTDGOaWEuzH34vn3AIDTfAFz/oBcE6ye5gs4Oz6Xa6NAc8Y4oZSvrWaRTqflaz4YdG/UzmY6qrnuHuxL+QQoERu5pGR092DfCWj8MLgNoFgueSsSSomU3gr0NF+wyf3t068BAF98+Q1evdwDAHx1/B3a3Y5tr5e4Ns9wVbgAZ4zUGw17NYniiBlLti9VipcQlccY54vJ5UEjDkjJrYUiPgtZi+WSaOakWW+g3mgMGY8H97egRDoolks2gP5JEos1Sgl63Z7ryBLgBKBRrN21WpwIWWYxC7VajVBKyICxIamd0e52bK9RYcQTMvG9OgZBBB3RlO02y1jCfDDIlbDKF5PLAxPQl86a0NZwu7a2msXSvQTCqso1TRsLVBTT1BbDiCegRPpsVSs3cLJtzVuniVAiHRjxhC1NJrkcMqhQbkU+cMuSPQEGANLpNIrlEirFS8m0MwXmg0GsrWblQcR+p0Lit5z3YIxLBv1WH2c9kSgMI57ARi4pq7JYLmEhlIKRS9gmSrvbwes/XyOkhCRbApzYL+KvfB6McZvDYQMxxWdxzT8oeeLmXhjjfCOX7Pe5p/31TG4b65+k8OL53pAcH21uQY9Fsb6SQrvbQfM2gKvCBXaebcteCQD3PvjQcyWTcQ88SliFHotyI57Aq5d72D3Yx48//ISQEpISitnbvA3gzdsjySAA6LEodp5s2xr5yckJzKbpOlHqjQbxbLeUsIq7VkvKJEaWyJVr8www+17v2uxXqzQZ/zR3G3PFcglm05SHaNZFWpnT+0GzaQIAX19JIZVZwS8/H4oOj81MVpqFUfHw0WNcFS5scvYtlYq11axt75u3R9P7wQf3t5D5dMXGgJcQJmLANhm2/eP7nieAlBIokY4N3DRAD4+OJj7Uz1Qkuh7hAHCcPxyySk6Auwf7Q2sPHz2W96yUK67KhJQQ/vj9V9t6Jrfd77UuDt4v/jG4a7XwcS5n623jWHMDLArADZxzrxfPKU+raRoA8M+ffTZ1zon+5+UZRpBhNk1unSLj/rfxW4f28W/n2MW+q5WaYGw9N95KuYKwqhIxKbzMYlcHRCmxzdpRMnhlbtb4G/2fa/qAugDbAAAAAElFTkSuQmCC)}.i-ok{width:0.750em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAgCAYAAAAIXrg4AAACuklEQVR42rVWy2rbQBQ9ioVHxK0Fsw/9Fa+S0NgSaBOKY7KxvkreBFt9pMiQrtqu8isli5KlbFQijcLtIp7pjGTLSkkGBr1G93HOvWfGchgjvOKw5c1hr/eihv9k2T8Hh70e7n/foyiKFzHe7Xbxtv/GzKAoCnz/+aPxxzheAADG44vGdd5wVIeozdhneNuwHMZIQmRZ1s6FeZ6rDH3PB2h3bRCRgggOY8Q5J5ELKotSm+Zzts7I7nTIYYySZFlZa06RC3IYI4cxOmhIDqRFKaMvyxJhODW+NY2DamqGiw1keZ4rggFgMBi0J0GHSBRia8pBEJDd6ZDd6aj7JFnuXK9D1MDBE+5V49k6I8658VyKR4O3Vg6SZFkzniRL9V464Zyrb9JGowMZtcNYDRZpjHNOSbJUTuSU73UHtUabXE5we3uLsixh2zbij5+MRpNkx/ECd7/ucPTuCKs0bUeyjn2SLNVVRiahqHISBIG6F7loT7LkwmFMGZdwVXH/ryrSnXDOjRkEQasy3atFeZ4b3Xx6fFKT5up/LbWoJFEIha9sxG1QVTN5BkSPCh6RC4NgvTSf/hXPFTsAm8xXaYrzD+cIwyn6rgvP9wEAfddFFM02EFn7xa6idMgfHhDHC/RdF/OrOQaDAaJoppZE0Qz+yGsvdnrVVOGQdS7LVpeIbJ0ZPOzlQNcgferNpq+RzrJ11swBgZQk9F1X4ez5PjzfN/YEAIqLVZri280NJpeT+kbUpKaygoIgoFI8quhls+nwSTmpZmDv2rSloKnda/MuDKeIohnCcKrE0BuOtGazAFBzFRVFgTheYH41N6pqPL7AKk0Rxwus0hTvz87gjUaVTqbtR0d9MMZw/fnaPAsRwRuO8OX6K06PTzC5nGzitdqfi7Y2GhlJPCFl1QKtDalFljxdv9bh13rt4/tfF2znwoOImpQAAAAASUVORK5CYII=)}.i-lock{width:0.781em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAgCAYAAADnnNMGAAADE0lEQVR42q2XTUsbURSGn3tNojHRaBkREhXE6q4uurBQCqWrbiqWiqD0Q+qmq4I/pb+gpbZWQSKVdtFd6UawBRe6EWsQNAptktbEaNTo3C6SGWbMJJk0ntWde++c97znc0ZQRaLjzQCq2r3R+WNR7kxUUq57JaGuVqVFGs395N6p4/10PCNkXmd0/rjkzFPJOpnXlRZp5MaDx3bLUlHb89pylnQcpXulcMVk4WkQmddVS28b915M2c5SG1/Y30qBOjf3/EGfud7dzHG4fQAgrIw8DtYDYHXR+udZknunhgJTdK+kb6idcH8nWscRu5s5R4+UgOheiczrJPdOEakoP9fOiK0kCodeKQwjdK8EIPb9r0ruX9A94CcdzyAtZ44g0fFmdKD3Tif+gCSZCLC7meZTrJBcM8tHtpef3Q4AMEwGLdxAqKsVgMPtA6LjzWYSXGaiADPQ659nef8tXaLckMXVY7InCggwPQRauKEIYqa8AJDlMiu18YVXH36bz8EmISpl4qu5PyT3L0B4WNoRLO2IyoEXqShrdgaiYLFdintiZvlIAQz3CbRwu4WhA8jkx0J2/Lh/Rjqe4apEOlhG7kj/b4XJ/QuXFW8ptlpk7F0WyDpXfLBJ8Pahn6UdoQBGegqMjOCN9KiKQS/WhbIWs1W/AJQBUo8YBXgJxO6ult42tHAD/qCP6/cmANj6Okcue2bzc/dAeWMut5X339J2EC3SiD8g6R/0mZXUP+gjmWgHfhXJe+gf9DkHPBEglz2z7RklIF37Q3jc3XG453GdmsVhNfWy0AWmJ67hD/pKmTlkpmuQdDyDzOssruaMjKOlt62s+xyL0R+o7LlPMcXkxxzZE0X2pLA2AlvC4pLLZC3xsPYjp15mU25ZmyD1tJJqncJ1TJ7cDTHcJ3i+UEjLN2MBc0hVE9cgWqQRLdIBRZC+Wx2lcbS6y8JK1pLC5qwHYiuJsh8O/83EkEc3mwEIdbWa47Za8dbsrtfTTfUNrSsVdU6wSdTAxO0QU+eOvUsYw8ZAtfp9cfW4LjJGwQo3vwX1yj9fWzbAqDI7CwAAAABJRU5ErkJggg==)}
@@ -37,7 +40,8 @@ header .spinner{border-color:rgba(255,255,255,.25);border-top-color:var(--primar
 @keyframes pulse{50%{opacity:.5}}
 .tabs{display:flex;gap:0;max-width:480px;margin:-32px auto 0;padding:4px;background:var(--surface);border:var(--bd);box-shadow:var(--sh);position:sticky;top:16px;z-index:100;width:calc(100% - 32px)}
 .tab-btn{flex:1;padding:10px 6px;min-height:44px;border:none;background:transparent;font-size:.9rem;font-weight:800;color:var(--muted);cursor:pointer;position:relative;z-index:1}
-.tab-thumb{position:absolute;top:4px;bottom:4px;left:0;width:0;background:var(--forest);transition:transform .25s steps(5,end);z-index:0}
+.tab-thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/3);background:var(--forest);transition:transform .25s steps(5,end);z-index:0}
+.tabs[data-i="1"] .tab-thumb{transform:translateX(100%)}.tabs[data-i="2"] .tab-thumb{transform:translateX(200%)}
 .tab-btn.active{color:#fff}
 .container{max-width:680px;margin:32px auto;padding:0 16px}
 .container>div{animation:slideIn .3s steps(4,end) both}
@@ -165,7 +169,7 @@ button.badge:hover:not(:disabled){filter:brightness(.95)}
   </div>
 </header>
 
-<div class="tabs" id="mainTabs" role="tablist"><span class="tab-thumb" id="tabThumb" aria-hidden="true"></span>
+<div class="tabs" id="mainTabs" role="tablist" data-i="0"><span class="tab-thumb" id="tabThumb" aria-hidden="true"></span>
   <button role="tab" class="tab-btn active" onclick="switchTab('order')">我要點餐</button>
   <button role="tab" class="tab-btn" onclick="switchTab('status')">對帳與查詢</button>
   <button role="tab" class="tab-btn" onclick="switchTab('menu')">今日菜單</button>
@@ -307,6 +311,35 @@ function escapeHTML(s) {
   if (s === null || s === undefined) return '';
   return String(s).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
 }
+
+// ---------- 時間（一律以台灣時間 UTC+8 顯示；今天只顯示 HH:mm，其他日子加上 MM/DD） ----------
+const p2 = n => String(n).padStart(2, '0');
+function tpeFmt(y, mo, d, h, mi) {
+  const n = new Date(Date.now() + 288e5);
+  const today = y === n.getUTCFullYear() && mo === n.getUTCMonth() + 1 && d === n.getUTCDate();
+  return (today || y < 1971 ? '' : p2(mo) + '/' + p2(d) + ' ') + p2(h) + ':' + p2(mi);
+}
+function fmtTime(v) {
+  if (v === undefined || v === null || v === '') return '';
+  const str = typeof v === 'string' ? v.trim() : '';
+  let m = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (m) return p2(+m[1]) + ':' + m[2];
+  let t = null;
+  if (typeof v === 'number') t = new Date(v > 1e11 ? v : v * 1000);
+  else if (/^\d{4}-\d{2}-\d{2}T[\d:.]+(Z|[+-]\d{2}:?\d{2})$/.test(str)) t = new Date(str);
+  if (t) {
+    if (isNaN(t)) return str || String(v);
+    const u = new Date(t.getTime() + 288e5);
+    return tpeFmt(u.getUTCFullYear(), u.getUTCMonth() + 1, u.getUTCDate(), u.getUTCHours(), u.getUTCMinutes());
+  }
+  m = str.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})[T\s]+(上午|下午|AM|PM)?\s*(\d{1,2}):(\d{2})/i);
+  if (m) {
+    let h = +m[5]; const ap = (m[4] || '').toLowerCase();
+    if ((ap === '下午' || ap === 'pm') && h < 12) h += 12; else if ((ap === '上午' || ap === 'am') && h === 12) h = 0;
+    return tpeFmt(+m[1], +m[2], +m[3], h, +m[6]);
+  }
+  return str || String(v);
+}
 const isPaid = o => o.status !== undefined ? String(o.status).trim() === '已付' : Boolean(o.paid);
 const setPaid = (o, v) => { o.paid = v; o.status = v ? '已付' : '未付'; };
 const orderDetails = o => o.details !== undefined ? o.details : (o.itemsSummary || '');
@@ -314,16 +347,17 @@ const loaderHTML = t => '<div class="sk-wrap" role="status" aria-label="' + t + 
 const retryHTML = (msg, fn) => `<div class="retry-box">讀取失敗：${escapeHTML(msg)}<br><button class="btn-action retry-btn" onclick="${fn}">重新嘗試</button></div>`;
 
 // ---------- API ----------
-let failStreak = 0, lastOrdersAt = 0, initFails = 0;
+let rollReady = false, failStreak = 0, lastOrdersAt = 0, initFails = 0;
 async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = false) {
   if (typeof google !== 'undefined' && google.script && google.script.run) {
     return new Promise((resolve, reject) => {
+      const to = setTimeout(() => reject(new Error('連線逾時，請檢查網路狀態後重試！')), (action === 'getInitialData' || action === 'getOrdersAndPaymentStatus') ? READ_TIMEOUT_MS : REQUEST_TIMEOUT_MS);
       const r = google.script.run
         .withSuccessHandler(res => {
           if (action === 'getOrdersAndPaymentStatus' && Array.isArray(res)) res = { success: true, orders: res, data: res };
-          hideConnBanner(); resolve(res);
+          clearTimeout(to); hideConnBanner(); resolve(res);
         })
-        .withFailureHandler(err => reject(new Error((err && err.message) || String(err))));
+        .withFailureHandler(err => { clearTimeout(to); reject(new Error((err && err.message) || String(err))); });
       switch (action) {
         case 'getInitialData': r.getInitialData(); break;
         case 'getOrdersAndPaymentStatus': r.getOrdersAndPaymentStatus(); break;
@@ -415,7 +449,7 @@ function init() {
   const cached = store.get('lunchApp_cachedData');
   if (cached) { try { applyDataToUI(JSON.parse(cached)); cachedTxt = cached; } catch (e) {} }
   if ($('itemList').children.length === 0) addItemRow();
-  moveThumb(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveThumb);
+  setTimeout(() => { rollReady = true; }, 1500);
   loadInitialData();
   setTimeout(() => { const st = $('currentShopText'); if (st.classList.contains('is-load')) st.innerHTML = '<span class="spinner"></span>伺服器喚醒中，請稍候…'; }, 4000);
   schedulePoll();
@@ -468,18 +502,13 @@ async function loadInitialData() {
 }
 
 // ---------- 分頁 ----------
-function moveThumb() {
-  const a = document.querySelector('.tab-btn.active'), t = $('tabThumb');
-  if (a && t && a.offsetWidth) { t.style.width = a.offsetWidth + 'px'; t.style.transform = 'translateX(' + a.offsetLeft + 'px)'; }
-}
-let _rf = 0; window.addEventListener('resize', () => { cancelAnimationFrame(_rf); _rf = requestAnimationFrame(moveThumb); });
 function switchTab(tab) {
   currentTab = tab;
   ['order', 'status', 'menu', 'admin'].forEach(t => { $('tab-' + t).style.display = t === tab ? 'block' : 'none'; });
   $('mainTabs').style.display = tab === 'admin' ? 'none' : 'flex';
   const tabs = ['order', 'status', 'menu'];
   document.querySelectorAll('.tab-btn').forEach((b, i) => { b.classList.toggle('active', tabs[i] === tab); b.setAttribute('aria-selected', tabs[i] === tab); });
-  moveThumb();
+  const ti = tabs.indexOf(tab); if (ti >= 0) $('mainTabs').dataset.i = ti;
   if (tab === 'status') { renderOrders(allOrders); loadStatusData(); }
   if (tab === 'menu') renderMenuList();
   if (tab === 'admin') { renderAdminTable(allOrders); loadAdminOrders(); }
@@ -550,7 +579,7 @@ function rollTotal(n) {
   d.dataset.v = s; d.setAttribute('aria-label', '$' + s);
   if (d.querySelectorAll('.dg').length !== s.length) {
     d.innerHTML = '<span aria-hidden="true">$</span>' + [...s].map(() => '<span class="dg" aria-hidden="true"><span class="col">0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</span></span>').join('');
-    void d.offsetWidth;
+    if (rollReady) void d.offsetWidth;
   }
   d.querySelectorAll('.col').forEach((c, i) => { c.style.transform = 'translateY(-' + s[i] + 'em)'; });
 }
@@ -595,7 +624,8 @@ async function handleOrderSubmit() {
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>送出中…';
   try {
     // 金額僅供顯示；後端會依菜單重新計算並以後端為準
-    const payload = { group, name, items, total, totalAmount: total, note: $('orderNote').value.trim() };
+    const nt = new Date(Date.now() + 288e5), clientTime = nt.getUTCFullYear() + '/' + p2(nt.getUTCMonth() + 1) + '/' + p2(nt.getUTCDate()) + ' ' + p2(nt.getUTCHours()) + ':' + p2(nt.getUTCMinutes()) + ':' + p2(nt.getUTCSeconds());
+    const payload = { group, name, items, total, totalAmount: total, note: $('orderNote').value.trim(), clientTime };
     const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) }, 0);
     if (res && res.success) {
       burst(btn); showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', () => {
@@ -635,29 +665,31 @@ async function loadStatusData(force = false) {
   catch (err) { if (!ordersReady) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
   finally { rb.classList.remove('busy'); }
 }
-function renderOrders(orders) {
-  if (currentTab !== 'status' || !ordersReady) return;
-  const box = $('statusList');
-  box.className = '';
-  const kw = $('statusFilter').value.trim().toLowerCase();
-  const list = !kw ? orders : orders.filter(o =>
-    [o.group, o.name, orderDetails(o)].some(v => String(v || '').toLowerCase().includes(kw)));
-  const sig = kw + '|' + ordersVer;
-  if (sig === box.dataset.sig && box.querySelector('.order-item,.empty')) return;
-  box.dataset.sig = sig;
-  if (!list.length) { box.innerHTML = '<div class="empty">' + (kw ? '找不到符合的紀錄' : '還沒有人點餐，不如你先？') + '</div>'; return; }
-  box.innerHTML = list.map(o => {
-    const paid = isPaid(o);
-    return `<div class="order-item ${paid ? 'is-paid' : ''}">
+function orderCardHTML(o) {
+  const paid = isPaid(o), t = fmtTime(o.time);
+  return `<div class="order-item ${paid ? 'is-paid' : ''}" data-k="${escapeHTML((o.group + ' ' + o.name + ' ' + orderDetails(o)).toLowerCase())}">
       <div class="order-header"><div class="order-user"><span class="adm-grp">${escapeHTML(o.group)}</span><span class="adm-name">${escapeHTML(o.name)}</span></div>
       <span class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}">${paid ? '已付' : '未付'}</span></div>
-      <div class="order-details"><strong>${escapeHTML(orderDetails(o)) || '無'}</strong><br><span class="adm-amt" style="color:var(--text)">$${escapeHTML(o.total)}</span>${o.time ? ' · ' + escapeHTML(o.time) : ''}${o.note ? '<br>備註：' + escapeHTML(o.note) : ''}</div>
+      <div class="order-details"><strong>${escapeHTML(orderDetails(o)) || '無'}</strong><br><span class="adm-amt" style="color:var(--text)">$${escapeHTML(o.total)}</span>${t ? ' · ' + escapeHTML(t) : ''}${o.note ? '<br>備註：' + escapeHTML(o.note) : ''}</div>
     </div>`;
-  }).join('');
+}
+function renderOrders() {
+  if (currentTab !== 'status' || !ordersReady) return;
+  const box = $('statusList');
+  if (box.dataset.v !== String(ordersVer)) {
+    box.dataset.v = ordersVer; box.className = '';
+    box.innerHTML = allOrders.length ? allOrders.map(orderCardHTML).join('') + '<div class="empty" id="statusEmpty" hidden>找不到符合的紀錄</div>' : '<div class="empty">還沒有人點餐，不如你先？</div>';
+  }
+  applyStatusFilter();
+}
+function applyStatusFilter() {
+  const kw = $('statusFilter').value.trim().toLowerCase(); let shown = 0;
+  $('statusList').querySelectorAll('.order-item').forEach(c => { const ok = !kw || c.dataset.k.indexOf(kw) > -1; if (c.hidden === ok) c.hidden = !ok; if (ok) shown++; });
+  const e = $('statusEmpty'); if (e) e.hidden = shown > 0;
 }
 function filterStatus() {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => renderOrders(allOrders), 200);
+  searchTimeout = setTimeout(applyStatusFilter, 120);
 }
 function renderMenuList() {
   const box = $('menuList');
@@ -702,23 +734,27 @@ function updateAdminStats(orders) {
   const np = orders.filter(o => !isPaid(o)).length;
   $('segAll').textContent = '全部 ' + orders.length; $('segUnpaid').textContent = '未付 ' + np; $('segPaid').textContent = '已付 ' + (orders.length - np);
 }
-function renderAdminTable(orders) {
-  if (currentTab !== 'admin') return;
-  orders = orders || [];
-  updateAdminStats(orders);
-  const box = $('adminOrdersContainer');
-  const list = adminFilter === 'unpaid' ? orders.filter(o => !isPaid(o)) : adminFilter === 'paid' ? orders.filter(o => isPaid(o)) : orders;
-  const sig = adminFilter + '|' + ordersVer;
-  if (sig === box.dataset.sig && box.querySelector('.adm-list,.empty')) return;
-  box.dataset.sig = sig;
-  if (!list.length) { box.innerHTML = '<div class="empty">' + (orders.length ? '這個分類目前沒有訂單' : '目前沒有任何訂單') + '</div>'; return; }
-  box.innerHTML = '<div class="adm-list">' + list.map(o => {
-    const paid = isPaid(o), ok = Number(o.rowIndex) > 1;
-    return `<div class="adm-card ${paid ? 'is-paid' : ''}"><div class="adm-main">
+function adminCardHTML(o) {
+  const paid = isPaid(o), ok = Number(o.rowIndex) > 1;
+  return `<div class="adm-card ${paid ? 'is-paid' : ''}" data-p="${paid ? 1 : 0}"><div class="adm-main">
       <div class="adm-who"><span class="adm-grp">${escapeHTML(o.group)}</span><span class="adm-name">${escapeHTML(o.name)}</span><span class="adm-amt">$${escapeHTML(o.total)}</span></div>
       <div class="adm-items">${escapeHTML(orderDetails(o)) || '無'}${o.note ? ' ｜ 備註：' + escapeHTML(o.note) : ''}</div></div>
       <button class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}" ${ok ? '' : 'disabled'} onclick="toggleOrderStatus(${Number(o.rowIndex)}, this)" aria-label="${escapeHTML(o.name)} 繳費狀態，點擊切換">${paid ? '✔ 已付' : '○ 未付'}</button></div>`;
-  }).join('') + '</div>';
+}
+function renderAdminTable() {
+  if (currentTab !== 'admin') return;
+  updateAdminStats(allOrders);
+  const box = $('adminOrdersContainer');
+  if (box.dataset.v !== String(ordersVer)) {
+    box.dataset.v = ordersVer;
+    box.innerHTML = allOrders.length ? '<div class="adm-list">' + allOrders.map(adminCardHTML).join('') + '</div><div class="empty" id="admEmpty" hidden>這個分類目前沒有訂單</div>' : '<div class="empty">目前沒有任何訂單</div>';
+  }
+  applyAdminFilter();
+}
+function applyAdminFilter() {
+  let shown = 0;
+  $('adminOrdersContainer').querySelectorAll('.adm-card').forEach(c => { const ok = adminFilter === 'all' || (adminFilter === 'paid') === (c.dataset.p === '1'); if (c.hidden === ok) c.hidden = !ok; if (ok) shown++; });
+  const e = $('admEmpty'); if (e) e.hidden = shown > 0;
 }
 function setAdminFilter(f) {
   adminFilter = f;
@@ -731,7 +767,7 @@ async function toggleOrderStatus(rowIndex, btn) {
   if (!o || btn.disabled) return;
   const prev = isPaid(o), next = !prev;
   const card = btn.closest('.adm-card');
-  const paint = v => { btn.textContent = v ? '✔ 已付' : '○ 未付'; btn.className = 'badge ' + (v ? 'badge-paid' : 'badge-unpaid'); if (card) card.classList.toggle('is-paid', v); };
+  const paint = v => { btn.textContent = v ? '✔ 已付' : '○ 未付'; btn.className = 'badge ' + (v ? 'badge-paid' : 'badge-unpaid'); if (card) { card.classList.toggle('is-paid', v); card.dataset.p = v ? '1' : '0'; } $('adminOrdersContainer').dataset.v = String(ordersVer); };
   if (navigator.vibrate) navigator.vibrate(12);
   toggling++; setPaid(o, next); touchOrders(); paint(next); updateAdminStats(allOrders); btn.disabled = true;
   try {
