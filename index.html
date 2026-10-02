@@ -1,327 +1,813 @@
-// ==========================================
-// 系統設定
-// ==========================================
-const ADMIN_PASSWORD = "6767";
-const SPREADSHEET_ID = "1-YHmI5FoP8P80ygKhvXS_hW0O17pTy4gT_Uy0JBRvVo";
-const TZ = "Asia/Taipei";
-const CACHE_MENU = "MENU_CACHE_V6";      // 升版：強制清除舊快取（舊快取內的時間是錯的）
-const CACHE_ORDERS = "ORDERS_CACHE_V6";
-const MENU_TTL = 600;                    // 菜單很少變動：快取 10 分鐘（後台切換店家會立刻清除）
-const ORDERS_TTL = 20;                   // 訂單：快取 20 秒（全班同時輪詢時只讀一次試算表；寫入會立刻清除）
-const LOCK_WAIT_MS = 20000;              // 午餐尖峰多人同時送出，排隊等候的時間要夠長
-const ORDER_COLS = 12;
-const SHEET_ORDERS = "今日誰點餐", SHEET_SETTING = "今日設定", SHEET_MENU = "菜單總表";
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
+<meta name="theme-color" content="#36453A">
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<script>var GAS_URL="https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
+<title>今天要吃什麼勒</title>
+<style>
+:root{--bg:#EAE5D8;--surface:#FBF9F4;--text:#171516;--muted:#52535B;--primary:#DD9436;--amber:#A3651F;--gold:#D8A45C;--forest:#36453A;--green:#33644F;--sage:#697C6E;--sand:#D6CFBF;--navy:#111D2C;--danger:#A63A29;--danger-bg:#F6E1DB;--success:#33644F;--success-bg:#DCE8E0;--border:rgba(23,21,22,.18);--bd:3px solid var(--text);--sh:4px 4px 0 var(--text);--sh-sm:3px 3px 0 var(--text);--st:steps(6,end)}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei","Heiti TC",sans-serif;-webkit-tap-highlight-color:transparent}
+html{width:100%;background:var(--bg);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{width:100%;overflow-x:hidden;overflow-x:clip;background:var(--bg) url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAJ0lEQVR42mNgGAWjYBSMAuoCcVExFXFRMRVS9DCNBtsoGAWjYBAAANhrAM/6yuJKAAAAAElFTkSuQmCC) 0 0/24px 24px;color:var(--text);padding-bottom:80px;padding-bottom:calc(80px + env(safe-area-inset-bottom));line-height:1.6;min-height:100vh;min-height:100dvh}
+[hidden]{display:none!important}
+.order-item,.adm-card{contain:layout style}
+button,select,input{font:inherit;color:inherit;touch-action:manipulation;border-radius:0}
+:focus-visible{outline:3px dashed var(--primary);outline-offset:2px}
+.i-warn{width:0.406em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAgCAYAAADJ2fKUAAABnUlEQVR42pWUTUvDQBCGn9nUW/FQEMSzEBA8+rsK/SGF0p/lvVDwLIFCxSJebPJ62EmabDZ+zKGd7Mw7H+/OrOGyAgHUQMNQAlAAazDwnyWoNOMJuI7YgZwwnoEXiTWYrYB7M5XAHRAyoAbjFdhHoIUaVAK3iXMTi+j+bxFlNCkAHIBPbJAloA6A2w+trchET/VUQj1gSSM912OY6qPxcqOuaVCYICMkpc6Y6GmcxYaZjsAJ+JhgDrcf+5kqiYVFp3mGuQpjD+wlNmBhA/bWi9Jk2PqRvb/KLHf4W7YuUyV149SXdnwqicIpDABb72sncRqtRez3Le7T/3oKOb1VDolzW9pUAGsvuvK+Kozj5dJtBNoA72B9QtosX27PUl541J0EdslyxZDS0aatfKXnDqjBNolPdj1bIGDrv4xRC6hjFq0yIEsBc9CDGTdO907iI8nYgZZAaaYF8IiYAefhWnS9hcuQxil99GE9+3nvPVS2p0rqLra/gCTv+2g1Dl71tX/vM2M0CLuMF6x7MxZ+9iMRfWDj73UBfIFtE59vR82vtyxBSZ0AAAAASUVORK5CYII=)}.i-x{width:0.875em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAgCAYAAAABtRhCAAADAUlEQVR42r1Xv2/aQBT+Dl8qGDpUTAkrLF4YPcVRPDQKQyoxNf8AM/9AFCEPzcjMXCkMlaV6sMTQDHRiTKTSIewVgzNilDN6HYzN+Rex0x8nWcDd8b5733v3vWeG/YPwusFKL4RgE9MshXR2dVXEdhqMKwpxRaEH2ybf9198Nr5P3nIZ/a8MOxQCCiEKgfliB+r7Po0NIwSkQmBjwwg8E9mGi3g6Mc1M0EoyZmPDgNrvo6VpEE8uhOuCiIJVRomjST+JIFwXz64LADhst+X4Uy6NoWdjw6AV57TiPD+OIvAo9Crcv+I8N6aRh1xR4K3XUDudVH7Nh0PMHSczxwnAD8fB18vLlAcH9Tq89RqfT05ilEbuMrZDend6Gn2/mE7R7HYxd5yAXsnq3HEwHw5xMZ1G09+vryOrLH56AgCamGYmbQ+2HaNpxTl5yyUJIUgIkaJRpn8j2ZGTiIfQ6nlndwYWfKrnHcBb47lW3R2x0cBPywIANLvdGI0Hngd1y5KcJQf1ekaWsgwN2s4tLCugaTua3W4MzNZ1LCwroI/2C2MlwW6mIKmdDg7bbdi6nlqzdR1qv79LNrZfOPmL0sp2oC1NAzUaseUPt7d4U68X1rEKCkqtcF08zmap+cfZLLrsKSr3UppzRrZdmo5GqSQJ4zkdjeIgLN+JykuVigj4cvYex4NBNLewLCy2mQoAx4MBnmvV4I6yopTm0Pjt5lPsUi8sCy1NQ0vTYqAAcHdzk61ISSei6pC4rMmLPzaMeMlKaO6Kc5qYJnnLZUpApJKVXf+yDOWVpIlppg4WKo0QQhZvqsjBq1WrmDtOKgwLy4Le6+VSpPd6KXoJgc7WqtVYDrK8eggAv+7vI4OyPOXFezoaRbUwrDIf7+72ZuX+il+wt0nEjEr1NPKT1WYk9wghSoGlQMNnYpqppio0Lu+TEwR/MIgrSuxavLYlLA0qhIji9BpPeMn2nfynp7gBRWH+ZlPYSKXsO8Pbo6Mo/QGgDFjp/l/yiiQwhv80/lmy/NXXud/CrI3bAIiakAAAAABJRU5ErkJggg==)}.i-cat{width:1.290em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAfCAYAAACVgY94AAAE2klEQVR42r1Yy28aRxz+ZgAbdlm2VBb4gdYQW7UihVbgIqWyc2p8y7m3HnLopY1UVar6R1SWLEdNLjn40FvPvbU91ZbaUMkHR4p8MkL4AbJkYR6Lecz0ADPdXRZYaNOfhBCzw/LN9/0e30IwQ4RVlRNKQSkh1ertuH0AwAmlqNVqZJbf8k+zORaPoVlvQAmrYonrgCtITdMQUkJcj0VRrdyAMwaf34dxB3ILOs3mZr0BQinXY1Gk02kAQK/b4yO2cwAw4gnosSgAcMb4u2XQGWurWVybZ6gUL3mv25PrPr8PMWMJC6EUgA4AgFCKdy6xM957H1C6CVQrN0PXjHgCc34ACGBA3/8LcM4fkO+bmaxcb3c7tusiCKUzgfQMUNcjmA8G+SCfJgK3xkIoBSSBauWGE0pJrVb77wEyxmXSTxtKpAMjksBJPxU4APKvAGqaxiklqFZvx94olVkBAJwdnw9JvJFLymtWVkfJHFZVPhGgrkfQ6/awmFzuLxQBxjickjhlbHc7tpwUIN3CWc2apoEzZu2tAIC7Vgu9bs/eBxnj3Of38Z0n2zDiCTDGOaWEuzH34vn3AIDTfAFz/oBcE6ye5gs4Oz6Xa6NAc8Y4oZSvrWaRTqflaz4YdG/UzmY6qrnuHuxL+QQoERu5pGR092DfCWj8MLgNoFgueSsSSomU3gr0NF+wyf3t068BAF98+Q1evdwDAHx1/B3a3Y5tr5e4Ns9wVbgAZ4zUGw17NYniiBlLti9VipcQlccY54vJ5UEjDkjJrYUiPgtZi+WSaOakWW+g3mgMGY8H97egRDoolks2gP5JEos1Sgl63Z7ryBLgBKBRrN21WpwIWWYxC7VajVBKyICxIamd0e52bK9RYcQTMvG9OgZBBB3RlO02y1jCfDDIlbDKF5PLAxPQl86a0NZwu7a2msXSvQTCqso1TRsLVBTT1BbDiCegRPpsVSs3cLJtzVuniVAiHRjxhC1NJrkcMqhQbkU+cMuSPQEGANLpNIrlEirFS8m0MwXmg0GsrWblQcR+p0Lit5z3YIxLBv1WH2c9kSgMI57ARi4pq7JYLmEhlIKRS9gmSrvbwes/XyOkhCRbApzYL+KvfB6McZvDYQMxxWdxzT8oeeLmXhjjfCOX7Pe5p/31TG4b65+k8OL53pAcH21uQY9Fsb6SQrvbQfM2gKvCBXaebcteCQD3PvjQcyWTcQ88SliFHotyI57Aq5d72D3Yx48//ISQEpISitnbvA3gzdsjySAA6LEodp5s2xr5yckJzKbpOlHqjQbxbLeUsIq7VkvKJEaWyJVr8www+17v2uxXqzQZ/zR3G3PFcglm05SHaNZFWpnT+0GzaQIAX19JIZVZwS8/H4oOj81MVpqFUfHw0WNcFS5scvYtlYq11axt75u3R9P7wQf3t5D5dMXGgJcQJmLANhm2/eP7nieAlBIokY4N3DRAD4+OJj7Uz1Qkuh7hAHCcPxyySk6Auwf7Q2sPHz2W96yUK67KhJQQ/vj9V9t6Jrfd77UuDt4v/jG4a7XwcS5n623jWHMDLArADZxzrxfPKU+raRoA8M+ffTZ1zon+5+UZRpBhNk1unSLj/rfxW4f28W/n2MW+q5WaYGw9N95KuYKwqhIxKbzMYlcHRCmxzdpRMnhlbtb4G/2fa/qAugDbAAAAAElFTkSuQmCC)}.i-ok{width:0.750em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAgCAYAAAAIXrg4AAACuklEQVR42rVWy2rbQBQ9ioVHxK0Fsw/9Fa+S0NgSaBOKY7KxvkreBFt9pMiQrtqu8isli5KlbFQijcLtIp7pjGTLSkkGBr1G93HOvWfGchgjvOKw5c1hr/eihv9k2T8Hh70e7n/foyiKFzHe7Xbxtv/GzKAoCnz/+aPxxzheAADG44vGdd5wVIeozdhneNuwHMZIQmRZ1s6FeZ6rDH3PB2h3bRCRgggOY8Q5J5ELKotSm+Zzts7I7nTIYYySZFlZa06RC3IYI4cxOmhIDqRFKaMvyxJhODW+NY2DamqGiw1keZ4rggFgMBi0J0GHSBRia8pBEJDd6ZDd6aj7JFnuXK9D1MDBE+5V49k6I8658VyKR4O3Vg6SZFkzniRL9V464Zyrb9JGowMZtcNYDRZpjHNOSbJUTuSU73UHtUabXE5we3uLsixh2zbij5+MRpNkx/ECd7/ucPTuCKs0bUeyjn2SLNVVRiahqHISBIG6F7loT7LkwmFMGZdwVXH/ryrSnXDOjRkEQasy3atFeZ4b3Xx6fFKT5up/LbWoJFEIha9sxG1QVTN5BkSPCh6RC4NgvTSf/hXPFTsAm8xXaYrzD+cIwyn6rgvP9wEAfddFFM02EFn7xa6idMgfHhDHC/RdF/OrOQaDAaJoppZE0Qz+yGsvdnrVVOGQdS7LVpeIbJ0ZPOzlQNcgferNpq+RzrJ11swBgZQk9F1X4ez5PjzfN/YEAIqLVZri280NJpeT+kbUpKaygoIgoFI8quhls+nwSTmpZmDv2rSloKnda/MuDKeIohnCcKrE0BuOtGazAFBzFRVFgTheYH41N6pqPL7AKk0Rxwus0hTvz87gjUaVTqbtR0d9MMZw/fnaPAsRwRuO8OX6K06PTzC5nGzitdqfi7Y2GhlJPCFl1QKtDalFljxdv9bh13rt4/tfF2znwoOImpQAAAAASUVORK5CYII=)}.i-lock{width:0.781em;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAgCAYAAADnnNMGAAADE0lEQVR42q2XTUsbURSGn3tNojHRaBkREhXE6q4uurBQCqWrbiqWiqD0Q+qmq4I/pb+gpbZWQSKVdtFd6UawBRe6EWsQNAptktbEaNTo3C6SGWbMJJk0ntWde++c97znc0ZQRaLjzQCq2r3R+WNR7kxUUq57JaGuVqVFGs395N6p4/10PCNkXmd0/rjkzFPJOpnXlRZp5MaDx3bLUlHb89pylnQcpXulcMVk4WkQmddVS28b915M2c5SG1/Y30qBOjf3/EGfud7dzHG4fQAgrIw8DtYDYHXR+udZknunhgJTdK+kb6idcH8nWscRu5s5R4+UgOheiczrJPdOEakoP9fOiK0kCodeKQwjdK8EIPb9r0ruX9A94CcdzyAtZ44g0fFmdKD3Tif+gCSZCLC7meZTrJBcM8tHtpef3Q4AMEwGLdxAqKsVgMPtA6LjzWYSXGaiADPQ659nef8tXaLckMXVY7InCggwPQRauKEIYqa8AJDlMiu18YVXH36bz8EmISpl4qu5PyT3L0B4WNoRLO2IyoEXqShrdgaiYLFdintiZvlIAQz3CbRwu4WhA8jkx0J2/Lh/Rjqe4apEOlhG7kj/b4XJ/QuXFW8ptlpk7F0WyDpXfLBJ8Pahn6UdoQBGegqMjOCN9KiKQS/WhbIWs1W/AJQBUo8YBXgJxO6ult42tHAD/qCP6/cmANj6Okcue2bzc/dAeWMut5X339J2EC3SiD8g6R/0mZXUP+gjmWgHfhXJe+gf9DkHPBEglz2z7RklIF37Q3jc3XG453GdmsVhNfWy0AWmJ67hD/pKmTlkpmuQdDyDzOssruaMjKOlt62s+xyL0R+o7LlPMcXkxxzZE0X2pLA2AlvC4pLLZC3xsPYjp15mU25ZmyD1tJJqncJ1TJ7cDTHcJ3i+UEjLN2MBc0hVE9cgWqQRLdIBRZC+Wx2lcbS6y8JK1pLC5qwHYiuJsh8O/83EkEc3mwEIdbWa47Za8dbsrtfTTfUNrSsVdU6wSdTAxO0QU+eOvUsYw8ZAtfp9cfW4LjJGwQo3vwX1yj9fWzbAqDI7CwAAAABJRU5ErkJggg==)}
+.ic{display:inline-block;height:1em;background-repeat:no-repeat;background-position:center;background-size:contain;image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:-.12em;flex:none}
+.conn-banner{display:none;background:var(--danger);color:#fff;font-size:.85rem;font-weight:700;text-align:center;padding:10px 16px;border-bottom:var(--bd);position:relative;z-index:9999}
+.conn-banner.show{display:block}
+header{position:relative;padding:40px 24px 72px;padding:calc(40px + env(safe-area-inset-top)) 24px 72px;text-align:center;z-index:1;overflow:hidden;background:var(--forest);color:var(--sand);border-bottom:4px solid var(--text)}
+header::before{content:"";position:absolute;width:160px;height:160px;background:var(--green);right:-40px;top:-50px;box-shadow:-48px 96px 0 -8px var(--sage)}
+.head-inner{position:relative;max-width:680px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.header-action-group{display:flex;align-items:center;gap:8px;margin-bottom:24px;flex-wrap:wrap;justify-content:center}
+.title-pill{background:var(--surface);border:var(--bd);padding:8px 18px;box-shadow:var(--sh-sm);font-size:1.1rem;font-weight:900;color:var(--text);display:flex;align-items:center;gap:10px}
+.title-pill .ic{font-size:1.5rem}
+.admin-pill{position:absolute;top:-24px;right:-8px;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:2px solid rgba(214,207,191,.5);background:rgba(255,255,255,.1);opacity:.5;cursor:pointer}
+.admin-pill:focus-visible{opacity:1;background:rgba(255,255,255,.25)}
+.shop-label{font-size:.85rem;font-weight:700;color:var(--sand);margin-bottom:4px}
+.shop-badge{display:block;font-size:2.8rem;font-size:clamp(2.2rem,9vw,4rem);font-weight:900;line-height:1.3;color:#F6F2E8;text-shadow:3px 3px 0 var(--text);word-break:break-word}
+.hl{background:linear-gradient(transparent 62%,var(--primary) 0) no-repeat 0 0/0 100%;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .08em;animation:swipe .6s .2s steps(8,end) forwards}
+@keyframes swipe{to{background-size:100% 100%}}
+.shop-badge.is-load,.shop-badge.is-err{font-size:1.5rem;color:var(--sand);text-shadow:none;animation:pulse 1.2s steps(2) infinite}
+header .spinner{border-color:rgba(255,255,255,.25);border-top-color:var(--primary)}
+@keyframes pulse{50%{opacity:.5}}
+.tabs{display:flex;gap:0;max-width:480px;margin:-32px auto 0;padding:4px;background:var(--surface);border:var(--bd);box-shadow:var(--sh);position:sticky;top:16px;z-index:100;width:calc(100% - 32px)}
+.tab-btn{flex:1;padding:10px 6px;min-height:44px;border:none;background:transparent;font-size:.9rem;font-weight:800;color:var(--muted);cursor:pointer;position:relative;z-index:1}
+.tab-thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/3);background:var(--forest);transition:transform .25s steps(5,end);z-index:0}
+.tabs[data-i="1"] .tab-thumb{transform:translateX(100%)}.tabs[data-i="2"] .tab-thumb{transform:translateX(200%)}
+.tab-btn.active{color:#fff}
+.container{max-width:680px;margin:32px auto;padding:0 16px}
+.container>div{animation:slideIn .3s steps(4,end) both}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card{background:var(--surface);border:var(--bd);padding:28px;box-shadow:6px 6px 0 var(--text);margin-bottom:24px}
+.card-title{font-size:1.4rem;font-weight:900;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.form-group{margin-bottom:22px}
+label{display:block;font-size:.9rem;font-weight:800;margin-bottom:8px}
+input[type=text],input[type=password],select{width:100%;padding:12px 14px;min-height:52px;border:var(--bd);font-size:1rem;background:#fff;outline:none}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h12v2H10v2H8v2H6v2H4V6H2V4H0z' fill='%23171516'/%3E%3C/svg%3E");background-position:calc(100% - 14px) center;background-size:12px 8px;background-repeat:no-repeat;padding-right:40px;cursor:pointer}
+select:disabled{background-color:#EFEADF;opacity:.6;cursor:not-allowed}
+input:focus,select:focus{border-color:var(--primary);box-shadow:4px 4px 0 var(--primary)}
+.item-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;background:#fff;padding:6px;border:2px solid var(--text);animation:slideIn .25s steps(3,end) both}
+.item-row select{flex:2;min-width:0;border:none;background-color:transparent;padding:10px 36px 10px 8px;min-height:44px}
+.item-row select:focus{box-shadow:none;background-color:#FFF6E6}
+.price-tag{width:70px;text-align:right;font-weight:900;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.btn-remove{width:40px;height:40px;flex:none;background:#fff;border:2px solid var(--text);color:var(--text);font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--text)}
+.btn-remove:active{transform:translate(2px,2px);box-shadow:none}
+.btn-add-item{background:transparent;border:3px dashed var(--muted);color:var(--muted);padding:14px;min-height:52px;width:100%;cursor:pointer;font-weight:800;margin-top:8px}
+.summary-box{background:#fff;border:var(--bd);padding:18px 22px;margin:32px 0 24px;display:flex;justify-content:space-between;align-items:center;font-weight:800;box-shadow:var(--sh-sm);position:relative;overflow:hidden}
+.summary-box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--primary)}
+.summary-box>span:first-child{padding-left:8px}
+.total-price{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums;display:inline-flex;align-items:flex-start;line-height:1}
+.dg{display:inline-block;height:1em;overflow:hidden;vertical-align:top;line-height:1}
+.col{display:block;transition:transform .5s steps(8,end)}
+.btn-submit{background:var(--primary);color:var(--text);border:var(--bd);padding:16px;min-height:60px;width:100%;font-size:1.1rem;font-weight:900;letter-spacing:.1em;cursor:pointer;box-shadow:var(--sh)}
+.btn-submit:active:not(:disabled){transform:translate(4px,4px);box-shadow:none}
+.btn-submit:disabled{background:#CFC8B7;color:#7C786C;box-shadow:none;cursor:wait}
+.btn-action{background:var(--forest);color:#fff;border:2px solid var(--text);padding:8px 16px;min-height:40px;font-size:.85rem;font-weight:800;cursor:pointer;box-shadow:var(--sh-sm)}
+.btn-action.busy{opacity:.55;pointer-events:none}
+.btn-action:active{transform:translate(3px,3px);box-shadow:none}
+.btn-danger{background:var(--danger);color:#fff;border:var(--bd);padding:14px;min-height:48px;font-weight:900;cursor:pointer;width:100%;box-shadow:var(--sh-sm)}
+.btn-danger:active{transform:translate(3px,3px);box-shadow:none}
+.btn-back{background:var(--surface);border:var(--bd);padding:14px;min-height:48px;width:100%;font-weight:800;cursor:pointer;margin-top:12px;box-shadow:var(--sh-sm)}
+.btn-back:active{transform:translate(3px,3px);box-shadow:none}
+.search-box{margin-bottom:20px}
+.order-item{position:relative;border:var(--bd);padding:16px 18px 16px 26px;margin-bottom:16px;background:#fff;overflow:hidden;box-shadow:var(--sh-sm)}
+.order-item::before,.adm-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--danger)}
+.order-item.is-paid::before,.adm-card.is-paid::before{background:var(--success)}
+.order-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.order-user{display:flex;flex-wrap:wrap;gap:2px 8px;min-width:0;font-weight:900;font-size:1.1rem}
+.order-details{font-size:.9rem;line-height:1.7;color:var(--muted)}
+.order-details strong{color:var(--text)}
+.badge{padding:5px 12px;font-size:.75rem;font-weight:900;border:2px solid var(--text);cursor:pointer;white-space:nowrap;letter-spacing:.03em}
+.badge-paid{background:var(--success-bg);color:var(--success)}
+.badge-unpaid{background:var(--danger-bg);color:var(--danger)}
+span.badge{cursor:default}
+.badge:disabled{opacity:.5;cursor:wait}
+button.badge:active:not(:disabled){transform:translate(2px,2px)}
+.admin-badge{background:var(--primary);border:2px solid var(--text);font-size:.72rem;font-weight:900;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.admin-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:#fff;border:var(--bd);padding:14px;box-shadow:var(--sh-sm)}
+.stat-label{font-size:.8rem;font-weight:800;color:var(--muted)}
+.stat-num{font-size:1.8rem;font-weight:900;margin-top:4px;font-variant-numeric:tabular-nums}
+.panel{border:var(--bd);padding:18px;margin-bottom:20px;background:#fff;box-shadow:var(--sh-sm)}
+.panel.danger{background:#FBF1ED;border-color:var(--danger);box-shadow:3px 3px 0 var(--danger)}
+.menu-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.95rem}
+.menu-table td{padding:14px 8px;border-bottom:3px dotted rgba(23,21,22,.25)}
+.menu-table tr:last-child td{border-bottom:none}
+.menu-table td:last-child{text-align:right;font-weight:900;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.empty{text-align:center;padding:36px 20px;font-weight:800;color:var(--muted);background:rgba(255,255,255,.5);border:3px dashed var(--border)}
+.retry-box{text-align:center;padding:36px 20px;font-weight:800;color:var(--muted)}
+.retry-btn{margin-top:14px}
+.spinner{display:inline-block;width:20px;height:20px;border:4px solid rgba(23,21,22,.12);border-top-color:var(--primary);border-radius:0;animation:spin .8s steps(4) infinite;vertical-align:middle;margin-right:10px}
+.btn-submit .spinner{border-color:rgba(23,21,22,.2);border-top-color:var(--text);width:16px;height:16px;border-width:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sk-wrap{display:grid;gap:14px;padding:4px 0}
+.sk{height:88px;border:3px solid rgba(23,21,22,.12);background:rgba(23,21,22,.06);animation:pulse 1.2s steps(2) infinite}
+.modal-overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(17,29,44,.7);display:none;justify-content:center;align-items:center;z-index:3000;padding:20px}
+#adminLoginModal{z-index:2100}
+.modal-card{background:var(--surface);border:4px solid var(--text);padding:28px 22px;max-width:360px;width:100%;text-align:center;box-shadow:8px 8px 0 var(--primary),8px 8px 0 4px var(--text);animation:slideIn .25s steps(4,end)}
+.modal-icon{font-size:3.4rem;height:1em;line-height:1;margin:0 auto 14px;display:flex;justify-content:center}
+.modal-icon .ic{font-size:inherit}
+.modal-title{font-size:1.3rem;font-weight:900;margin-bottom:10px}
+.modal-msg{font-size:.95rem;margin-bottom:26px;color:var(--muted);white-space:pre-line}
+.modal-btn-group{display:flex;gap:12px}
+.modal-btn{flex:1;background:var(--forest);color:#fff;border:var(--bd);padding:12px;min-height:52px;font-weight:900;cursor:pointer;box-shadow:var(--sh-sm)}
+.modal-btn:active{transform:translate(3px,3px);box-shadow:none}
+.modal-btn:disabled{opacity:.5;cursor:wait}
+.modal-btn-cancel{background:var(--bg);color:var(--text)}
+.seg{display:flex;gap:6px;margin-bottom:12px}
+.seg button{flex:1;min-height:42px;border:2px solid var(--text);background:#fff;font-weight:800;font-size:.82rem;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--forest);color:#fff}
+.adm-list{display:grid;gap:10px}
+.adm-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;padding:14px 12px 14px 22px;border:3px solid var(--text);background:#fff}
+.adm-main{flex:1;min-width:0}
+.adm-who{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+.adm-grp{flex-basis:100%;font-size:.78rem;font-weight:800;color:var(--muted)}
+.adm-name{font-size:1.05rem;font-weight:900;white-space:nowrap}
+.adm-amt{font-weight:900;white-space:nowrap;font-variant-numeric:tabular-nums}
+.adm-items{font-size:.85rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.adm-card .badge{flex:none;min-width:88px;min-height:52px;font-size:.92rem}
+.lite .container>div,.lite .item-row,.lite .modal-card,.lite .sk,.lite .shop-badge.is-load{animation:none}
+.lite .hl{animation:none;background-size:100% 100%}
+.low .card,.low .order-item,.low .stat-card,.low .panel,.low .tabs{box-shadow:none}
+.low *{transition:none!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media (max-width:480px){header{padding:32px 20px 60px;padding:calc(32px + env(safe-area-inset-top)) 20px 60px}.card{padding:22px 16px}.price-tag{display:none}.item-row select{font-size:.95rem}.container{padding:0 12px}.panel{padding:14px 12px}}
+@media (hover:hover){
+.tab-btn:not(.active):hover{color:var(--text);background:rgba(0,0,0,.05)}
+.btn-remove:hover{background:var(--danger-bg);color:var(--danger)}
+.btn-add-item:hover{background:rgba(23,21,22,.05);border-color:var(--text);color:var(--text)}
+.btn-submit:hover:not(:disabled){background:var(--amber);color:#fff;transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--text)}
+.btn-action:hover{background:var(--primary);color:var(--text)}
+.btn-danger:hover{background:#85291A}
+.btn-back:hover{background:var(--bg)}
+button.badge:hover:not(:disabled){filter:brightness(.95)}
+.modal-btn:hover{background:var(--primary);color:var(--text)}
+.modal-btn-cancel:hover{background:var(--sand)}
+.admin-pill:hover{opacity:1;background:rgba(255,255,255,.25)}
+}
+</style>
+</head>
+<body>
+<div class="conn-banner" id="connBanner" role="status">連線不穩，資料可能不是最新，正在重新連線…</div>
 
-// ==========================================
-// 工具
-// ==========================================
-let _ss = null; // 同一次執行內只開一次試算表（openById 約 0.2~0.5 秒）
-function getTargetSpreadsheet() {
-  if (_ss) return _ss;
-  try { _ss = SpreadsheetApp.openById(SPREADSHEET_ID); }
-  catch (e) {
-    _ss = SpreadsheetApp.getActiveSpreadsheet();
-    if (!_ss) throw new Error("無法開啟試算表，請檢查 ID 或存取權限！");
+<header>
+  <div class="head-inner">
+    <div class="header-action-group">
+      <div class="title-pill"><i class="ic i-cat" aria-hidden="true"></i>今天要吃什麼勒</div>
+      <button class="admin-pill" onclick="openAdminModal()" aria-label="管理員" title="管理員"><i class="ic i-lock" aria-hidden="true"></i></button>
+    </div>
+    <div class="shop-label">今日店家</div>
+    <span class="shop-badge is-load" id="currentShopText"><span class="spinner"></span>載入中…</span>
+  </div>
+</header>
+
+<div class="tabs" id="mainTabs" role="tablist" data-i="0"><span class="tab-thumb" id="tabThumb" aria-hidden="true"></span>
+  <button role="tab" class="tab-btn active" onclick="switchTab('order')">我要點餐</button>
+  <button role="tab" class="tab-btn" onclick="switchTab('status')">對帳與查詢</button>
+  <button role="tab" class="tab-btn" onclick="switchTab('menu')">今日菜單</button>
+</div>
+
+<div class="container">
+  <div id="tab-order">
+    <div class="card">
+      <div class="card-title">填寫訂購資訊</div>
+      <div class="form-group">
+        <label for="groupSelect">組別 *</label>
+        <select id="groupSelect" onchange="updateNameOptions()">
+          <option value="">請選擇組別</option>
+          <option value="第一組">第一組</option><option value="第二組">第二組</option><option value="第三組">第三組</option>
+          <option value="第四組">第四組</option><option value="第五組">第五組</option><option value="教師組">教師組</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="nameSelect">座號與姓名 *</label>
+        <select id="nameSelect" disabled onchange="saveUserSelection()"><option value="">請先選擇組別</option></select>
+      </div>
+      <div class="form-group">
+        <label>餐點品項（最多 5 項）</label>
+        <div id="itemList"></div>
+        <button type="button" class="btn-add-item" id="btnAddItem" onclick="addItemRow()">+ 新增一項餐點</button>
+      </div>
+      <div class="form-group">
+        <label for="orderNote">備註</label>
+        <input type="text" id="orderNote" maxlength="100" placeholder="（不一定要填）">
+      </div>
+      <div class="summary-box"><span>應付總金額</span><span class="total-price" id="totalDisplay" role="img" aria-label="$0">$0</span></div>
+      <button class="btn-submit" id="submitBtn" onclick="handleOrderSubmit()">送出點餐</button>
+    </div>
+  </div>
+
+  <div id="tab-status" style="display:none;">
+    <div class="card">
+      <div class="card-title"><span>點餐與繳費狀態</span><button class="btn-action" id="btnRefreshStatus" onclick="loadStatusData(true)">重新整理</button></div>
+      <input type="text" id="statusFilter" class="search-box" placeholder="輸入姓名、組別或餐點搜尋" oninput="filterStatus()">
+      <div id="statusList"><div class="sk-wrap"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
+    </div>
+  </div>
+
+  <div id="tab-menu" style="display:none;">
+    <div class="card">
+      <div class="card-title">今日菜單</div>
+      <div id="menuList"><div class="sk-wrap"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
+    </div>
+  </div>
+
+  <div id="tab-admin" style="display:none;">
+    <div class="card">
+      <div class="card-title"><div>管理員控制台<span class="admin-badge">已登入</span></div></div>
+      <div class="admin-stats-grid">
+        <div class="stat-card"><div class="stat-label">今日訂單數</div><div class="stat-num" id="statOrderCount">0</div></div>
+        <div class="stat-card"><div class="stat-label">訂單總金額</div><div class="stat-num" id="statTotalAmount">$0</div></div>
+        <div class="stat-card"><div class="stat-label">已收金額</div><div class="stat-num" style="color:var(--success)" id="statPaidAmount">$0</div></div>
+        <div class="stat-card"><div class="stat-label">未收金額</div><div class="stat-num" style="color:var(--danger)" id="statUnpaidAmount">$0</div></div>
+      </div>
+      <div class="panel">
+        <label for="adminShopsSelect">切換今日店家</label>
+        <div style="display:flex;gap:12px;margin-top:8px"><select id="adminShopsSelect"></select><button class="btn-action" style="white-space:nowrap;height:52px" onclick="handleAdminChangeShop()">確認更換</button></div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px">
+          <label style="margin:0">對帳管理 <span style="font-size:.75rem;font-weight:400;opacity:.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
+          <button class="btn-action" id="btnRefreshAdmin" style="padding:6px 14px" onclick="loadAdminOrders(true)">重新整理</button>
+        </div>
+        <div class="seg" id="adminSeg" role="group" aria-label="篩選"><button id="segAll" data-f="all" class="on" onclick="setAdminFilter('all')">全部</button><button id="segUnpaid" data-f="unpaid" onclick="setAdminFilter('unpaid')">未付</button><button id="segPaid" data-f="paid" onclick="setAdminFilter('paid')">已付</button></div>
+        <div id="adminOrdersContainer"><div class="sk-wrap"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
+      </div>
+      <div class="panel danger">
+        <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
+        <p style="font-size:.85rem;margin-bottom:16px;color:var(--muted)">會清除「今日誰點餐」的所有訂購資料，標題列會保留。</p>
+        <button class="btn-danger" onclick="handleAdminClearOrders()">清空今日紀錄</button>
+      </div>
+      <button class="btn-back" onclick="switchTab('order')">返回點餐頁面</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="customModal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-icon" id="modalIcon"><i class="ic i-ok"></i></div>
+    <div class="modal-title" id="modalTitle">提示</div>
+    <div class="modal-msg" id="modalMsg"></div>
+    <div class="modal-btn-group">
+      <button class="modal-btn modal-btn-cancel" id="modalCancelBtn" style="display:none" onclick="closeModal(true)">取消</button>
+      <button class="modal-btn" id="modalConfirmBtn" onclick="closeModal()">賀哦，哇災！</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adminLoginModal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="modal-icon"><i class="ic i-lock"></i></div>
+    <div class="modal-title">管理員驗證</div>
+    <div class="form-group" style="margin-top:20px;text-align:left">
+      <label for="adminPasswordInput">管理密碼</label>
+      <input type="password" id="adminPasswordInput" autocomplete="current-password" placeholder="請輸入後台密碼" onkeypress="if(event.key==='Enter')submitAdminLogin()">
+    </div>
+    <div class="modal-btn-group">
+      <button class="modal-btn modal-btn-cancel" onclick="closeAdminModal()">取消</button>
+      <button class="modal-btn" id="adminLoginBtn" onclick="submitAdminLogin()">登入後台</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GAS_API_URL = GAS_URL;
+const REQUEST_TIMEOUT_MS = 40000, READ_TIMEOUT_MS = 25000, MAX_RETRIES = 2, RETRY_BASE_DELAY_MS = 1500, POLL_MS = 45000, FRESH_MS = 15000;
+const groupMembersData = {
+  "第一組": ["04 舒香雅","10 施美美","12 王麗敏","18 江珈宜","21 林彩葳","26 林瑋妮"],
+  "第二組": ["08 吳同祐","09 劉靜文","11 黃昱瑄","20 郭貞纓","27 陳玟妤","29 簡雅珍"],
+  "第三組": ["01 楊宜靜","03 陳昱寧","13 莊芯卉","15 何婧湘","17 羅懿","19 廖慧蘭"],
+  "第四組": ["06 邱韻如","07 汪維嘉","22 薛佩𠊙","23 劉育均","24 徐皜軒","28 謝宛真"],
+  "第五組": ["02 吳欣珉","05 鍾涵茹","14 劉曉珊","16 薛席婷","25 陳怡芳","30 張語宸"],
+  "教師組": ["助教","老師"]
+};
+let currentShop = '', menuItems = [], allOrders = [], allShopsList = [], adminToken = '';
+let isFetchingData = false, searchTimeout = null, modalCallback = null, currentTab = 'order', lastFocus = null;
+const $ = id => document.getElementById(id);
+const LITE = (navigator.deviceMemory || 4) <= 2 || (navigator.hardwareConcurrency || 8) <= 2 || !!(navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || '')));
+const LOW = LITE;
+const TOUCH = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
+if (LITE || TOUCH) document.documentElement.classList.add('lite');
+if (LOW) document.documentElement.classList.add('low');
+let toggling = 0, ordersPromise = null, adminFilter = 'all', ordersVer = 0, ordersSig = '', ordersReady = false, cachedTxt = '';
+function touchOrders() { ordersSig = JSON.stringify(allOrders); ordersVer++; ordersReady = true; { const t = ordersSig; lazy(() => store.set('lunchApp_orders', t)); } }
+function setOrders(a) { const t = JSON.stringify(a); if (t === ordersSig) { ordersReady = true; return false; } allOrders = a; ordersSig = t; ordersVer++; ordersReady = true; lazy(() => store.set('lunchApp_orders', t)); return true; }
+const lazy = fn => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 50));
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+// 像素圖示對照：🎉→合格　⚠️→驚嘆號　❌/❓→叉叉　🔐→鎖　🍱→黑貓
+const ICON_MAP = { '🎉': 'ok', '⚠️': 'warn', '❌': 'x', '❓': 'x', '🔐': 'lock', '🍱': 'cat' };
+function escapeHTML(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+}
+
+// ---------- 時間（一律以台灣時間 UTC+8 顯示；今天只顯示 HH:mm，其他日子加上 MM/DD） ----------
+const p2 = n => String(n).padStart(2, '0');
+function tpeFmt(y, mo, d, h, mi) {
+  const n = new Date(Date.now() + 288e5);
+  const today = y === n.getUTCFullYear() && mo === n.getUTCMonth() + 1 && d === n.getUTCDate();
+  return (today || y < 1971 ? '' : p2(mo) + '/' + p2(d) + ' ') + p2(h) + ':' + p2(mi);
+}
+function fmtTime(v) {
+  if (v === undefined || v === null || v === '') return '';
+  const str = typeof v === 'string' ? v.trim() : '';
+  let m = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (m) return p2(+m[1]) + ':' + m[2];
+  let t = null;
+  if (typeof v === 'number') t = new Date(v > 1e11 ? v : v * 1000);
+  else if (/^\d{4}-\d{2}-\d{2}T[\d:.]+(Z|[+-]\d{2}:?\d{2})$/.test(str)) t = new Date(str);
+  if (t) {
+    if (isNaN(t)) return str || String(v);
+    const u = new Date(t.getTime() + 288e5);
+    return tpeFmt(u.getUTCFullYear(), u.getUTCMonth() + 1, u.getUTCDate(), u.getUTCHours(), u.getUTCMinutes());
   }
-  return _ss;
-}
-function cacheGet(key) {
-  try { const s = CacheService.getScriptCache().get(key); return s ? JSON.parse(s) : null; } catch (e) { return null; }
-}
-function cachePut(key, obj, ttl) {
-  try { CacheService.getScriptCache().put(key, JSON.stringify(obj), ttl); } catch (e) {} // 單筆上限 100KB，超過就略過
-}
-function invalidateMenu() { try { CacheService.getScriptCache().remove(CACHE_MENU); } catch (e) {} }
-function invalidateOrders() { try { CacheService.getScriptCache().remove(CACHE_ORDERS); } catch (e) {} }
-function invalidateCache() { invalidateMenu(); invalidateOrders(); }
-function toNum(v) { return Number(String(v == null ? "" : v).replace(/[^0-9.-]+/g, "")) || 0; }
-// 防止試算表公式注入（= + - @ 開頭的文字）
-function safeText(v, max) {
-  let s = String(v == null ? "" : v).trim().slice(0, max || 100);
-  if (/^[=+\-@]/.test(s)) s = "'" + s;
-  return s;
-}
-function withLock(fn) {
-  const lock = LockService.getScriptLock();
-  let has = false;
-  try {
-    has = lock.tryLock(LOCK_WAIT_MS);
-    if (!has) return { success: false, message: "伺服器繁忙中，請稍後再試！" };
-    return fn();
-  } catch (err) {
-    return { success: false, message: "操作失敗：" + (err.message || err) };
-  } finally {
-    if (has) { try { lock.releaseLock(); } catch (e) {} }
+  m = str.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})[T\s]+(上午|下午|AM|PM)?\s*(\d{1,2}):(\d{2})/i);
+  if (m) {
+    let h = +m[5]; const ap = (m[4] || '').toLowerCase();
+    if ((ap === '下午' || ap === 'pm') && h < 12) h += 12; else if ((ap === '上午' || ap === 'am') && h === 12) h = 0;
+    return tpeFmt(+m[1], +m[2], +m[3], h, +m[6]);
   }
+  return str || String(v);
 }
+const isPaid = o => o.status !== undefined ? String(o.status).trim() === '已付' : Boolean(o.paid);
+const setPaid = (o, v) => { o.paid = v; o.status = v ? '已付' : '未付'; };
+const orderDetails = o => o.details !== undefined ? o.details : (o.itemsSummary || '');
+const loaderHTML = t => '<div class="sk-wrap" role="status" aria-label="' + t + '">' + '<div class="sk"></div>'.repeat(3) + '</div>';
+const retryHTML = (msg, fn) => `<div class="retry-box">讀取失敗：${escapeHTML(msg)}<br><button class="btn-action retry-btn" onclick="${fn}">重新嘗試</button></div>`;
 
-// ==========================================
-// 路由
-// ==========================================
-function doGet(e) {
-  const p = (e && e.parameter) || {};
-  if (p.action === "ping") return json_({ success: true, message: "pong", time: new Date().toISOString() });
-  if (Object.keys(p).length === 0) {
-    return HtmlService.createHtmlOutputFromFile("Index")
-      .setTitle("今天要吃什麼勒")
-      .addMetaTag("viewport", "width=device-width, initial-scale=1, viewport-fit=cover")
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-  }
-  return handleRequest(e);
-}
-function doPost(e) { return handleRequest(e); }
-
-function json_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
-
-function handleRequest(e) {
-  const parameter = (e && e.parameter) || {};
-  const callback = parameter.callback || null;
-  let action = parameter.action || "";
-  let p = {};
-  try {
-    if (e && e.postData && e.postData.contents) {
-      const o = JSON.parse(e.postData.contents);
-      action = o.action || action;
-      p = o.payload !== undefined ? o.payload : o;
-      if (typeof p === "string") p = JSON.parse(p);
-    } else if (parameter.payload) {
-      p = JSON.parse(parameter.payload);
-    }
-  } catch (err) { p = {}; }
-  if (!p || typeof p !== "object") p = {};
-  ["password", "newShop", "rowIndex", "newStatus"].forEach(k => {
-    if (p[k] === undefined && parameter[k] !== undefined) p[k] = parameter[k];
-  });
-
-  const pwd = p.password || "";
-  const routes = {
-    ping: () => ({ success: true, message: "pong", time: new Date().toISOString() }),
-    getInitialData: getInitialData,
-    getTodayMenuData: getInitialData,
-    getOrdersAndPaymentStatus: () => ({ success: true, orders: loadOrders() }),
-    submitOrder: () => submitOrder(p),
-    adminVerify: () => adminVerify(pwd),
-    adminTogglePaid: () => adminTogglePaid(pwd, Number(p.rowIndex), p.newStatus),
-    adminChangeShop: () => adminChangeShop(pwd, p.newShop),
-    adminClearAllOrders: () => adminClearAllOrders(pwd)
-  };
-
-  let result = { success: false, message: "無效的操作" };
-  try { if (routes[action]) result = routes[action](); }
-  catch (err) { result = { success: false, message: err.message || err.toString() }; }
-
-  const out = JSON.stringify(result);
-  if (callback) {
-    if (!/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) return json_({ success: false, message: "無效的 callback 參數" });
-    return ContentService.createTextOutput(callback + "(" + out + ")").setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-  return ContentService.createTextOutput(out).setMimeType(ContentService.MimeType.JSON);
-}
-
-function verifyAdmin(password) { return String(password == null ? "" : password).trim() === ADMIN_PASSWORD; }
-function adminVerify(password) {
-  return verifyAdmin(password) ? { success: true, message: "驗證成功" } : { success: false, message: "密碼錯誤！" };
-}
-function normalizePaidStatus(v) {
-  if (v === true || v === 1) return true;
-  if (v === false || v === 0 || v == null) return false;
-  return ["true", "1", "已付", "已繳", "已繳費", "paid"].indexOf(String(v).trim().toLowerCase()) !== -1;
-}
-
-// ==========================================
-// 讀取（菜單與訂單分開快取、只讀需要的欄位與列數）
-// ==========================================
-// 菜單：shop / items / allShops / priceMap（價格的唯一依據，不會傳給前端）
-function loadMenu(force) {
-  if (!force) { const c = cacheGet(CACHE_MENU); if (c) return c; }
-  const ss = getTargetSpreadsheet();
-  const setting = ss.getSheetByName(SHEET_SETTING);
-  const shop = setting ? String(setting.getRange("B1").getValue()).trim() : "";
-  const items = [], shops = [], seen = {}, priceMap = {};
-  const sheet = ss.getSheetByName(SHEET_MENU);
-  const last = sheet ? sheet.getLastRow() : 0;
-  if (last > 1) {
-    const data = sheet.getRange(2, 1, last - 1, 3).getValues();
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i];
-      if (!row[0]) continue;
-      const shopName = String(row[0]).trim();
-      const itemName = row[1] ? String(row[1]).trim() : "";
-      if (!seen[shopName]) { seen[shopName] = 1; shops.push(shopName); }
-      if (shopName === shop && itemName) {
-        const price = toNum(row[2]);
-        items.push({ name: itemName, price: price });
-        if (!Object.prototype.hasOwnProperty.call(priceMap, itemName)) priceMap[itemName] = price;
+// ---------- API ----------
+let rollReady = false, failStreak = 0, lastOrdersAt = 0, lastInitialAt = 0, initFails = 0;
+async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = false) {
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    return new Promise((resolve, reject) => {
+      const to = setTimeout(() => reject(new Error('連線逾時，請檢查網路狀態後重試！')), (action === 'getInitialData' || action === 'getOrdersAndPaymentStatus') ? READ_TIMEOUT_MS : REQUEST_TIMEOUT_MS);
+      const r = google.script.run
+        .withSuccessHandler(res => {
+          if (action === 'getOrdersAndPaymentStatus' && Array.isArray(res)) res = { success: true, orders: res, data: res };
+          clearTimeout(to); hideConnBanner(); resolve(res);
+        })
+        .withFailureHandler(err => { clearTimeout(to); reject(new Error((err && err.message) || String(err))); });
+      switch (action) {
+        case 'getInitialData': r.getInitialData(); break;
+        case 'getOrdersAndPaymentStatus': r.getOrdersAndPaymentStatus(); break;
+        case 'submitOrder': r.submitOrder(data.payload ? JSON.parse(data.payload) : data); break;
+        case 'adminVerify': r.adminVerify(data.password); break;
+        case 'adminTogglePaid': r.adminTogglePaid(data.password, data.rowIndex, data.newStatus); break;
+        case 'adminChangeShop': r.adminChangeShop(data.password, data.newShop); break;
+        case 'adminClearAllOrders': r.adminClearAllOrders(data.password); break;
+        default: reject(new Error('未知的動作: ' + action));
       }
-    }
+    });
   }
-  const menu = { shop: shop, items: items, allShops: shops, priceMap: priceMap };
-  cachePut(CACHE_MENU, menu, MENU_TTL);
-  return menu;
-}
-
-// 下單時間一律還原成「台灣時間 yyyy-MM-dd HH:mm:ss」。
-// Google 試算表會把「2026-10-02 12:30:00」這種文字自動轉成日期，並以【試算表時區】解讀；
-// 所以必須用同一個時區（試算表時區）格式化回來，才會還原成當初寫入的台灣時間。
-// 若直接指定 Asia/Taipei，一旦試算表時區不是台灣就會差上好幾個小時。
-function fmtOrderTime(v, tz) {
-  if (v === "" || v == null) return "";
-  if (v instanceof Date) {
-    if (isNaN(v.getTime())) return "";
-    if (Number(Utilities.formatDate(v, tz, "yyyy")) < 1950) return Utilities.formatDate(v, tz, "HH:mm:ss"); // 純「時間」儲存格
-    return Utilities.formatDate(v, tz, "yyyy-MM-dd HH:mm:ss");
+  const TMO = (action === 'getInitialData' || action === 'getOrdersAndPaymentStatus') ? READ_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
+  let lastErr = null;
+  const hasAbort = typeof AbortController !== 'undefined';
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = hasAbort ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), TMO) : 0;
+    try {
+      let text;
+      const pre = attempt === 0 && PRE[action];
+      if (pre) {
+        PRE[action] = null;
+        const r = await Promise.race([pre, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout'), { name: 'AbortError' })), TMO))]);
+        if (!r.ok) throw new Error(`HTTP 錯誤狀態: ${r.status}`);
+        text = r.text.trim();
+      } else {
+        const response = await fetch(GAS_API_URL, {
+          method: 'POST', redirect: 'follow', cache: 'no-store',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, ...data }), signal: controller ? controller.signal : undefined
+        });
+        if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
+        text = (await response.text()).trim();
+      }
+      if (text.startsWith('<')) throw new Error('伺服器忙碌中或權限設定異常，稍後會自動重試。');
+      let json;
+      try { json = JSON.parse(text); } catch (e) { throw new Error('伺服器回傳格式異常，請稍後再試'); }
+      failStreak = 0; hideConnBanner();
+      return json;
+    } catch (err) {
+      lastErr = err;
+      if (attempt === retries) {
+        if (!silent || ++failStreak >= 2) showConnBanner();
+        throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
+      }
+      await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1) + Math.random() * 800));
+    } finally { clearTimeout(timeoutId); }
   }
-  return String(v).trim();
+  throw lastErr || new Error('無法連線至伺服器。');
 }
+function showConnBanner() { $('connBanner').classList.add('show'); }
+function hideConnBanner() { $('connBanner').classList.remove('show'); }
 
-function loadOrders(force) {
-  if (!force) { const c = cacheGet(CACHE_ORDERS); if (c) return c; }
-  const ss = getTargetSpreadsheet();
-  const orders = [];
-  const sheet = ss.getSheetByName(SHEET_ORDERS);
-  const last = sheet ? sheet.getLastRow() : 0;
-  if (last > 1) {
-    const tz = ss.getSpreadsheetTimeZone() || TZ;
-    const data = sheet.getRange(2, 1, last - 1, ORDER_COLS).getValues();
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i];
-      if (!row[2]) continue;
-      const names = [];
-      for (let c = 6; c <= 10; c++) if (row[c]) names.push(String(row[c]).trim());
-      const paid = row[0] === true || row[0] === "TRUE" || row[0] === "已付" || row[0] === "已繳" || row[0] === "已繳費";
-      orders.push({
-        rowIndex: i + 2, status: paid ? "已付" : "未付",
-        details: names.join("、"),
-        group: row[1] || "", name: row[2] || "", total: toNum(row[3]),
-        time: fmtOrderTime(row[4], tz), note: row[11] || ""
-      });
-    }
+// ---------- Modal ----------
+function setModalIcon(icon) { $('modalIcon').innerHTML = '<i class="ic i-' + (ICON_MAP[icon] || 'ok') + '"></i>'; }
+function showModal(title, msg, icon = '🎉', callback = null) {
+  $('modalTitle').innerText = title; $('modalMsg').innerText = msg; setModalIcon(icon);
+  $('modalCancelBtn').style.display = 'none';
+  const b = $('modalConfirmBtn'); b.innerText = '賀哦，哇災！'; b.onclick = () => closeModal();
+  modalCallback = callback;
+  lastFocus = document.activeElement; $('customModal').style.display = 'flex'; b.focus();
+}
+function showConfirmModal(title, msg, icon = '❓', onConfirm = null) {
+  $('modalTitle').innerText = title; $('modalMsg').innerText = msg; setModalIcon(icon);
+  $('modalCancelBtn').style.display = 'inline-block';
+  const b = $('modalConfirmBtn'); b.innerText = '確定';
+  b.onclick = () => { closeModal(true); if (onConfirm) onConfirm(); };
+  modalCallback = null;
+  lastFocus = document.activeElement; $('customModal').style.display = 'flex';
+}
+function closeModal(skipCallback) {
+  $('customModal').style.display = 'none';
+  const cb = modalCallback; modalCallback = null;
+  if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+  if (cb && !skipCallback) cb();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(true); closeAdminModal(); } });
+
+// ---------- 初始化 ----------
+function init() {
+  const g = store.get('lunchApp_group'), n = store.get('lunchApp_name');
+  if (g && groupMembersData[g]) {
+    $('groupSelect').value = g; updateNameOptions();
+    if (n) $('nameSelect').value = n;
   }
-  cachePut(CACHE_ORDERS, orders, ORDERS_TTL);
-  return orders;
+  const co = store.get('lunchApp_orders');
+  if (co) { try { const a = JSON.parse(co); if (Array.isArray(a)) setOrders(a); } catch (e) {} }
+  const cached = store.get('lunchApp_cachedData');
+  if (cached) { try { applyDataToUI(JSON.parse(cached)); cachedTxt = cached; } catch (e) {} }
+  if ($('itemList').children.length === 0) addItemRow();
+  setTimeout(() => { rollReady = true; }, 1500);
+  loadInitialData();
+  setTimeout(() => { const st = $('currentShopText'); if (st.classList.contains('is-load')) st.innerHTML = '<span class="spinner"></span>伺服器喚醒中，請稍候…'; }, 4000);
+  schedulePoll();
 }
-
-// 一次拿到菜單＋訂單，前端開頁只需要這一個請求
-function getInitialData() {
+const BASE_POLL = POLL_MS * (LITE ? 2 : 1);
+let pollDelay = BASE_POLL, pollTimer = 0;
+function schedulePoll(ms) { clearTimeout(pollTimer); pollTimer = setTimeout(pollOrders, ms || pollDelay * (0.8 + Math.random() * 0.4)); }
+async function pollOrders() {
+  if (document.hidden || navigator.onLine === false || toggling || (currentTab !== 'status' && currentTab !== 'admin')) return schedulePoll();
+  const v = ordersVer;
   try {
-    const m = loadMenu(), o = loadOrders();
-    return { success: true, shop: m.shop, items: m.items, allShops: m.allShops, orders: o };
+    await fetchOrders(0, true); renderOrders(allOrders); renderAdminTable(allOrders);
+    pollDelay = ordersVer !== v ? BASE_POLL : Math.min(pollDelay * 1.5, BASE_POLL * 3);
+  } catch (e) { pollDelay = Math.min(pollDelay * 2, BASE_POLL * 4); }
+  schedulePoll();
+}
+function wakePoll() {
+  if (document.hidden) return;
+  if (Date.now() - lastInitialAt > 300000) loadInitialData();   // 久未開啟：順便更新店家與菜單（管理員可能已換店家）
+  if (Date.now() - lastOrdersAt > FRESH_MS) schedulePoll(400 + Math.random() * 1500);
+}
+document.addEventListener('visibilitychange', wakePoll);
+window.addEventListener('online', () => { failStreak = 0; hideConnBanner(); wakePoll(); });
+function applyDataToUI(res) {
+  currentShop = res.shop || '尚未設定店家';
+  menuItems = Array.isArray(res.items) ? res.items : []; _opt = '';
+  allShopsList = Array.isArray(res.allShops) ? res.allShops : [];
+  if (Array.isArray(res.orders)) setOrders(res.orders);
+  const st = $('currentShopText'); st.className = 'shop-badge';
+  if (st.dataset.shop !== currentShop) { st.dataset.shop = currentShop; st.innerHTML = '<span class="hl">' + escapeHTML(currentShop) + '</span>'; }
+  renderMenuList();
+  if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows();
+  populateAdminShopsSelect();
+  renderOrders(allOrders);
+  if (currentTab === 'admin') renderAdminTable(allOrders);
+}
+
+async function loadInitialData() {
+  if (isFetchingData) return;
+  isFetchingData = true;
+  try {
+    const res = await apiRequest('getInitialData', {}, undefined, menuItems.length > 0);
+    if (!res || !res.success) throw new Error((res && res.message) || '讀取資料失敗');
+    lastInitialAt = Date.now();
+    const txt = JSON.stringify(res);
+    if (txt !== cachedTxt) { cachedTxt = txt; applyDataToUI(res); lazy(() => store.set('lunchApp_cachedData', txt)); }
   } catch (err) {
-    throw new Error("讀取初始資料失敗：" + err.message);
-  }
-}
-function getTodayMenuData() { return getInitialData(); }
-function getOrdersAndPaymentStatus() { return loadOrders(); }
-
-// ==========================================
-// 寫入
-// ==========================================
-function submitOrder(payload) {
-  payload = payload || {};
-  const group = safeText(payload.group, 20), name = safeText(payload.name, 30);
-  if (!group || !name) return { success: false, message: "請選擇組別與姓名！" };
-
-  const raw = (Array.isArray(payload.items) ? payload.items : [payload.items])
-    .map(i => i && typeof i === "object" ? String(i.name || "").trim() : String(i == null ? "" : i).trim())
-    .filter(Boolean).slice(0, 5);
-  if (!raw.length) return { success: false, message: "請至少選擇一項餐點！" };
-
-  // 以下都在「鎖外面」先做完（讀菜單、驗證價格、開試算表），鎖內只做最短的寫入，
-  // 午餐尖峰 30 人同時送出時才不會排隊排到逾時。
-  const menu = loadMenu();
-  let total = 0;
-  for (let i = 0; i < raw.length; i++) {
-    if (!Object.prototype.hasOwnProperty.call(menu.priceMap, raw[i])) {
-      return { success: false, code: "MENU_CHANGED", message: "「" + raw[i] + "」不在今日店家的菜單中（店家可能剛被切換），請重新整理後再點餐。" };
+    if (menuItems.length === 0) {
+      const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '載入失敗，請檢查連線'; delete st.dataset.shop;
+      $('menuList').className = '';
+      $('menuList').innerHTML = retryHTML(err.message, 'loadInitialData()');
+      initFails++; setTimeout(loadInitialData, Math.min(8000 * initFails, 40000));
     }
-    total += menu.priceMap[raw[i]];  // 價格以伺服器端菜單為準，不信任前端送來的金額
+  } finally { isFetchingData = false; }
+}
+
+// ---------- 分頁 ----------
+function switchTab(tab) {
+  currentTab = tab;
+  ['order', 'status', 'menu', 'admin'].forEach(t => { $('tab-' + t).style.display = t === tab ? 'block' : 'none'; });
+  $('mainTabs').style.display = tab === 'admin' ? 'none' : 'flex';
+  const tabs = ['order', 'status', 'menu'];
+  document.querySelectorAll('.tab-btn').forEach((b, i) => { b.classList.toggle('active', tabs[i] === tab); b.setAttribute('aria-selected', tabs[i] === tab); });
+  const ti = tabs.indexOf(tab); if (ti >= 0) $('mainTabs').dataset.i = ti;
+  if (tab === 'status') { renderOrders(allOrders); loadStatusData(); }
+  if (tab === 'menu') renderMenuList();
+  if (tab === 'admin') { renderAdminTable(allOrders); loadAdminOrders(); }
+  window.scrollTo(0, 0);
+}
+
+// ---------- 組別 / 姓名 ----------
+function updateNameOptions() {
+  const sel = $('nameSelect'), g = $('groupSelect').value;
+  if (!g || !groupMembersData[g]) {
+    sel.innerHTML = '<option value="">請先選擇組別</option>'; sel.disabled = true; return;
   }
-  const note = safeText(payload.note, 200);
-  const sheet = getTargetSpreadsheet().getSheetByName(SHEET_ORDERS);
-  if (!sheet) return { success: false, message: "找不到「" + SHEET_ORDERS + "」工作表！" };
+  sel.innerHTML = '<option value="">請選擇座號姓名</option>' + groupMembersData[g].map(m => `<option value="${escapeHTML(m)}">${escapeHTML(m)}</option>`).join('');
+  sel.disabled = false;
+  store.set('lunchApp_group', g);
+}
+function saveUserSelection() {
+  const g = $('groupSelect').value, n = $('nameSelect').value;
+  if (g) store.set('lunchApp_group', g);
+  if (n) store.set('lunchApp_name', n);
+}
 
-  return withLock(function () {
-    const now = Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd HH:mm:ss");
-    const r = sheet.getLastRow() + 1;
-    sheet.getRange(r, 5).setNumberFormat("@"); // 時間欄存成純文字，避免被試算表自動轉成日期（時區錯亂的根源）
-    sheet.getRange(r, 1, 1, ORDER_COLS).setValues([[false, group, name, total, now, menu.shop,
-      raw[0] || "", raw[1] || "", raw[2] || "", raw[3] || "", raw[4] || "", note]]);
-    invalidateOrders();
-    return { success: true, message: "點餐成功！", total: total };
+// ---------- 餐點與價格（價格唯一來源：選項的 data-price） ----------
+let _opt = '';
+function menuOptionsHTML() {
+  return _opt || (_opt = '<option value="" data-price="0">請選擇餐點品項</option>' +
+    menuItems.map(i => `<option value="${escapeHTML(i.name)}" data-price="${Number(i.price) || 0}">${escapeHTML(i.name)} ($${Number(i.price) || 0})</option>`).join(''));
+}
+function addItemRow() {
+  const list = $('itemList');
+  if (list.querySelectorAll('.item-row').length >= 5) return showModal('提示', '每筆訂單最多只能選擇 5 項餐點！', '⚠️');
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.innerHTML = `<select onchange="calculateTotal()" aria-label="餐點品項">${menuOptionsHTML()}</select><span class="price-tag">$0</span><button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除" aria-label="移除此項">✕</button>`;
+  list.appendChild(row);
+  calculateTotal();
+}
+function removeItemRow(btn) {
+  const row = btn.closest('.item-row');
+  row.style.opacity = '0';
+  setTimeout(() => {
+    row.remove();
+    if ($('itemList').children.length === 0) addItemRow(); else calculateTotal();
+  }, 120);
+}
+function updateExistingItemRows() {
+  const options = menuOptionsHTML();
+  document.querySelectorAll('.item-row select').forEach(s => {
+    const v = s.value;
+    s.innerHTML = options;
+    s.value = v;
+    if (s.selectedIndex < 0) s.selectedIndex = 0;
   });
+  calculateTotal();
 }
-
-function adminTogglePaid(password, rowIndex, newStatus) {
-  if (!verifyAdmin(password)) return { success: false, message: "權限不足，密碼錯誤！" };
-  rowIndex = Number(rowIndex);
-  if (!rowIndex || isNaN(rowIndex) || rowIndex <= 1) return { success: false, message: "無效的列號！" };
-  const sheet = getTargetSpreadsheet().getSheetByName(SHEET_ORDERS);
-  if (!sheet) return { success: false, message: "找不到「" + SHEET_ORDERS + "」工作表！" };
-  return withLock(function () {
-    if (rowIndex > sheet.getLastRow()) return { success: false, message: "找不到這筆訂單，請重新整理！" };
-    const paid = normalizePaidStatus(newStatus);
-    sheet.getRange(rowIndex, 1).setValue(paid);
-    invalidateOrders();
-    return { success: true, status: "success", message: "狀態更新成功！", newStatus: paid };
+function readItems() {
+  const items = [];
+  document.querySelectorAll('.item-row select').forEach(s => {
+    if (!s.value) return;
+    const o = s.options[s.selectedIndex];
+    items.push({ name: s.value, price: Number(o && o.dataset.price) || 0 });
   });
+  return items;
 }
-
-function adminChangeShop(password, newShop) {
-  if (!verifyAdmin(password)) return { success: false, message: "權限不足，密碼錯誤！" };
-  newShop = String(newShop || "").trim();
-  if (!newShop) return { success: false, message: "請選擇店家！" };
-  return withLock(function () {
-    const ss = getTargetSpreadsheet();
-    const sheet = ss.getSheetByName(SHEET_SETTING);
-    if (!sheet) return { success: false, message: "找不到「" + SHEET_SETTING + "」工作表！" };
-    if (loadMenu(true).allShops.indexOf(newShop) === -1) return { success: false, message: "菜單總表中沒有這間店家！" };
-    sheet.getRange("B1").setValue(newShop);
-    invalidateMenu();
-    return { success: true, message: "已成功將今日店家切換為【" + newShop + "】！" };
+function rollTotal(n) {
+  const d = $('totalDisplay'), s = String(n);
+  if (d.dataset.v === s) return;
+  d.dataset.v = s; d.setAttribute('aria-label', '$' + s);
+  if (d.querySelectorAll('.dg').length !== s.length) {
+    d.innerHTML = '<span aria-hidden="true">$</span>' + [...s].map(() => '<span class="dg" aria-hidden="true"><span class="col">0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</span></span>').join('');
+    if (rollReady) void d.offsetWidth;
+  }
+  d.querySelectorAll('.col').forEach((c, i) => { c.style.transform = 'translateY(-' + s[i] + 'em)'; });
+}
+function calculateTotal() {
+  let total = 0;
+  document.querySelectorAll('.item-row').forEach(row => {
+    const s = row.querySelector('select'), o = s.options[s.selectedIndex];
+    const p = o ? Number(o.dataset.price) || 0 : 0;
+    row.querySelector('.price-tag').textContent = '$' + p;
+    total += p;
   });
+  rollTotal(total);
+  return total;
 }
 
-function adminClearAllOrders(password) {
-  if (!verifyAdmin(password)) return { success: false, message: "權限不足，密碼錯誤！" };
-  return withLock(function () {
-    const sheet = getTargetSpreadsheet().getSheetByName(SHEET_ORDERS);
-    if (!sheet) return { success: false, message: "找不到「" + SHEET_ORDERS + "」工作表！" };
-    const lastRow = sheet.getLastRow(), lastCol = sheet.getLastColumn() || ORDER_COLS;
-    if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, lastCol).clearContent();
-    invalidateOrders();
-    return { success: true, message: "已成功清空今日所有點餐資料！" };
-  });
+// 像素方塊慶祝特效（低階機種自動關閉）
+function burst(el) {
+  if (LITE || TOUCH || !Element.prototype.animate || (window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches)) return;
+  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, cols = ['#DD9436', '#D8A45C', '#33644F', '#697C6E', '#111D2C'];
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('i'), a = Math.random() * Math.PI * 2, v = 90 + Math.random() * 150;
+    p.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;width:8px;height:8px;pointer-events:none;z-index:4000;background:' + cols[i % 5];
+    frag.appendChild(p);
+    p.animate([
+      { transform: 'translate(0,0)', opacity: 1 },
+      { transform: 'translate(' + Math.cos(a) * v + 'px,' + (Math.sin(a) * v - 80) + 'px)', opacity: 1, offset: .6 },
+      { transform: 'translate(' + Math.cos(a) * v * 1.1 + 'px,' + (Math.sin(a) * v + 120) + 'px)', opacity: 0 }
+    ], { duration: 900 + Math.random() * 300, easing: 'steps(10,end)' }).onfinish = () => p.remove();
+  }
+  document.body.appendChild(frag);
 }
+async function handleOrderSubmit() {
+  saveUserSelection();
+  const group = $('groupSelect').value, name = $('nameSelect').value;
+  if (!group || !name) return showModal('提示', '請先選擇組別以及座號姓名！', '⚠️');
+  const items = readItems();
+  if (items.length === 0) return showModal('提示', '請至少選擇一項餐點！', '⚠️');
+  const total = items.reduce((a, i) => a + i.price, 0);
 
-// ==========================================
-// 保持熱機（降低「第一個人開頁要等很久」的冷啟動）
-// 使用方式：在 Apps Script 編輯器選擇 installKeepWarm 後按「執行」一次即可。
-// 只在台灣時間 07:00–15:00 執行，並順便把菜單與訂單快取預先暖好。
-// ==========================================
-function keepWarm() {
-  const h = Number(Utilities.formatDate(new Date(), TZ, "H"));
-  if (h < 7 || h >= 15) return;
-  loadMenu(true);
-  loadOrders(true);
-}
-function installKeepWarm() {
-  removeKeepWarm();
-  ScriptApp.newTrigger("keepWarm").timeBased().everyMinutes(5).create();
-}
-function removeKeepWarm() {
-  ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === "keepWarm") ScriptApp.deleteTrigger(t); });
-}
-
-// ==========================================
-// 診斷：在編輯器執行 debugTimezone，到「執行記錄」查看時區是否一致
-// ==========================================
-function debugTimezone() {
-  const ss = getTargetSpreadsheet();
-  Logger.log("腳本時區：" + Session.getScriptTimeZone());
-  Logger.log("試算表時區：" + ss.getSpreadsheetTimeZone() + "（建議設為 " + TZ + "：檔案 → 設定 → 時區）");
-  const sheet = ss.getSheetByName(SHEET_ORDERS);
-  if (sheet && sheet.getLastRow() > 1) {
-    const v = sheet.getRange(sheet.getLastRow(), 5).getValue();
-    Logger.log("最後一筆時間原始值型別：" + (v instanceof Date ? "Date（被自動轉成日期）" : typeof v) + "，還原後：" + fmtOrderTime(v, ss.getSpreadsheetTimeZone() || TZ));
+  const btn = $('submitBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>送出中…';
+  try {
+    // 金額僅供顯示；後端會依菜單重新計算並以後端為準
+    const payload = { group, name, items, total, totalAmount: total, note: $('orderNote').value.trim() };
+    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) }, 0);
+    if (res && res.success) {
+      burst(btn); showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎉', () => {
+        $('orderNote').value = ''; $('itemList').innerHTML = ''; addItemRow();
+        lastOrdersAt = 0; switchTab('status');
+      });
+    } else {
+      if (res && res.code === 'MENU_CHANGED') loadInitialData();
+      throw new Error((res && res.message) || '送出失敗');
+    }
+  } catch (err) {
+    showModal('送出失敗', (err.message || '送出失敗，請再試一次。') + (/逾時/.test(err.message) ? '\n訂單可能已送出，請先到「對帳與查詢」確認，再決定是否重送。' : ''), '❌');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '送出點餐';
   }
 }
+
+// ---------- 訂單資料 ----------
+function fetchOrders(retries, silent) {
+  if (ordersPromise) return ordersPromise;
+  ordersPromise = (async () => {
+    const res = await apiRequest('getOrdersAndPaymentStatus', {}, retries, silent);
+    if (!res || !res.success) throw new Error((res && res.message) || '載入失敗');
+    lastOrdersAt = Date.now();
+    if (!toggling) setOrders(res.orders || res.data || []);
+    return allOrders;
+  })().finally(() => { ordersPromise = null; });
+  return ordersPromise;
+}
+async function loadStatusData(force = false) {
+  const box = $('statusList'), rb = $('btnRefreshStatus');
+  if (ordersReady) renderOrders(allOrders);
+  else if (!box.querySelector('.sk-wrap')) box.innerHTML = loaderHTML('載入紀錄中…');
+  if (!force && ordersReady && Date.now() - lastOrdersAt < FRESH_MS) return;
+  rb.classList.add('busy');
+  try { await fetchOrders(force ? undefined : 0, !force); renderOrders(allOrders); }
+  catch (err) { if (!ordersReady) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
+  finally { rb.classList.remove('busy'); }
+}
+function orderCardHTML(o) {
+  const paid = isPaid(o), t = fmtTime(o.time);
+  return `<div class="order-item ${paid ? 'is-paid' : ''}" data-k="${escapeHTML((o.group + ' ' + o.name + ' ' + orderDetails(o)).toLowerCase())}">
+      <div class="order-header"><div class="order-user"><span class="adm-grp">${escapeHTML(o.group)}</span><span class="adm-name">${escapeHTML(o.name)}</span></div>
+      <span class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}">${paid ? '已付' : '未付'}</span></div>
+      <div class="order-details"><strong>${escapeHTML(orderDetails(o)) || '無'}</strong><br><span class="adm-amt" style="color:var(--text)">$${escapeHTML(o.total)}</span>${t ? ' · ' + escapeHTML(t) : ''}${o.note ? '<br>備註：' + escapeHTML(o.note) : ''}</div>
+    </div>`;
+}
+function renderOrders() {
+  if (currentTab !== 'status' || !ordersReady) return;
+  const box = $('statusList');
+  if (box.dataset.v !== String(ordersVer)) {
+    box.dataset.v = ordersVer; box.className = '';
+    box.innerHTML = allOrders.length ? allOrders.map(orderCardHTML).join('') + '<div class="empty" id="statusEmpty" hidden>找不到符合的紀錄</div>' : '<div class="empty">還沒有人點餐，不如你先？</div>';
+  }
+  applyStatusFilter();
+}
+function applyStatusFilter() {
+  const kw = $('statusFilter').value.trim().toLowerCase(); let shown = 0;
+  $('statusList').querySelectorAll('.order-item').forEach(c => { const ok = !kw || c.dataset.k.indexOf(kw) > -1; if (c.hidden === ok) c.hidden = !ok; if (ok) shown++; });
+  const e = $('statusEmpty'); if (e) e.hidden = shown > 0;
+}
+function filterStatus() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(applyStatusFilter, 120);
+}
+function renderMenuList() {
+  const box = $('menuList');
+  box.className = '';
+  if (!menuItems.length) { box.innerHTML = '<div class="empty">目前尚無今日菜單</div>'; return; }
+  box.innerHTML = '<table class="menu-table">' + menuItems.map(i => `<tr><td>${escapeHTML(i.name)}</td><td>$${Number(i.price) || 0}</td></tr>`).join('') + '</table>';
+}
+
+// ---------- 管理員 ----------
+function openAdminModal() {
+  if (adminToken) return switchTab('admin');
+  $('adminPasswordInput').value = '';
+  $('adminLoginModal').style.display = 'flex';
+  setTimeout(() => $('adminPasswordInput').focus(), 100);
+}
+function closeAdminModal() { $('adminLoginModal').style.display = 'none'; }
+async function submitAdminLogin() {
+  const pwd = $('adminPasswordInput').value;
+  if (!pwd) return;
+  const btn = $('adminLoginBtn'); btn.disabled = true;
+  try {
+    const res = await apiRequest('adminVerify', { password: pwd }, 1);
+    if (res && res.success) { adminToken = pwd; closeAdminModal(); switchTab('admin'); }
+    else showModal('登登', '你再猜猜看？', '❌');
+  } catch (err) { showModal('錯誤', err.message, '❌'); }
+  finally { btn.disabled = false; }
+}
+async function loadAdminOrders(force = false) {
+  const box = $('adminOrdersContainer');
+  if (!ordersReady && !box.querySelector('.sk-wrap')) box.innerHTML = loaderHTML('載入訂單中…');
+  if (!force && ordersReady && Date.now() - lastOrdersAt < FRESH_MS) return;
+  try { await fetchOrders(force ? undefined : 0, !force); renderAdminTable(allOrders); }
+  catch (err) { if (!ordersReady) box.innerHTML = retryHTML(err.message, 'loadAdminOrders(true)'); }
+}
+function updateAdminStats(orders) {
+  let total = 0, paid = 0;
+  orders.forEach(o => { const t = Number(o.total) || 0; total += t; if (isPaid(o)) paid += t; });
+  $('statOrderCount').innerText = orders.length + ' 筆';
+  $('statTotalAmount').innerText = '$' + total;
+  $('statPaidAmount').innerText = '$' + paid;
+  $('statUnpaidAmount').innerText = '$' + (total - paid);
+  const np = orders.filter(o => !isPaid(o)).length;
+  $('segAll').textContent = '全部 ' + orders.length; $('segUnpaid').textContent = '未付 ' + np; $('segPaid').textContent = '已付 ' + (orders.length - np);
+}
+function adminCardHTML(o) {
+  const paid = isPaid(o), ok = Number(o.rowIndex) > 1;
+  return `<div class="adm-card ${paid ? 'is-paid' : ''}" data-p="${paid ? 1 : 0}"><div class="adm-main">
+      <div class="adm-who"><span class="adm-grp">${escapeHTML(o.group)}</span><span class="adm-name">${escapeHTML(o.name)}</span><span class="adm-amt">$${escapeHTML(o.total)}</span></div>
+      <div class="adm-items">${escapeHTML(orderDetails(o)) || '無'}${o.note ? ' ｜ 備註：' + escapeHTML(o.note) : ''}</div></div>
+      <button class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}" ${ok ? '' : 'disabled'} onclick="toggleOrderStatus(${Number(o.rowIndex)}, this)" aria-label="${escapeHTML(o.name)} 繳費狀態，點擊切換">${paid ? '✔ 已付' : '○ 未付'}</button></div>`;
+}
+function renderAdminTable() {
+  if (currentTab !== 'admin') return;
+  updateAdminStats(allOrders);
+  const box = $('adminOrdersContainer');
+  if (box.dataset.v !== String(ordersVer)) {
+    box.dataset.v = ordersVer;
+    box.innerHTML = allOrders.length ? '<div class="adm-list">' + allOrders.map(adminCardHTML).join('') + '</div><div class="empty" id="admEmpty" hidden>這個分類目前沒有訂單</div>' : '<div class="empty">目前沒有任何訂單</div>';
+  }
+  applyAdminFilter();
+}
+function applyAdminFilter() {
+  let shown = 0;
+  $('adminOrdersContainer').querySelectorAll('.adm-card').forEach(c => { const ok = adminFilter === 'all' || (adminFilter === 'paid') === (c.dataset.p === '1'); if (c.hidden === ok) c.hidden = !ok; if (ok) shown++; });
+  const e = $('admEmpty'); if (e) e.hidden = shown > 0;
+}
+function setAdminFilter(f) {
+  adminFilter = f;
+  document.querySelectorAll('#adminSeg button').forEach(b => b.classList.toggle('on', b.dataset.f === f));
+  renderAdminTable(allOrders);
+}
+// 樂觀更新：先改畫面，失敗再還原
+async function toggleOrderStatus(rowIndex, btn) {
+  const o = allOrders.find(x => x.rowIndex === rowIndex);
+  if (!o || btn.disabled) return;
+  const prev = isPaid(o), next = !prev;
+  const card = btn.closest('.adm-card');
+  const paint = v => { btn.textContent = v ? '✔ 已付' : '○ 未付'; btn.className = 'badge ' + (v ? 'badge-paid' : 'badge-unpaid'); if (card) { card.classList.toggle('is-paid', v); card.dataset.p = v ? '1' : '0'; } $('adminOrdersContainer').dataset.v = String(ordersVer); };
+  if (navigator.vibrate) navigator.vibrate(12);
+  toggling++; setPaid(o, next); touchOrders(); paint(next); updateAdminStats(allOrders); btn.disabled = true;
+  try {
+    const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex, newStatus: next });
+    if (!res || !res.success) throw new Error((res && res.message) || '更新失敗');
+  } catch (err) {
+    setPaid(o, prev); touchOrders(); paint(prev); updateAdminStats(allOrders);
+    showModal('同步失敗', '狀態已還原。\n(' + err.message + ')', '⚠️');
+  } finally { btn.disabled = false; toggling--; }
+}
+function populateAdminShopsSelect() {
+  const sel = $('adminShopsSelect');
+  sel.innerHTML = allShopsList.map(s => `<option value="${escapeHTML(s)}" ${s === currentShop ? 'selected' : ''}>${escapeHTML(s)}</option>`).join('');
+}
+function handleAdminChangeShop() {
+  const newShop = $('adminShopsSelect').value;
+  if (!newShop) return;
+  showConfirmModal('確認更換', `確定要將今日店家切換為「${newShop}」嗎？`, '❓', async () => {
+    try {
+      const res = await apiRequest('adminChangeShop', { password: adminToken, newShop }, 0);
+      if (!res || !res.success) throw new Error((res && res.message) || '更換失敗');
+      showModal('成功', res.message || '店家已成功更換！', '🎉', () => loadInitialData());
+    } catch (err) { showModal('錯誤', err.message || '更換店家失敗', '❌'); }
+  });
+}
+function handleAdminClearOrders() {
+  showConfirmModal('危險操作', '確定要清空今日所有的點餐紀錄嗎？按了就回不去囉瑞煩:)', '⚠️', async () => {
+    try {
+      const res = await apiRequest('adminClearAllOrders', { password: adminToken }, 0);
+      if (!res || !res.success) throw new Error((res && res.message) || '清空失敗');
+      allOrders = []; touchOrders(); lastOrdersAt = Date.now();
+      showModal('成功', '今日點餐紀錄已清空！', '🎉', () => { renderAdminTable([]); renderOrders([]); loadInitialData(); });
+    } catch (err) { showModal('錯誤', err.message || '清空紀錄失敗', '❌'); }
+  });
+}
+init();
+</script>
+</body>
+</html>
