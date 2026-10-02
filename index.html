@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#36453A">
-<link rel="preconnect" href="https://script.google.com">
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <title>今天要吃什麼勒</title>
 <style>
 :root{--bg:#EAE5D8;--surface:#FBF9F4;--text:#171516;--muted:#52535B;--primary:#DD9436;--amber:#A3651F;--gold:#D8A45C;--forest:#36453A;--green:#33644F;--sage:#697C6E;--sand:#D6CFBF;--navy:#111D2C;--danger:#A63A29;--danger-bg:#F6E1DB;--success:#33644F;--success-bg:#DCE8E0;--border:rgba(23,21,22,.18);--bd:3px solid var(--text);--sh:4px 4px 0 var(--text);--sh-sm:3px 3px 0 var(--text);--st:steps(6,end)}
@@ -24,7 +26,7 @@ header::before{content:"";position:absolute;width:160px;height:160px;background:
 .title-pill{background:var(--surface);border:var(--bd);padding:8px 18px;box-shadow:var(--sh-sm);font-size:1.1rem;font-weight:900;color:var(--text);display:flex;align-items:center;gap:10px}
 .title-pill .ic{font-size:1.5rem}
 .admin-pill{position:absolute;top:-24px;right:-8px;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;border:2px solid rgba(214,207,191,.5);background:rgba(255,255,255,.1);opacity:.5;cursor:pointer}
-.admin-pill:hover,.admin-pill:focus-visible{opacity:1;background:rgba(255,255,255,.25)}
+.admin-pill:focus-visible{opacity:1;background:rgba(255,255,255,.25)}
 .shop-label{font-size:.85rem;font-weight:700;color:var(--sand);margin-bottom:4px}
 .shop-badge{display:block;font-size:2.8rem;font-size:clamp(2.2rem,9vw,4rem);font-weight:900;line-height:1.3;color:#F6F2E8;text-shadow:3px 3px 0 var(--text);word-break:break-word}
 .hl{background:linear-gradient(transparent 62%,var(--primary) 0) no-repeat 0 0/0 100%;-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .08em;animation:swipe .6s .2s steps(8,end) forwards}
@@ -36,7 +38,6 @@ header .spinner{border-color:rgba(255,255,255,.25);border-top-color:var(--primar
 .tab-btn{flex:1;padding:10px 6px;min-height:44px;border:none;background:transparent;font-size:.9rem;font-weight:800;color:var(--muted);cursor:pointer;position:relative;z-index:1}
 .tab-thumb{position:absolute;top:4px;bottom:4px;left:0;width:0;background:var(--forest);transition:transform .25s steps(5,end);z-index:0}
 .tab-btn.active{color:#fff}
-.tab-btn:not(.active):hover{color:var(--text);background:rgba(0,0,0,.05)}
 .container{max-width:680px;margin:32px auto;padding:0 16px}
 .container>div{animation:slideIn .3s steps(4,end) both}
 @keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -53,28 +54,22 @@ input:focus,select:focus{border-color:var(--primary);box-shadow:4px 4px 0 var(--
 .item-row select:focus{box-shadow:none;background-color:#FFF6E6}
 .price-tag{width:70px;text-align:right;font-weight:900;font-size:1.1rem;font-variant-numeric:tabular-nums}
 .btn-remove{width:40px;height:40px;flex:none;background:#fff;border:2px solid var(--text);color:var(--text);font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--text)}
-.btn-remove:hover{background:var(--danger-bg);color:var(--danger)}
 .btn-remove:active{transform:translate(2px,2px);box-shadow:none}
 .btn-add-item{background:transparent;border:3px dashed var(--muted);color:var(--muted);padding:14px;min-height:52px;width:100%;cursor:pointer;font-weight:800;margin-top:8px}
-.btn-add-item:hover{background:rgba(23,21,22,.05);border-color:var(--text);color:var(--text)}
 .summary-box{background:#fff;border:var(--bd);padding:18px 22px;margin:32px 0 24px;display:flex;justify-content:space-between;align-items:center;font-weight:800;box-shadow:var(--sh-sm);position:relative;overflow:hidden}
 .summary-box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--primary)}
 .summary-box>span:first-child{padding-left:8px}
 .total-price{font-size:2.4rem;font-weight:900;font-variant-numeric:tabular-nums;display:inline-flex;align-items:flex-start;line-height:1}
 .dg{display:inline-block;height:1em;overflow:hidden;vertical-align:top;line-height:1}
-.col{display:block;transition:transform .5s steps(8,end);will-change:transform}
+.col{display:block;transition:transform .5s steps(8,end)}
 .btn-submit{background:var(--primary);color:var(--text);border:var(--bd);padding:16px;min-height:60px;width:100%;font-size:1.1rem;font-weight:900;letter-spacing:.1em;cursor:pointer;box-shadow:var(--sh)}
-.btn-submit:hover:not(:disabled){background:var(--amber);color:#fff;transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--text)}
 .btn-submit:active:not(:disabled){transform:translate(4px,4px);box-shadow:none}
 .btn-submit:disabled{background:#CFC8B7;color:#7C786C;box-shadow:none;cursor:wait}
 .btn-action{background:var(--forest);color:#fff;border:2px solid var(--text);padding:8px 16px;min-height:40px;font-size:.85rem;font-weight:800;cursor:pointer;box-shadow:var(--sh-sm)}
-.btn-action:hover{background:var(--primary);color:var(--text)}
 .btn-action:active{transform:translate(3px,3px);box-shadow:none}
 .btn-danger{background:var(--danger);color:#fff;border:var(--bd);padding:14px;min-height:48px;font-weight:900;cursor:pointer;width:100%;box-shadow:var(--sh-sm)}
-.btn-danger:hover{background:#85291A}
 .btn-danger:active{transform:translate(3px,3px);box-shadow:none}
 .btn-back{background:var(--surface);border:var(--bd);padding:14px;min-height:48px;width:100%;font-weight:800;cursor:pointer;margin-top:12px;box-shadow:var(--sh-sm)}
-.btn-back:hover{background:var(--bg)}
 .btn-back:active{transform:translate(3px,3px);box-shadow:none}
 .search-box{margin-bottom:20px}
 .order-item{position:relative;border:var(--bd);padding:16px 18px 16px 26px;margin-bottom:16px;background:#fff;overflow:hidden;box-shadow:var(--sh-sm);content-visibility:auto;contain-intrinsic-size:auto 130px}
@@ -89,7 +84,6 @@ input:focus,select:focus{border-color:var(--primary);box-shadow:4px 4px 0 var(--
 .badge-unpaid{background:var(--danger-bg);color:var(--danger)}
 span.badge{cursor:default}
 .badge:disabled{opacity:.5;cursor:wait}
-button.badge:hover:not(:disabled){filter:brightness(.95)}
 button.badge:active:not(:disabled){transform:translate(2px,2px)}
 .admin-badge{background:var(--primary);border:2px solid var(--text);font-size:.72rem;font-weight:900;padding:2px 8px;margin-left:8px;vertical-align:middle}
 .admin-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
@@ -119,11 +113,9 @@ button.badge:active:not(:disabled){transform:translate(2px,2px)}
 .modal-msg{font-size:.95rem;margin-bottom:26px;color:var(--muted);white-space:pre-line}
 .modal-btn-group{display:flex;gap:12px}
 .modal-btn{flex:1;background:var(--forest);color:#fff;border:var(--bd);padding:12px;min-height:52px;font-weight:900;cursor:pointer;box-shadow:var(--sh-sm)}
-.modal-btn:hover{background:var(--primary);color:var(--text)}
 .modal-btn:active{transform:translate(3px,3px);box-shadow:none}
 .modal-btn:disabled{opacity:.5;cursor:wait}
 .modal-btn-cancel{background:var(--bg);color:var(--text)}
-.modal-btn-cancel:hover{background:var(--sand)}
 .seg{display:flex;gap:6px;margin-bottom:12px}
 .seg button{flex:1;min-height:42px;border:2px solid var(--text);background:#fff;font-weight:800;font-size:.82rem;color:var(--muted);cursor:pointer}
 .seg button.on{background:var(--forest);color:#fff}
@@ -138,9 +130,21 @@ button.badge:active:not(:disabled){transform:translate(2px,2px)}
 .adm-card .badge{flex:none;min-width:88px;min-height:52px;font-size:.92rem}
 .lite *{animation:none!important;transition:none!important}
 .lite .card,.lite .order-item,.lite .stat-card,.lite .panel,.lite .tabs{box-shadow:none}
-@media (hover:none){.btn-submit:hover:not(:disabled){transform:none;box-shadow:var(--sh)}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media (max-width:480px){header{padding:32px 20px 60px;padding:calc(32px + env(safe-area-inset-top)) 20px 60px}.card{padding:22px 16px}.price-tag{display:none}.item-row select{font-size:.95rem}.container{padding:0 12px}.panel{padding:14px 12px}}
+@media (hover:hover){
+.tab-btn:not(.active):hover{color:var(--text);background:rgba(0,0,0,.05)}
+.btn-remove:hover{background:var(--danger-bg);color:var(--danger)}
+.btn-add-item:hover{background:rgba(23,21,22,.05);border-color:var(--text);color:var(--text)}
+.btn-submit:hover:not(:disabled){background:var(--amber);color:#fff;transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--text)}
+.btn-action:hover{background:var(--primary);color:var(--text)}
+.btn-danger:hover{background:#85291A}
+.btn-back:hover{background:var(--bg)}
+button.badge:hover:not(:disabled){filter:brightness(.95)}
+.modal-btn:hover{background:var(--primary);color:var(--text)}
+.modal-btn-cancel:hover{background:var(--sand)}
+.admin-pill:hover{opacity:1;background:rgba(255,255,255,.25)}
+}
 </style>
 </head>
 <body>
@@ -282,7 +286,9 @@ let isFetchingData = false, searchTimeout = null, modalCallback = null, currentT
 const $ = id => document.getElementById(id);
 const LITE = (navigator.deviceMemory || 4) <= 2 || (navigator.hardwareConcurrency || 8) <= 2 || !!(navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || '')));
 if (LITE) document.documentElement.classList.add('lite');
-let toggling = 0, ordersPromise = null, adminFilter = 'all';
+let toggling = 0, ordersPromise = null, adminFilter = 'all', ordersVer = 0, ordersSig = '', ordersReady = false, cachedTxt = '';
+function touchOrders() { ordersSig = JSON.stringify(allOrders); ordersVer++; ordersReady = true; }
+function setOrders(a) { const t = JSON.stringify(a); if (t === ordersSig) { ordersReady = true; return false; } allOrders = a; ordersSig = t; ordersVer++; ordersReady = true; return true; }
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -379,30 +385,31 @@ function closeModal(skipCallback) {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(true); closeAdminModal(); } });
 
 // ---------- 初始化 ----------
-window.onload = function() {
+function init() {
   const g = store.get('lunchApp_group'), n = store.get('lunchApp_name');
   if (g && groupMembersData[g]) {
     $('groupSelect').value = g; updateNameOptions();
     if (n) $('nameSelect').value = n;
   }
   const cached = store.get('lunchApp_cachedData');
-  if (cached) { try { applyDataToUI(JSON.parse(cached)); } catch (e) {} }
+  if (cached) { try { applyDataToUI(JSON.parse(cached)); cachedTxt = cached; } catch (e) {} }
   if ($('itemList').children.length === 0) addItemRow();
   moveThumb(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveThumb);
   loadInitialData();
-  setInterval(pollOrders, POLL_MS);
-};
+  setInterval(pollOrders, LITE ? POLL_MS * 2 : POLL_MS);
+}
 function pollOrders() {
-  if (document.hidden) return;
+  if (document.hidden || navigator.onLine === false || toggling) return;
   if (currentTab === 'status') loadStatusData();
   else if (currentTab === 'admin') loadAdminOrders();
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) pollOrders(); });
+window.addEventListener('online', () => { hideConnBanner(); pollOrders(); });
 function applyDataToUI(res) {
   currentShop = res.shop || '尚未設定店家';
-  menuItems = Array.isArray(res.items) ? res.items : [];
+  menuItems = Array.isArray(res.items) ? res.items : []; _opt = '';
   allShopsList = Array.isArray(res.allShops) ? res.allShops : [];
-  if (Array.isArray(res.orders)) allOrders = res.orders;
+  if (Array.isArray(res.orders)) setOrders(res.orders);
   const st = $('currentShopText'); st.className = 'shop-badge';
   if (st.dataset.shop !== currentShop) { st.dataset.shop = currentShop; st.innerHTML = '<span class="hl">' + escapeHTML(currentShop) + '</span>'; }
   renderMenuList();
@@ -418,8 +425,8 @@ async function loadInitialData() {
   try {
     const res = await apiRequest('getInitialData');
     if (!res || !res.success) throw new Error((res && res.message) || '讀取資料失敗');
-    store.set('lunchApp_cachedData', JSON.stringify(res));
-    applyDataToUI(res);
+    const txt = JSON.stringify(res);
+    if (txt !== cachedTxt) { cachedTxt = txt; store.set('lunchApp_cachedData', txt); applyDataToUI(res); }
   } catch (err) {
     if (menuItems.length === 0) {
       const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '載入失敗，請檢查連線'; delete st.dataset.shop;
@@ -442,7 +449,7 @@ function switchTab(tab) {
   const tabs = ['order', 'status', 'menu'];
   document.querySelectorAll('.tab-btn').forEach((b, i) => { b.classList.toggle('active', tabs[i] === tab); b.setAttribute('aria-selected', tabs[i] === tab); });
   moveThumb();
-  if (tab === 'status') loadStatusData();
+  if (tab === 'status') { renderOrders(allOrders); loadStatusData(); }
   if (tab === 'menu') renderMenuList();
   if (tab === 'admin') { renderAdminTable(allOrders); loadAdminOrders(); }
   window.scrollTo(0, 0);
@@ -465,9 +472,10 @@ function saveUserSelection() {
 }
 
 // ---------- 餐點與價格（價格唯一來源：選項的 data-price） ----------
+let _opt = '';
 function menuOptionsHTML() {
-  return '<option value="" data-price="0">請選擇餐點品項</option>' +
-    menuItems.map(i => `<option value="${escapeHTML(i.name)}" data-price="${Number(i.price) || 0}">${escapeHTML(i.name)} ($${Number(i.price) || 0})</option>`).join('');
+  return _opt || (_opt = '<option value="" data-price="0">請選擇餐點品項</option>' +
+    menuItems.map(i => `<option value="${escapeHTML(i.name)}" data-price="${Number(i.price) || 0}">${escapeHTML(i.name)} ($${Number(i.price) || 0})</option>`).join(''));
 }
 function addItemRow() {
   const list = $('itemList');
@@ -575,30 +583,31 @@ async function handleOrderSubmit() {
 }
 
 // ---------- 訂單資料 ----------
-function fetchOrders() {
+function fetchOrders(retries) {
   if (ordersPromise) return ordersPromise;
   ordersPromise = (async () => {
-    const res = await apiRequest('getOrdersAndPaymentStatus');
+    const res = await apiRequest('getOrdersAndPaymentStatus', {}, retries);
     if (!res || !res.success) throw new Error((res && res.message) || '載入失敗');
-    if (!toggling) allOrders = res.orders || res.data || [];
+    if (!toggling) setOrders(res.orders || res.data || []);
     return allOrders;
   })().finally(() => { ordersPromise = null; });
   return ordersPromise;
 }
 async function loadStatusData(force = false) {
   const box = $('statusList');
-  if (allOrders.length) renderOrders(allOrders);
+  if (ordersReady) renderOrders(allOrders);
   else if (force) { box.innerHTML = loaderHTML('載入紀錄中…'); }
-  try { await fetchOrders(); renderOrders(allOrders); }
+  try { await fetchOrders(force ? undefined : 0); renderOrders(allOrders); }
   catch (err) { if (!allOrders.length) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
 }
 function renderOrders(orders) {
+  if (currentTab !== 'status' || !ordersReady) return;
   const box = $('statusList');
   box.className = '';
   const kw = $('statusFilter').value.trim().toLowerCase();
   const list = !kw ? orders : orders.filter(o =>
     [o.group, o.name, orderDetails(o)].some(v => String(v || '').toLowerCase().includes(kw)));
-  const sig = kw + '|' + JSON.stringify(list);
+  const sig = kw + '|' + ordersVer;
   if (sig === box.dataset.sig && box.querySelector('.order-item,.empty')) return;
   box.dataset.sig = sig;
   if (!list.length) { box.innerHTML = '<div class="empty">' + (kw ? '找不到符合的紀錄' : '還沒有人點餐，不如你先？') + '</div>'; return; }
@@ -644,7 +653,7 @@ async function submitAdminLogin() {
 async function loadAdminOrders(force = false) {
   const box = $('adminOrdersContainer');
   if (!allOrders.length && force) box.innerHTML = loaderHTML('載入訂單中…');
-  try { await fetchOrders(); renderAdminTable(allOrders); renderOrders(allOrders); }
+  try { await fetchOrders(force ? undefined : 0); renderAdminTable(allOrders); }
   catch (err) { if (!allOrders.length) box.innerHTML = retryHTML(err.message, 'loadAdminOrders(true)'); }
 }
 function updateAdminStats(orders) {
@@ -658,11 +667,12 @@ function updateAdminStats(orders) {
   $('segAll').textContent = '全部 ' + orders.length; $('segUnpaid').textContent = '未付 ' + np; $('segPaid').textContent = '已付 ' + (orders.length - np);
 }
 function renderAdminTable(orders) {
+  if (currentTab !== 'admin') return;
   orders = orders || [];
   updateAdminStats(orders);
   const box = $('adminOrdersContainer');
   const list = adminFilter === 'unpaid' ? orders.filter(o => !isPaid(o)) : adminFilter === 'paid' ? orders.filter(o => isPaid(o)) : orders;
-  const sig = adminFilter + '|' + JSON.stringify(orders);
+  const sig = adminFilter + '|' + ordersVer;
   if (sig === box.dataset.sig && box.querySelector('.adm-list,.empty')) return;
   box.dataset.sig = sig;
   if (!list.length) { box.innerHTML = '<div class="empty">' + (orders.length ? '這個分類目前沒有訂單' : '目前沒有任何訂單') + '</div>'; return; }
@@ -687,13 +697,12 @@ async function toggleOrderStatus(rowIndex, btn) {
   const card = btn.closest('.adm-card');
   const paint = v => { btn.textContent = v ? '✔ 已付' : '○ 未付'; btn.className = 'badge ' + (v ? 'badge-paid' : 'badge-unpaid'); if (card) card.classList.toggle('is-paid', v); };
   if (navigator.vibrate) navigator.vibrate(12);
-  toggling++; setPaid(o, next); paint(next); updateAdminStats(allOrders); btn.disabled = true;
+  toggling++; setPaid(o, next); touchOrders(); paint(next); updateAdminStats(allOrders); btn.disabled = true;
   try {
     const res = await apiRequest('adminTogglePaid', { password: adminToken, rowIndex, newStatus: next });
     if (!res || !res.success) throw new Error((res && res.message) || '更新失敗');
-    renderOrders(allOrders);
   } catch (err) {
-    setPaid(o, prev); paint(prev); updateAdminStats(allOrders);
+    setPaid(o, prev); touchOrders(); paint(prev); updateAdminStats(allOrders);
     showModal('同步失敗', '狀態已還原。\n(' + err.message + ')', '⚠️');
   } finally { btn.disabled = false; toggling--; }
 }
@@ -717,11 +726,12 @@ function handleAdminClearOrders() {
     try {
       const res = await apiRequest('adminClearAllOrders', { password: adminToken }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '清空失敗');
-      allOrders = [];
+      allOrders = []; touchOrders();
       showModal('成功', '今日點餐紀錄已清空！', '🎉', () => { renderAdminTable([]); renderOrders([]); loadInitialData(); });
     } catch (err) { showModal('錯誤', err.message || '清空紀錄失敗', '❌'); }
   });
 }
+init();
 </script>
 </body>
 </html>
