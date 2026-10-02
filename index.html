@@ -120,7 +120,8 @@ button.badge:active:not(:disabled){transform:translate(2px,2px)}
 .modal-btn-group{display:flex;gap:12px}
 .modal-btn{flex:1;background:var(--forest);color:#fff;border:var(--bd);padding:12px;min-height:52px;font-weight:900;cursor:pointer;box-shadow:var(--sh-sm)}
 .modal-btn:active{transform:translate(3px,3px);box-shadow:none}
-.modal-btn:disabled{opacity:.5;cursor:wait}
+.modal-btn:disabled{opacity:.7;cursor:wait}
+.modal-btn .spinner{border-color:rgba(255,255,255,.3);border-top-color:#fff;width:16px;height:16px;border-width:3px;margin-right:8px}
 .modal-btn-cancel{background:var(--bg);color:var(--text)}
 .seg{display:flex;gap:6px;margin-bottom:12px}
 .seg button{flex:1;min-height:42px;border:2px solid var(--text);background:#fff;font-weight:800;font-size:.82rem;color:var(--muted);cursor:pointer}
@@ -370,7 +371,7 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
       }
     });
   }
-  const TMO = (action === 'getInitialData' || action === 'getOrdersAndPaymentStatus') ? READ_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
+  const TMO = (action === 'getInitialData' || action === 'getOrdersAndPaymentStatus' || action === 'adminVerify' || action === 'ping') ? READ_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
   let lastErr = null;
   const hasAbort = typeof AbortController !== 'undefined';
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -703,8 +704,10 @@ function renderMenuList() {
 }
 
 // ---------- 管理員 ----------
+let lastPing = 0;
 function openAdminModal() {
   if (adminToken) return switchTab('admin');
+  if (Date.now() - lastPing > 60000) { lastPing = Date.now(); apiRequest('ping', {}, 0, true).catch(() => {}); }
   $('adminPasswordInput').value = '';
   $('adminLoginModal').style.display = 'flex';
   setTimeout(() => $('adminPasswordInput').focus(), 100);
@@ -713,13 +716,14 @@ function closeAdminModal() { $('adminLoginModal').style.display = 'none'; }
 async function submitAdminLogin() {
   const pwd = $('adminPasswordInput').value;
   if (!pwd) return;
-  const btn = $('adminLoginBtn'); btn.disabled = true;
+  const btn = $('adminLoginBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>驗證中…';
+  if (Date.now() - lastOrdersAt > FRESH_MS) fetchOrders(0, true).catch(() => {});
   try {
     const res = await apiRequest('adminVerify', { password: pwd }, 1);
     if (res && res.success) { adminToken = pwd; closeAdminModal(); switchTab('admin'); }
     else showModal('登登', '你再猜猜看？', '❌');
   } catch (err) { showModal('錯誤', err.message, '❌'); }
-  finally { btn.disabled = false; }
+  finally { btn.disabled = false; btn.textContent = '登入後台'; }
 }
 async function loadAdminOrders(force = false) {
   const box = $('adminOrdersContainer');
