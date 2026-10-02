@@ -7,6 +7,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<script>var GAS_URL="https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData','getOrdersAndPaymentStatus'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
 <title>今天要吃什麼勒</title>
 <style>
 :root{--bg:#EAE5D8;--surface:#FBF9F4;--text:#171516;--muted:#52535B;--primary:#DD9436;--amber:#A3651F;--gold:#D8A45C;--forest:#36453A;--green:#33644F;--sage:#697C6E;--sand:#D6CFBF;--navy:#111D2C;--danger:#A63A29;--danger-bg:#F6E1DB;--success:#33644F;--success-bg:#DCE8E0;--border:rgba(23,21,22,.18);--bd:3px solid var(--text);--sh:4px 4px 0 var(--text);--sh-sm:3px 3px 0 var(--text);--st:steps(6,end)}
@@ -66,6 +67,7 @@ input:focus,select:focus{border-color:var(--primary);box-shadow:4px 4px 0 var(--
 .btn-submit:active:not(:disabled){transform:translate(4px,4px);box-shadow:none}
 .btn-submit:disabled{background:#CFC8B7;color:#7C786C;box-shadow:none;cursor:wait}
 .btn-action{background:var(--forest);color:#fff;border:2px solid var(--text);padding:8px 16px;min-height:40px;font-size:.85rem;font-weight:800;cursor:pointer;box-shadow:var(--sh-sm)}
+.btn-action.busy{opacity:.55;pointer-events:none}
 .btn-action:active{transform:translate(3px,3px);box-shadow:none}
 .btn-danger{background:var(--danger);color:#fff;border:var(--bd);padding:14px;min-height:48px;font-weight:900;cursor:pointer;width:100%;box-shadow:var(--sh-sm)}
 .btn-danger:active{transform:translate(3px,3px);box-shadow:none}
@@ -271,8 +273,8 @@ button.badge:hover:not(:disabled){filter:brightness(.95)}
 </div>
 
 <script>
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";
-const REQUEST_TIMEOUT_MS = 30000, MAX_RETRIES = 2, RETRY_BASE_DELAY_MS = 1200, POLL_MS = 30000;
+const GAS_API_URL = GAS_URL;
+const REQUEST_TIMEOUT_MS = 30000, READ_TIMEOUT_MS = 12000, MAX_RETRIES = 2, RETRY_BASE_DELAY_MS = 800, POLL_MS = 30000;
 const groupMembersData = {
   "第一組": ["04 舒香雅","10 施美美","12 王麗敏","18 江珈宜","21 林彩葳","26 林瑋妮"],
   "第二組": ["08 吳同祐","09 劉靜文","11 黃昱瑄","20 郭貞纓","27 陳玟妤","29 簡雅珍"],
@@ -287,8 +289,8 @@ const $ = id => document.getElementById(id);
 const LITE = (navigator.deviceMemory || 4) <= 2 || (navigator.hardwareConcurrency || 8) <= 2 || !!(navigator.connection && (navigator.connection.saveData || /2g/.test(navigator.connection.effectiveType || '')));
 if (LITE) document.documentElement.classList.add('lite');
 let toggling = 0, ordersPromise = null, adminFilter = 'all', ordersVer = 0, ordersSig = '', ordersReady = false, cachedTxt = '';
-function touchOrders() { ordersSig = JSON.stringify(allOrders); ordersVer++; ordersReady = true; }
-function setOrders(a) { const t = JSON.stringify(a); if (t === ordersSig) { ordersReady = true; return false; } allOrders = a; ordersSig = t; ordersVer++; ordersReady = true; return true; }
+function touchOrders() { ordersSig = JSON.stringify(allOrders); ordersVer++; ordersReady = true; store.set('lunchApp_orders', ordersSig); }
+function setOrders(a) { const t = JSON.stringify(a); if (t === ordersSig) { ordersReady = true; return false; } allOrders = a; ordersSig = t; ordersVer++; ordersReady = true; store.set('lunchApp_orders', t); return true; }
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -327,19 +329,29 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES) {
       }
     });
   }
+  const TMO = (action === 'getInitialData' || action === 'getOrdersAndPaymentStatus') ? READ_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
   let lastErr = null;
   const hasAbort = typeof AbortController !== 'undefined';
   for (let attempt = 0; attempt <= retries; attempt++) {
     const controller = hasAbort ? new AbortController() : null;
-    const timeoutId = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : 0;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), TMO) : 0;
     try {
-      const response = await fetch(GAS_API_URL, {
-        method: 'POST', redirect: 'follow', cache: 'no-store',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, ...data }), signal: controller ? controller.signal : undefined
-      });
-      if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
-      const text = (await response.text()).trim();
+      let text;
+      const pre = attempt === 0 && PRE[action];
+      if (pre) {
+        PRE[action] = null;
+        const r = await Promise.race([pre, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout'), { name: 'AbortError' })), TMO))]);
+        if (!r.ok) throw new Error(`HTTP 錯誤狀態: ${r.status}`);
+        text = r.text.trim();
+      } else {
+        const response = await fetch(GAS_API_URL, {
+          method: 'POST', redirect: 'follow', cache: 'no-store',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, ...data }), signal: controller ? controller.signal : undefined
+        });
+        if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
+        text = (await response.text()).trim();
+      }
       if (text.startsWith('<')) throw new Error('伺服器回傳了非預期的內容，請確認 Apps Script 部署權限為「任何人」，且已重新部署最新版本。');
       let json;
       try { json = JSON.parse(text); } catch (e) { throw new Error('伺服器回傳格式異常，請稍後再試'); }
@@ -391,11 +403,15 @@ function init() {
     $('groupSelect').value = g; updateNameOptions();
     if (n) $('nameSelect').value = n;
   }
+  const co = store.get('lunchApp_orders');
+  if (co) { try { const a = JSON.parse(co); if (Array.isArray(a)) setOrders(a); } catch (e) {} }
   const cached = store.get('lunchApp_cachedData');
   if (cached) { try { applyDataToUI(JSON.parse(cached)); cachedTxt = cached; } catch (e) {} }
   if ($('itemList').children.length === 0) addItemRow();
   moveThumb(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveThumb);
   loadInitialData();
+  fetchOrders(0).then(() => renderOrders(allOrders)).catch(() => {});
+  setTimeout(() => { const st = $('currentShopText'); if (st.classList.contains('is-load')) st.innerHTML = '<span class="spinner"></span>伺服器喚醒中，請稍候…'; }, 4000);
   setInterval(pollOrders, LITE ? POLL_MS * 2 : POLL_MS);
 }
 function pollOrders() {
@@ -594,11 +610,13 @@ function fetchOrders(retries) {
   return ordersPromise;
 }
 async function loadStatusData(force = false) {
-  const box = $('statusList');
+  const box = $('statusList'), rb = $('btnRefreshStatus');
   if (ordersReady) renderOrders(allOrders);
   else if (force) { box.innerHTML = loaderHTML('載入紀錄中…'); }
+  rb.classList.add('busy');
   try { await fetchOrders(force ? undefined : 0); renderOrders(allOrders); }
-  catch (err) { if (!allOrders.length) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
+  catch (err) { if (!ordersReady) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
+  finally { rb.classList.remove('busy'); }
 }
 function renderOrders(orders) {
   if (currentTab !== 'status' || !ordersReady) return;
