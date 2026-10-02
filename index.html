@@ -38,7 +38,7 @@ header::before{content:"";position:absolute;width:160px;height:160px;background:
 .shop-badge.is-load,.shop-badge.is-err{font-size:1.5rem;color:var(--sand);text-shadow:none;animation:pulse 1.2s steps(2) infinite}
 header .spinner{border-color:rgba(255,255,255,.25);border-top-color:var(--primary)}
 @keyframes pulse{50%{opacity:.5}}
-.tabs{display:flex;gap:0;max-width:480px;margin:-32px auto 0;padding:4px;background:var(--surface);border:var(--bd);box-shadow:var(--sh);position:sticky;top:16px;z-index:100;width:calc(100% - 32px)}
+.tabs{display:flex;gap:0;max-width:480px;margin:-32px auto 0;padding:4px;background:var(--surface);border:var(--bd);box-shadow:var(--sh);position:relative;z-index:2;width:calc(100% - 32px)}
 .tab-btn{flex:1;padding:10px 6px;min-height:44px;border:none;background:transparent;font-size:.9rem;font-weight:800;color:var(--muted);cursor:pointer;position:relative;z-index:1}
 .tab-thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/3);background:var(--forest);transition:transform .25s steps(5,end);z-index:0}
 .tabs[data-i="1"] .tab-thumb{transform:translateX(100%)}.tabs[data-i="2"] .tab-thumb{transform:translateX(200%)}
@@ -798,7 +798,7 @@ function handleAdminChangeShop() {
   });
 }
 function handleAdminClearOrders() {
-  showConfirmModal('確定要清空嗎？', '按了就回不去囉瑞煩:)', '⚠️', async () => {
+  showConfirmModal('危險操作', '確定要清空今日所有的點餐紀錄嗎？按了就回不去囉瑞煩:)', '⚠️', async () => {
     try {
       const res = await apiRequest('adminClearAllOrders', { password: adminToken }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '清空失敗');
