@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
-<script>var GAS_URL="https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
+<script>var GAS_URL="https://script.google.com/macros/s/AKfycbzS82dxzGqzlT6nip3OkjqHMOOeHmMFbvQPcluNSjrzN13ERfcAW1ugOChkYf-9rcIw6g/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
 <title>今天要吃什麼勒</title>
 <style>
 :root{--bg:#EAE5D8;--surface:#FBF9F4;--text:#171516;--muted:#52535B;--primary:#DD9436;--amber:#A3651F;--gold:#D8A45C;--forest:#36453A;--green:#33644F;--sage:#697C6E;--sand:#D6CFBF;--navy:#111D2C;--danger:#A63A29;--danger-bg:#F6E1DB;--success:#33644F;--success-bg:#DCE8E0;--border:rgba(23,21,22,.18);--bd:3px solid var(--text);--sh:4px 4px 0 var(--text);--sh-sm:3px 3px 0 var(--text);--st:steps(6,end)}
@@ -857,8 +857,8 @@ function handleAdminChangeShop() {
 }
 function handleAdminToggleOrdering() {
   const open = !orderingOpen;
-  showConfirmModal(open ? '重新開放點餐' : '關閉今日點餐',
-    open ? '確定要重新開放點餐嗎？' : '關閉後同學將無法再送出訂單（訂單紀錄仍可查看），確定嗎？', '❓', async () => {
+  showConfirmModal(open ? '開放點餐' : '今日點餐',
+    open ? '要開店嗎？' : '要關店嗎？', '❓', async () => {
     const btn = $('btnToggleOrdering'); btn.classList.add('busy');
     try {
       const res = await apiRequest('adminSetOrdering', { password: adminToken, open }, 0);
@@ -870,7 +870,7 @@ function handleAdminToggleOrdering() {
   });
 }
 function handleAdminClearOrders() {
-  showConfirmModal('危險操作', '確定要清空今日所有的點餐紀錄嗎？按了就回不去囉瑞煩:)', '⚠️', async () => {
+  showConfirmModal('確定嗎？', '按了就回不去囉瑞煩:)', '⚠️', async () => {
     try {
       const res = await apiRequest('adminClearAllOrders', { password: adminToken }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '清空失敗');
