@@ -252,7 +252,7 @@ button.badge:hover:not(:disabled){filter:brightness(.95)}
       </div>
       <div class="panel">
         <label>今日點餐開關 <span id="orderingState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
-        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">關閉後同學無法再送出新訂單，已送出的訂單紀錄不受影響。</p>
+        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">關閉後同學無法再送出新訂單。</p>
         <button class="btn-danger" id="btnToggleOrdering" onclick="handleAdminToggleOrdering()">關閉今日點餐</button>
       </div>
       <div class="panel">
@@ -265,7 +265,7 @@ button.badge:hover:not(:disabled){filter:brightness(.95)}
       </div>
       <div class="panel danger">
         <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
-        <p style="font-size:.85rem;margin-bottom:16px;color:var(--muted)">會清除「今日誰點餐」的所有訂購資料，標題列會保留。</p>
+        <p style="font-size:.85rem;margin-bottom:16px;color:var(--muted)">會清除「今日誰點餐」的所有訂購資料。</p>
         <button class="btn-danger" onclick="handleAdminClearOrders()">清空今日紀錄</button>
       </div>
       <button class="btn-back" onclick="switchTab('order')">返回點餐頁面</button>
@@ -483,7 +483,7 @@ function applyOrderingState() {
   const closed = !orderingOpen, btn = $('btnToggleOrdering');
   $('orderCard').classList.toggle('is-closed', closed);
   $('orderingState').textContent = closed ? '（目前：已關閉）' : '（目前：開放中）';
-  btn.textContent = closed ? '重新開放點餐' : '關閉今日點餐';
+  btn.textContent = closed ? '重新開放點餐' : '關閉點餐';
   btn.className = closed ? 'btn-action' : 'btn-danger';
   btn.style.width = closed ? '100%' : '';
 }
@@ -864,7 +864,7 @@ function handleAdminToggleOrdering() {
       const res = await apiRequest('adminSetOrdering', { password: adminToken, open }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '操作失敗');
       orderingOpen = res.open !== false; cachedTxt = ''; applyOrderingState();
-      showModal('成功', res.message || (open ? '已重新開放點餐！' : '今日點餐已關閉！'), '🎉');
+      showModal('成功', res.message || (open ? '已開放點餐！' : '點餐已關閉！'), '🎉');
     } catch (err) { showModal('錯誤', err.message || '操作失敗', '❌'); }
     finally { btn.classList.remove('busy'); }
   });
