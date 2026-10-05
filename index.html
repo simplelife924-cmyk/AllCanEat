@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
-<script>var GAS_URL="https://script.google.com/macros/s/AKfycbzS82dxzGqzlT6nip3OkjqHMOOeHmMFbvQPcluNSjrzN13ERfcAW1ugOChkYf-9rcIw6g/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
+<script>var GAS_URL="https://script.google.com/macros/s/AKfycby62Gqr10uIr_dLCbFDSA79jw4f4fkFlhGBRiXo-IEh3Ikx5RkFJzHEayKFdxUZgHmlDA/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
 <title>今天要吃什麼勒</title>
 <style>
 :root{--bg:#EAE5D8;--surface:#FBF9F4;--text:#171516;--muted:#52535B;--primary:#DD9436;--amber:#A3651F;--gold:#D8A45C;--forest:#36453A;--green:#33644F;--sage:#697C6E;--sand:#D6CFBF;--navy:#111D2C;--danger:#A63A29;--danger-bg:#F6E1DB;--success:#33644F;--success-bg:#DCE8E0;--border:rgba(23,21,22,.18);--bd:3px solid var(--text);--sh:4px 4px 0 var(--text);--sh-sm:3px 3px 0 var(--text);--st:steps(6,end)}
@@ -111,6 +111,7 @@ button.badge:active:not(:disabled){transform:translate(2px,2px)}
 .closed-sign{width:220px;max-width:70%;margin:0 auto 20px;transform-origin:50% 0;animation:sway 2.4s steps(4) infinite alternate}
 .closed-sign svg{display:block;width:100%;height:auto;image-rendering:pixelated}
 @keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+.closed-cat{display:block;width:120px;height:auto;margin:-4px auto 14px;image-rendering:pixelated;image-rendering:crisp-edges}
 .closed-text{font-size:1.25rem;font-weight:900;line-height:1.5}
 .closed-sub{font-size:.85rem;color:var(--muted);margin-top:8px;font-weight:700}
 .lite .closed-sign{animation:none}
@@ -192,8 +193,9 @@ button.badge:hover:not(:disabled){filter:brightness(.95)}
     <div class="card" id="orderCard">
       <div class="closed-box">
         <div class="closed-sign" id="closedSign"></div>
-        <div class="closed-text">今日已打烊</div>
-        <div class="closed-sub">來不及囉┐(´д`)┌</div>
+        <img class="closed-cat" alt="" width="30" height="22" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAWCAYAAADXYyzPAAAB5klEQVR42rWWPUjDQBiG30gKDQiHFjGCg0hxcJdOp5NDB+ng6ODSyc2hgiAtLYUOHewg3TsILg6dHDrJTS6OTtXJ4klppGBJh0Ac9I40f01N+0E4cpfL8/283yVADKOU2rPMO20pDlTXdQ8kaN5tKmKaG6LreqR9scGzwGKnWqRzlkzMrcbCiqcPofcLAVczFJVWFgBQKpUAAJVWFtUMXSz46olJaLlclnAx71cicSlx2ynIOOdgjCl+z3PO49eYc+47TwjxFZdwKJaqOec42R6Ac+5xQNO0QPhcVO3uZacDmqZNP0AqufSEZ8V2N7D+jDFFRH37NgklhEQ/uSildrHNFHc6neIIq68YCSGhUTpNCQMErVFK7cPVD3SMDRBCoKq/iUskEoHOEUIwHA6l0tWgT9m0aGXKVNUX6Fa4EzqRasaYcje27YvxnyNH+4Hf2h100THSSKVSoVDTNAHAA5XgRqOBg+umnc/n5cJNoYB6vf5vlZum6Qv0qPrx/AwA0Ov1AACj0cj3r6KWswBsAbBw2R74ttU0KAAo4qW1Wg2GYUhos9mUGymldvJ4F2vLK+h/f3nG8f2LbDHRTtPAMmLLsmSU/X7f27uvz9gk63gffnrGPSQn+juKOJUoqo7y8xa1C4T9AOirDDYaq3rxAAAAAElFTkSuQmCC">
+        <div class="closed-text">今日已打烊，來不及囉┐(´д`)┌</div>
+        <div class="closed-sub">已送出的訂單仍可到「對帳與查詢」查看</div>
       </div>
       <div class="card-title">填寫訂購資訊</div>
       <div class="form-group">
@@ -252,7 +254,7 @@ button.badge:hover:not(:disabled){filter:brightness(.95)}
       </div>
       <div class="panel">
         <label>今日點餐開關 <span id="orderingState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
-        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">關閉後同學無法再送出新訂單。</p>
+        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">關閉後同學無法再送出新訂單，已送出的訂單紀錄不受影響。</p>
         <button class="btn-danger" id="btnToggleOrdering" onclick="handleAdminToggleOrdering()">關閉今日點餐</button>
       </div>
       <div class="panel">
@@ -265,7 +267,7 @@ button.badge:hover:not(:disabled){filter:brightness(.95)}
       </div>
       <div class="panel danger">
         <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
-        <p style="font-size:.85rem;margin-bottom:16px;color:var(--muted)">會清除「今日誰點餐」的所有訂購資料。</p>
+        <p style="font-size:.85rem;margin-bottom:16px;color:var(--muted)">會清除「今日誰點餐」的所有訂購資料，標題列會保留。</p>
         <button class="btn-danger" onclick="handleAdminClearOrders()">清空今日紀錄</button>
       </div>
       <button class="btn-back" onclick="switchTab('order')">返回點餐頁面</button>
@@ -483,7 +485,7 @@ function applyOrderingState() {
   const closed = !orderingOpen, btn = $('btnToggleOrdering');
   $('orderCard').classList.toggle('is-closed', closed);
   $('orderingState').textContent = closed ? '（目前：已關閉）' : '（目前：開放中）';
-  btn.textContent = closed ? '重新開放點餐' : '關閉點餐';
+  btn.textContent = closed ? '重新開放點餐' : '關閉今日點餐';
   btn.className = closed ? 'btn-action' : 'btn-danger';
   btn.style.width = closed ? '100%' : '';
 }
@@ -857,20 +859,20 @@ function handleAdminChangeShop() {
 }
 function handleAdminToggleOrdering() {
   const open = !orderingOpen;
-  showConfirmModal(open ? '開放點餐' : '今日點餐',
-    open ? '要開店嗎？' : '要關店嗎？', '❓', async () => {
+  showConfirmModal(open ? '重新開放點餐' : '關閉今日點餐',
+    open ? '確定要重新開放點餐嗎？' : '關閉後同學將無法再送出訂單（訂單紀錄仍可查看），確定嗎？', '❓', async () => {
     const btn = $('btnToggleOrdering'); btn.classList.add('busy');
     try {
       const res = await apiRequest('adminSetOrdering', { password: adminToken, open }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '操作失敗');
       orderingOpen = res.open !== false; cachedTxt = ''; applyOrderingState();
-      showModal('成功', res.message || (open ? '已開放點餐！' : '點餐已關閉！'), '🎉');
+      showModal('成功', res.message || (open ? '已重新開放點餐！' : '今日點餐已關閉！'), '🎉');
     } catch (err) { showModal('錯誤', err.message || '操作失敗', '❌'); }
     finally { btn.classList.remove('busy'); }
   });
 }
 function handleAdminClearOrders() {
-  showConfirmModal('確定嗎？', '按了就回不去囉瑞煩:)', '⚠️', async () => {
+  showConfirmModal('危險操作', '確定要清空今日所有的點餐紀錄嗎？按了就回不去囉瑞煩:)', '⚠️', async () => {
     try {
       const res = await apiRequest('adminClearAllOrders', { password: adminToken }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '清空失敗');
