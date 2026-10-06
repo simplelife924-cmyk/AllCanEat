@@ -315,7 +315,7 @@ img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
 
 <script>
 const GAS_API_URL = GAS_URL;
-const REQUEST_TIMEOUT_MS = 40000, READ_TIMEOUT_MS = 25000, MAX_RETRIES = 2, RETRY_BASE_DELAY_MS = 1500, POLL_MS = 45000, FRESH_MS = 15000;
+const REQUEST_TIMEOUT_MS = 40000, READ_TIMEOUT_MS = 25000, MAX_RETRIES = 2, RETRY_BASE_DELAY_MS = 1500, POLL_MS = 45000, FRESH_MS = 15000, FAST_TIMEOUT_MS = 9000;
 const groupMembersData = {
   "第一組": ["04 舒香雅","10 施美美","12 王麗敏","18 江珈宜","21 林彩葳","26 林瑋妮"],
   "第二組": ["08 吳同祐","09 劉靜文","11 黃昱瑄","20 郭貞纓","27 陳玟妤","29 簡雅珍"],
@@ -412,7 +412,7 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
       }
     });
   }
-  const TMO = (action === 'getInitialData' || action === 'getOrdersAndPaymentStatus' || action === 'adminVerify' || action === 'ping') ? READ_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
+  const TMO = (action === 'adminVerify' || action === 'ping') ? FAST_TIMEOUT_MS : (action === 'getInitialData' || action === 'getOrdersAndPaymentStatus') ? READ_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
   let lastErr = null;
   const hasAbort = typeof AbortController !== 'undefined';
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -801,13 +801,13 @@ async function submitAdminLogin() {
   const pwd = $('adminPasswordInput').value;
   if (!pwd) return;
   const btn = $('adminLoginBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>驗證中…';
-  if (Date.now() - lastOrdersAt > FRESH_MS) fetchOrders(0, true).catch(() => {});
+  const slow = setTimeout(() => { btn.innerHTML = '<span class="spinner"></span>伺服器喚醒中…'; }, 3500);
   try {
-    const res = await apiRequest('adminVerify', { password: pwd }, 1);
+    const res = await apiRequest('adminVerify', { password: pwd }, 2);
     if (res && res.success) { adminToken = pwd; closeAdminModal(); switchTab('admin'); }
     else showModal('登登', '你再猜猜看？', '❌');
   } catch (err) { showModal('錯誤', err.message, '❌'); }
-  finally { btn.disabled = false; btn.textContent = '登入後台'; }
+  finally { clearTimeout(slow); btn.disabled = false; btn.textContent = '登入後台'; }
 }
 async function loadAdminOrders(force = false) {
   const box = $('adminOrdersContainer');
@@ -891,7 +891,7 @@ function handleAdminChangeShop() {
 function handleAdminToggleOrdering() {
   const open = !orderingOpen;
   showConfirmModal(open ? '開店' : '閉店',
-    open ? '確定要重新開放點餐嗎？' : '關閉後同學不就不能訂囉，確定嗎？', '❓', async () => {
+    open ? '確定要重新開放點餐嗎？' : '關閉後同學將無法再送出訂單，確定嗎？', '❓', async () => {
     const btn = $('btnToggleOrdering'), prev = orderingOpen;
     orderingOpen = open; applyOrderingState();                 // 先改畫面，管理員立刻看到結果
     btn.classList.add('busy'); $('orderingState').textContent = '（同步中…）';
