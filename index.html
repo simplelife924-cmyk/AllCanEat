@@ -332,7 +332,12 @@ const TOUCH = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
 if (LITE || TOUCH) document.documentElement.classList.add('lite');
 if (LOW) document.documentElement.classList.add('low');
 let toggling = 0, ordersPromise = null, adminFilter = 'all', ordersVer = 0, ordersSig = '', ordersReady = false, cachedTxt = '';
-let orderingOpen = true;
+let orderingOpen = true, syncing = false;
+function setSyncing(on) {
+  if (!on && !syncing) return;
+  syncing = on; const b = $('submitBtn'); b.disabled = on;
+  b.innerHTML = on ? '<span class="spinner"></span>同步中…' : '送出點餐';
+}
 function touchOrders() { ordersSig = JSON.stringify(allOrders); ordersVer++; ordersReady = true; { const t = ordersSig; lazy(() => store.set('lunchApp_orders', t)); } }
 function setOrders(a) { const t = JSON.stringify(a); if (t === ordersSig) { ordersReady = true; return false; } allOrders = a; ordersSig = t; ordersVer++; ordersReady = true; lazy(() => store.set('lunchApp_orders', t)); return true; }
 const lazy = fn => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 50));
@@ -511,7 +516,12 @@ function init() {
   const co = store.get('lunchApp_orders');
   if (co) { try { const a = JSON.parse(co); if (Array.isArray(a)) setOrders(a); } catch (e) {} }
   const cached = store.get('lunchApp_cachedData');
-  if (cached) { try { applyDataToUI(JSON.parse(cached)); cachedTxt = cached; } catch (e) {} }
+  if (cached) { try {
+    const d = JSON.parse(cached), stale = Date.now() - (+store.get('lunchApp_cachedAt') || 0) > 600000;
+    if (stale) d.orderingOpen = true;                       // 舊快取裡的「已打烊」不可信，先當作開放
+    applyDataToUI(d); cachedTxt = stale ? '' : cached;      // stale 時強制讓最新資料重新套用
+    if (stale) { setSyncing(true); setTimeout(() => setSyncing(false), 12000); }
+  } catch (e) {} }
   if ($('itemList').children.length === 0) addItemRow();
   setTimeout(() => { rollReady = true; }, 1500);
   loadInitialData();
@@ -558,9 +568,10 @@ async function loadInitialData() {
   try {
     const res = await apiRequest('getInitialData', {}, undefined, menuItems.length > 0);
     if (!res || !res.success) throw new Error((res && res.message) || '讀取資料失敗');
-    lastInitialAt = Date.now();
+    lastInitialAt = Date.now(); store.set('lunchApp_cachedAt', String(lastInitialAt));
     const txt = JSON.stringify(res);
     if (txt !== cachedTxt) { cachedTxt = txt; applyDataToUI(res); lazy(() => store.set('lunchApp_cachedData', txt)); }
+    setSyncing(false);
   } catch (err) {
     if (menuItems.length === 0) {
       const st = $('currentShopText'); st.className = 'shop-badge is-err'; st.innerText = '載入失敗，請檢查連線'; delete st.dataset.shop;
@@ -696,7 +707,13 @@ async function handleOrderSubmit() {
   try {
     // 金額僅供顯示；後端會依菜單重新計算並以後端為準
     const payload = { group, name, items, total, totalAmount: total, note: $('orderNote').value.trim() };
-    const res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) }, 0);
+    let res = null;
+    for (let tries = 0; ; tries++) {
+      res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) }, 0);
+      if (!(res && res.code === 'BUSY') || tries >= 3) break;
+      btn.innerHTML = '<span class="spinner"></span>人多排隊中…(' + (tries + 1) + '/3)';
+      await new Promise(r => setTimeout(r, 1200 + Math.random() * 1800));
+    }
     if (res && res.success) {
       burst(btn); showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎆', () => {
         $('orderNote').value = ''; $('itemList').innerHTML = ''; addItemRow();
@@ -731,10 +748,10 @@ async function loadStatusData(force = false) {
   if (ordersReady) renderOrders(allOrders);
   else if (!box.querySelector('.sk-wrap')) box.innerHTML = loaderHTML('載入紀錄中…');
   if (!force && ordersReady && Date.now() - lastOrdersAt < FRESH_MS) return;
-  rb.classList.add('busy');
+  rb.classList.add('busy'); const rbText = rb.textContent; if (force) rb.textContent = '更新中…';
   try { await fetchOrders(force ? undefined : 0, !force); renderOrders(allOrders); }
   catch (err) { if (!ordersReady) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
-  finally { rb.classList.remove('busy'); }
+  finally { rb.classList.remove('busy'); rb.textContent = rbText; }
 }
 function orderCardHTML(o) {
   const paid = isPaid(o), t = fmtTime(o.time);
@@ -795,8 +812,11 @@ async function loadAdminOrders(force = false) {
   const box = $('adminOrdersContainer');
   if (!ordersReady && !box.querySelector('.sk-wrap')) box.innerHTML = loaderHTML('載入訂單中…');
   if (!force && ordersReady && Date.now() - lastOrdersAt < FRESH_MS) return;
+  const rb = $('btnRefreshAdmin'), rbText = rb.textContent;
+  if (force) { rb.classList.add('busy'); rb.textContent = '更新中…'; }
   try { await fetchOrders(force ? undefined : 0, !force); renderAdminTable(allOrders); }
   catch (err) { if (!ordersReady) box.innerHTML = retryHTML(err.message, 'loadAdminOrders(true)'); }
+  finally { rb.classList.remove('busy'); rb.textContent = rbText; }
 }
 function updateAdminStats(orders) {
   let total = 0, paid = 0;
@@ -871,13 +891,19 @@ function handleAdminToggleOrdering() {
   const open = !orderingOpen;
   showConfirmModal(open ? '開店' : '閉店',
     open ? '確定要重新開放點餐嗎？' : '關閉後同學將無法再送出訂單，確定嗎？', '❓', async () => {
-    const btn = $('btnToggleOrdering'); btn.classList.add('busy');
+    const btn = $('btnToggleOrdering'), prev = orderingOpen;
+    orderingOpen = open; applyOrderingState();                 // 先改畫面，管理員立刻看到結果
+    btn.classList.add('busy'); $('orderingState').textContent = '（同步中…）';
     try {
       const res = await apiRequest('adminSetOrdering', { password: adminToken, open }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '操作失敗');
       orderingOpen = res.open !== false; cachedTxt = ''; applyOrderingState();
+      try { const c = JSON.parse(store.get('lunchApp_cachedData') || 'null'); if (c) { c.orderingOpen = orderingOpen; store.set('lunchApp_cachedData', JSON.stringify(c)); } } catch (e) {}
       showModal('成功', res.message || (open ? '已開店！' : '已閉店！'), '🎉');
-    } catch (err) { showModal('錯誤', err.message || '操作失敗', '❌'); }
+    } catch (err) {
+      orderingOpen = prev; applyOrderingState();               // 失敗才還原
+      showModal('錯誤', err.message || '操作失敗', '❌');
+    }
     finally { btn.classList.remove('busy'); }
   });
 }
