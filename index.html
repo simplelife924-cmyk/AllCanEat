@@ -908,6 +908,10 @@ function handleAdminClearOrders() {
     if (mod && ['KeyA', 'KeyC', 'KeyX'].includes(c) && !isField(e.target)) return stop(e);
   }, true);
 })();
+// ---------- 回訪秒開：Service Worker（僅在自有靜態網域啟用；GAS 內嵌網址不適用）----------
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !/googleusercontent\.com$|script\.google\.com$/.test(location.hostname)) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
 init();
 
 </script>
