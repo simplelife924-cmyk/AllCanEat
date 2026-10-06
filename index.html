@@ -169,6 +169,11 @@ button.badge:hover:not(:disabled){filter:brightness(.95)}
 }
 .site-foot{max-width:680px;margin:8px auto 0;padding:0 16px;text-align:center;font-size:.7rem;line-height:1.5;color:var(--muted);opacity:.7;letter-spacing:.02em}
 @media (max-width:740px){html{background:var(--primary)}body{background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAJ0lEQVR42mNgGAWjYBSMAuoCcVExFXFRMRVS9DCNBtsoGAWjYBAAANhrAM/6yuJKAAAAAElFTkSuQmCC) 0 0/24px 24px,var(--primary)}.site-foot{color:var(--text);opacity:.75}}
+/* ---- 防複製（嚇阻層）---- */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
+@media print{html{display:none!important}}
 </style>
 </head>
 <body>
@@ -886,6 +891,23 @@ function handleAdminClearOrders() {
     } catch (err) { showModal('錯誤', err.message || '清空紀錄失敗', '❌'); }
   });
 }
+// ---------- 防複製（僅能擋一般使用者，無法真正防止技術人員） ----------
+(function () {
+  const isField = el => !!el && /^(INPUT|TEXTAREA)$/.test(el.tagName);
+  const stop = e => { e.preventDefault(); e.stopPropagation(); return false; };
+  document.addEventListener('contextmenu', e => { if (!isField(e.target)) stop(e); }, true);
+  document.addEventListener('selectstart', e => { if (!isField(e.target)) stop(e); }, true);
+  document.addEventListener('dragstart', stop, true);
+  ['copy', 'cut'].forEach(ev => document.addEventListener(ev, e => { if (!isField(e.target)) stop(e); }, true));
+  document.addEventListener('keydown', e => {
+    const c = e.code, mod = e.ctrlKey || e.metaKey;
+    if (c === 'F12') return stop(e);
+    if (mod && e.shiftKey && ['KeyI', 'KeyJ', 'KeyC', 'KeyK'].includes(c)) return stop(e);
+    if (mod && e.altKey && ['KeyI', 'KeyJ', 'KeyC', 'KeyU'].includes(c)) return stop(e);
+    if (mod && ['KeyU', 'KeyS', 'KeyP'].includes(c)) return stop(e);
+    if (mod && ['KeyA', 'KeyC', 'KeyX'].includes(c) && !isField(e.target)) return stop(e);
+  }, true);
+})();
 init();
 
 </script>
