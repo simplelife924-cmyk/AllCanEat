@@ -453,21 +453,21 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
         if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
         text = (await response.text()).trim();
       }
-      if (text.startsWith('<')) throw new Error('伺服器忙碌中或權限設定異常，稍後會自動重試。');
+      if (text.startsWith('<')) throw new Error('修但幾勒喔......');
       let json;
-      try { json = JSON.parse(text); } catch (e) { throw new Error('伺服器回傳格式異常，請稍後再試'); }
+      try { json = JSON.parse(text); } catch (e) { throw new Error('修但幾勒喔......); }
       failStreak = 0; hideConnBanner();
       return json;
     } catch (err) {
       lastErr = err;
       if (attempt === retries) {
         if (!silent || ++failStreak >= 2) showConnBanner();
-        throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查網路狀態後重試！' : (err.message || '無法連線至伺服器。'));
+        throw new Error(err.name === 'AbortError' ? '修但幾勒喔......' : (err.message || '修但幾勒喔......'));
       }
       await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1) + Math.random() * 800));
     } finally { clearTimeout(timeoutId); }
   }
-  throw lastErr || new Error('無法連線至伺服器。');
+  throw lastErr || new Error('修但幾勒喔......');
 }
 function showConnBanner() { $('connBanner').classList.add('show'); }
 function hideConnBanner() { $('connBanner').classList.remove('show'); }
