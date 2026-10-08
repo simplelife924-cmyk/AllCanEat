@@ -279,7 +279,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <!-- 新增：今日品項統計＋一鍵複製叫餐文字 -->
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
-          <label style="margin:0">今日品項統計 <span id="itemTotalCount" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
+          <label style="margin:0">品項統計 <span id="itemTotalCount" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
           <button class="btn-action" id="btnCopyTally" onclick="copyTally(this)" disabled>複製叫餐文字</button>
         </div>
         <div id="itemTally"></div>
@@ -714,7 +714,7 @@ function burst(el) {
 }
 async function handleOrderSubmit() {
   saveUserSelection();
-  if (!orderingOpen) return showModal('提示', '今日已打烊，來不及囉┐(´д`)┌', '⚠️');
+  if (!orderingOpen) return showModal('提示', '今日已打烊，來不及囉 _(┐ ◟;ﾟдﾟ)ノ, '⚠️');
   const group = $('groupSelect').value, name = $('nameSelect').value;
   if (!group || !name) return showModal('提示', '請先選擇組別以及座號姓名！', '⚠️');
   const items = readItems();
