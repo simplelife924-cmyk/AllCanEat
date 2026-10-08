@@ -156,6 +156,10 @@ button.badge:active:not(:disabled){transform:translate(2px,2px)}
 .adm-amt{font-weight:900;white-space:nowrap;font-variant-numeric:tabular-nums}
 .adm-items{font-size:.85rem;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
 .adm-card .badge{flex:none;min-width:88px;min-height:52px;font-size:.92rem}
+.btn-del{margin-top:8px;min-height:36px;padding:4px 12px;border:2px solid var(--danger);background:transparent;color:var(--danger);font-weight:800;font-size:.78rem;cursor:pointer}
+.btn-del:active{transform:translate(2px,2px)}
+.btn-del:disabled{opacity:.5;cursor:not-allowed}
+@media (hover:hover){.btn-del:hover:not(:disabled){background:var(--danger-bg)}}
 .lite .container>div,.lite .item-row,.lite .modal-card,.lite .sk,.lite .shop-badge.is-load{animation:none}
 .lite .hl{animation:none;background-size:100% 100%}
 .low .card,.low .order-item,.low .stat-card,.low .panel,.low .tabs{box-shadow:none}
@@ -215,7 +219,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="closed-sign" id="closedSign"></div>
         <img class="closed-cat" alt="" width="30" height="22" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAWCAYAAADXYyzPAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAACGklEQVR42rWWvWvbQBjGnwsyRFA4WlPsQodQ2kL+gJLpTlPJGOjawUumTl1SCCQRToO7GLwU7xlKp0IzBi+RrkuWjl3SdqrJGRMFQ41CEVyHoKs+TpZdJQ+IEyedfvd+6oAKYoypReaTWqoCbTabOQjn3DiflYWKykIajcZc6yqDY/iiWqri5kU8cWMxjrXXOgbw7/u7rePbszjWwRrD/uE6AALXdQEAbw/XcbDGQG4TvHMqAACu66Ldbmv4zqmAKghRfJGq5VQkKSWEEMT0vpSyeoyllMZ5SqkxuUajEYQQpFJWSynx8tEFpJS5Ddi2XQi/kazO1nJyA7ZtlzeQ/Y0nqZ3tHZ0Vxl8IQWKrP/xMQyml83cuzrna/XySejDgjkomx6z4xiOldKaVSRHGmPI8D4TkGY7jwPd9Yorx83vnGAQPQCmFZV07rlarFW6OUorJZKIz3UpCkOhBvufN5zLLMgKzGZ6EarDjOPjo+fjyB3hzpX9vRi8wxtRTfMcgeIx6vT4TGoYhAOSgGtzr9bDa2gRAtMXvt7bQ7Xb/O8vDMDQCU2BCCE5evwIADIdDAMB0OjWeKt5tRABWAETYProwllUZFMB1L+ecq06ngyAINLTf7+uFjHO1/GIV9+/cxfj3ZW68+vRNl1hcTmVgnVxRFGkrx+Nx5jUF8eMrHtIGfk1GufEZllP1Hd/PLKeiA1q2wZfFtAyU1V+70wkR8MvKTwAAAABJRU5ErkJggg==">
         <div class="closed-text">今日已打烊</div>
-        <div class="closed-sub">來不及囉 _(┐ ◟;ﾟдﾟ)ノ </div>
+        <div class="closed-sub">來不及囉┐(´д`)┌</div>
       </div>
       <div class="card-title">填寫訂購資訊</div>
       <div class="form-group">
@@ -425,6 +429,7 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
         case 'adminTogglePaid': r.adminTogglePaid(data.password, data.rowIndex, data.newStatus); break;
         case 'adminChangeShop': r.adminChangeShop(data.password, data.newShop); break;
         case 'adminClearAllOrders': r.adminClearAllOrders(data.password); break;
+        case 'adminDeleteOrder': r.adminDeleteOrder(data.password, data.rowIndex, data.group, data.name, data.total); break;
         case 'adminSetOrdering': r.adminSetOrdering(data.password, data.open); break;
         default: reject(new Error('未知的動作: ' + action));
       }
@@ -898,7 +903,8 @@ function adminCardHTML(o) {
   const paid = isPaid(o), ok = Number(o.rowIndex) > 1;
   return `<div class="adm-card ${paid ? 'is-paid' : ''}" data-p="${paid ? 1 : 0}"><div class="adm-main">
       <div class="adm-who"><span class="adm-grp">${escapeHTML(o.group)}</span><span class="adm-name">${escapeHTML(o.name)}</span><span class="adm-amt">$${escapeHTML(o.total)}</span></div>
-      <div class="adm-items">${escapeHTML(orderDetails(o)) || '無'}${o.note ? ' ｜ 備註：' + escapeHTML(o.note) : ''}</div></div>
+      <div class="adm-items">${escapeHTML(orderDetails(o)) || '無'}${o.note ? ' ｜ 備註：' + escapeHTML(o.note) : ''}</div>
+      <button class="btn-del" ${ok ? '' : 'disabled'} onclick="deleteOrder(${Number(o.rowIndex)}, this)">刪除此單</button></div>
       <button class="badge ${paid ? 'badge-paid' : 'badge-unpaid'}" ${ok ? '' : 'disabled'} onclick="toggleOrderStatus(${Number(o.rowIndex)}, this)" aria-label="${escapeHTML(o.name)} 繳費狀態，點擊切換">${paid ? '✔ 已付' : '○ 未付'}</button></div>`;
 }
 function renderAdminTable() {
@@ -972,6 +978,25 @@ function handleAdminToggleOrdering() {
       showModal('錯誤', err.message || '操作失敗', '❌');
     }
     finally { btn.classList.remove('busy'); }
+  });
+}
+// 單獨刪除某筆訂單（後端會核對組別／姓名／金額，避免列號位移刪錯人）
+function deleteOrder(rowIndex, btn) {
+  const o = allOrders.find(x => x.rowIndex === rowIndex);
+  if (!o || btn.disabled) return;
+  showConfirmModal('刪除訂單', '確定要刪除「' + o.group + ' ' + o.name + '」的訂單嗎？\n' + (orderDetails(o) || '無') + '（$' + o.total + '）\n\n刪除後無法復原。', '⚠️', async () => {
+    toggling++; btn.disabled = true;
+    let res;
+    try {
+      res = await apiRequest('adminDeleteOrder', { password: adminToken, rowIndex, group: o.group, name: o.name, total: o.total }, 0);
+      if (!res || !res.success) throw new Error((res && res.message) || '刪除失敗');
+    } catch (err) {
+      toggling--; btn.disabled = false;
+      return showModal('刪除失敗', err.message || '刪除失敗，請重新整理後再試。', '❌');
+    }
+    toggling--; lastOrdersAt = 0;
+    await loadAdminOrders(true);                                // 列號會位移，直接重新讀取最新訂單
+    showModal('成功', res.message || '訂單已刪除！', '🎉');
   });
 }
 function handleAdminClearOrders() {
