@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head><!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-PLHQ33RV');</script>
-<!-- End Google Tag Manager -->
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
@@ -14,7 +8,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
-<script>var GAS_URL="https://script.google.com/macros/s/AKfycbzS82dxzGqzlT6nip3OkjqHMOOeHmMFbvQPcluNSjrzN13ERfcAW1ugOChkYf-9rcIw6g/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
+<script>var GAS_URL="https://script.google.com/macros/s/AKfycbzS82dxzGqzlT6nip3OkjqHMOOeHmMFbvQPcluNSjrzN13ERfcAW1ugOChkYf-9rcIw6g/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',priority:'high',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
+<!-- Google Tag Manager（延後到頁面載入完且閒置時才載入，不跟第一個 API 請求搶手機頻寬） -->
+<script>window.dataLayer=window.dataLayer||[];(function(){function go(){window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtm.js?id=GTM-PLHQ33RV';document.head.appendChild(s)}addEventListener('load',function(){window.requestIdleCallback?requestIdleCallback(go,{timeout:4000}):setTimeout(go,2000)})})();</script>
 <title>今天要吃什麼勒</title>
 <style>
 :root{--bg:#FFF1DE;--surface:#FFF9F0;--text:#131515;--muted:#55524C;--primary:#FF6701;--amber:#E25E3E;--gold:#FEA82F;--forest:#FF6701;--green:#E25E3E;--sage:#FEA82F;--sand:#FFC288;--navy:#131515;--danger:#C63D2F;--danger-bg:#FFE0D2;--success:#33644F;--success-bg:#DCE8E0;--border:rgba(19,21,21,.18);--bd:3px solid var(--text);--sh:4px 4px 0 var(--text);--sh-sm:3px 3px 0 var(--text);--st:steps(6,end)}
@@ -165,7 +161,7 @@ button.badge:active:not(:disabled){transform:translate(2px,2px)}
 .low .card,.low .order-item,.low .stat-card,.low .panel,.low .tabs{box-shadow:none}
 .low *{transition:none!important}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-@media (max-width:480px){header{padding:32px 20px 60px;padding:calc(32px + env(safe-area-inset-top)) 20px 60px}.card{padding:22px 16px}.price-tag{display:none}.item-row select{font-size:.95rem}.container{padding:0 12px}.panel{padding:14px 12px}}
+@media (max-width:480px){header{padding:32px 20px 60px;padding:calc(32px + env(safe-area-inset-top)) 20px 60px}.card{padding:22px 16px}.price-tag{display:none}.item-row select{font-size:1rem}.container{padding:0 12px}.panel{padding:14px 12px}}
 @media (hover:hover){
 .tab-btn:not(.active):hover{color:var(--text);background:rgba(0,0,0,.05)}
 .btn-remove:hover{background:var(--danger-bg);color:var(--danger)}
@@ -202,7 +198,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button class="admin-pill" onclick="openAdminModal()" aria-label="管理員" title="管理員"><i class="ic i-lock" aria-hidden="true"></i></button>
     </div>
     <div class="shop-label">今日店家</div>
-    <span class="shop-badge is-load" id="currentShopText"><span class="spinner"></span>載入中…</span>
+    <span class="shop-badge is-load" id="currentShopText"><span class="spinner"></span>修但幾勒喔……</span>
   </div>
 </header>
 
@@ -359,7 +355,7 @@ let orderingOpen = true, syncing = false;
 function setSyncing(on) {
   if (!on && !syncing) return;
   syncing = on; const b = $('submitBtn'); b.disabled = on;
-  b.innerHTML = on ? '<span class="spinner"></span>同步中…' : '送出點餐';
+  b.innerHTML = on ? '<span class="spinner"></span>修但幾勒喔……' : '送出點餐';
 }
 function touchOrders() { ordersSig = JSON.stringify(allOrders); ordersVer++; ordersReady = true; { const t = ordersSig; lazy(() => store.set('lunchApp_orders', t)); } }
 function setOrders(a) { const t = JSON.stringify(a); if (t === ordersSig) { ordersReady = true; return false; } allOrders = a; ordersSig = t; ordersVer++; ordersReady = true; lazy(() => store.set('lunchApp_orders', t)); return true; }
@@ -458,21 +454,23 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
         if (!response.ok) throw new Error(`HTTP 錯誤狀態: ${response.status}`);
         text = (await response.text()).trim();
       }
-      if (text.startsWith('<')) throw new Error('修但幾勒喔......');
+      if (text.startsWith('<')) throw new Error('伺服器回應異常，請稍後再試一次');
       let json;
-      try { json = JSON.parse(text); } catch (e) { throw new Error('修但幾勒喔......'); }
+      try { json = JSON.parse(text); } catch (e) { throw new Error('伺服器回應異常，請稍後再試一次'); }
       failStreak = 0; hideConnBanner();
       return json;
     } catch (err) {
       lastErr = err;
       if (attempt === retries) {
         if (!silent || ++failStreak >= 2) showConnBanner();
-        throw new Error(err.name === 'AbortError' ? '修但幾勒喔......' : (err.message || '修但幾勒喔......'));
+        throw new Error(err.name === 'AbortError' ? '連線逾時，請檢查網路後再試一次'
+          : (err.name === 'TypeError' || /failed to fetch|load failed|networkerror/i.test(err.message || '') || !err.message) ? '連線失敗，請檢查網路後再試一次'
+          : err.message);
       }
       await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1) + Math.random() * 800));
     } finally { clearTimeout(timeoutId); }
   }
-  throw lastErr || new Error('修但幾勒喔......');
+  throw lastErr || new Error('連線失敗，請檢查網路後再試一次');
 }
 function showConnBanner() { $('connBanner').classList.add('show'); }
 function hideConnBanner() { $('connBanner').classList.remove('show'); }
@@ -522,6 +520,7 @@ function buildCloseSign() {
 }
 function applyOrderingState() {
   const closed = !orderingOpen, btn = $('btnToggleOrdering');
+  if (closed && !$('closedSign').firstChild) buildCloseSign(); // 只有真的打烊才建立像素招牌
   $('orderCard').classList.toggle('is-closed', closed);
   $('orderingState').textContent = closed ? '（目前：已關閉）' : '（目前：開放中）';
   btn.textContent = closed ? '重新開放點餐' : '關閉今日點餐';
@@ -531,7 +530,6 @@ function applyOrderingState() {
 
 // ---------- 初始化 ----------
 function init() {
-  buildCloseSign();
   const g = store.get('lunchApp_group'), n = store.get('lunchApp_name');
   if (g && groupMembersData[g]) {
     $('groupSelect').value = g; updateNameOptions();
@@ -549,7 +547,7 @@ function init() {
   if ($('itemList').children.length === 0) addItemRow();
   setTimeout(() => { rollReady = true; }, 1500);
   loadInitialData();
-  setTimeout(() => { const st = $('currentShopText'); if (st.classList.contains('is-load')) st.innerHTML = '<span class="spinner"></span>伺服器喚醒中，請稍候…'; }, 4000);
+  setTimeout(() => { const st = $('currentShopText'); if (st.classList.contains('is-load')) st.innerHTML = '<span class="spinner"></span>修但幾勒喔……'; }, 4000);
   schedulePoll();
 }
 const BASE_POLL = POLL_MS * (LITE ? 2 : 1);
@@ -579,9 +577,9 @@ function applyDataToUI(res) {
   const st = $('currentShopText'); st.className = 'shop-badge';
   if (st.dataset.shop !== currentShop) { st.dataset.shop = currentShop; st.innerHTML = '<span class="hl">' + escapeHTML(currentShop) + '</span>'; }
   orderingOpen = res.orderingOpen !== false; applyOrderingState();
-  renderMenuList();
+  if (currentTab === 'menu') renderMenuList();
   if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows();
-  populateAdminShopsSelect();
+  if (adminToken) populateAdminShopsSelect();
   renderOrders(allOrders);
   if (currentTab === 'admin') renderAdminTable(allOrders);
 }
@@ -616,7 +614,7 @@ function switchTab(tab) {
   const ti = tabs.indexOf(tab); if (ti >= 0) $('mainTabs').dataset.i = ti;
   if (tab === 'status') { renderOrders(allOrders); loadStatusData(); }
   if (tab === 'menu') renderMenuList();
-  if (tab === 'admin') { renderAdminTable(allOrders); loadAdminOrders(); }
+  if (tab === 'admin') { populateAdminShopsSelect(); renderAdminTable(allOrders); loadAdminOrders(); }
   window.scrollTo(0, 0);
 }
 
@@ -717,6 +715,9 @@ function burst(el) {
   }
   document.body.appendChild(frag);
 }
+let submitReq = (() => { try { const o = JSON.parse(store.get('lunchApp_req') || 'null'); if (o && o.id && Date.now() - o.at < 600000) return o; } catch (e) {} return { sig: '', id: '', at: 0 }; })();
+const saveReq = () => store.set('lunchApp_req', JSON.stringify(submitReq)); // 重新整理頁面後仍沿用同一個 requestId
+const newReqId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 async function handleOrderSubmit() {
   saveUserSelection();
   if (!orderingOpen) return showModal('提示', '今日已打烊，來不及囉 _(┐ ◟;ﾟдﾟ)ノ', '⚠️');
@@ -727,21 +728,29 @@ async function handleOrderSubmit() {
   const total = items.reduce((a, i) => a + i.price, 0);
 
   const btn = $('submitBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>送出中…';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>修但幾勒喔……';
+  let unsure = true; // 沒收到明確回覆（或伺服器回報操作失敗）時，訂單可能其實已寫入
   try {
     // 金額僅供顯示；後端會依菜單重新計算並以後端為準
-    const payload = { group, name, items, total, totalAmount: total, note: $('orderNote').value.trim() };
+    const note = $('orderNote').value.trim();
+    // 同一份內容的重送沿用同一個 requestId，後端 10 分鐘內只會寫入一次
+    const sig = JSON.stringify([group, name, items.map(i => i.name), note]);
+    if (submitReq.sig !== sig || Date.now() - submitReq.at > 600000) { submitReq = { sig, id: newReqId(), at: Date.now() }; saveReq(); }
+    const payload = { group, name, items, total, totalAmount: total, note, requestId: submitReq.id };
     let res = null;
     for (let tries = 0; ; tries++) {
       res = await apiRequest('submitOrder', { payload: JSON.stringify(payload) }, 0);
+      unsure = !!(res && !res.success && /^操作失敗/.test(res.message || ''));
       if (!(res && res.code === 'BUSY') || tries >= 3) break;
-      btn.innerHTML = '<span class="spinner"></span>人多排隊中…(' + (tries + 1) + '/3)';
+      btn.innerHTML = '<span class="spinner"></span>修但幾勒喔……';
       await new Promise(r => setTimeout(r, 1200 + Math.random() * 1800));
     }
     if (res && res.success) {
-      burst(btn); showModal('點餐成功！', '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎆', () => {
+      submitReq = { sig: '', id: '', at: 0 }; saveReq(); // 成功後清掉，下一次再點同樣的餐會是新的一單
+      lastOrdersAt = 0; fetchOrders(0, true).catch(() => {}); // 背景預先更新訂單
+      burst(btn); showModal('點餐成功！', (res.duplicate ? '這份訂單剛才已經送出成功了，系統沒有重複建立。\n' : '') + '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎆', () => {
         $('orderNote').value = ''; $('itemList').innerHTML = ''; addItemRow();
-        lastOrdersAt = 0; switchTab('status');
+        switchTab('status');
       });
     } else {
       if (res && res.code === 'MENU_CHANGED') loadInitialData();
@@ -749,7 +758,7 @@ async function handleOrderSubmit() {
       throw new Error((res && res.message) || '送出失敗');
     }
   } catch (err) {
-    showModal('送出失敗', (err.message || '送出失敗，請再試一次。') + (/逾時/.test(err.message) ? '\n訂單可能已送出，請先到「對帳與查詢」確認，再決定是否重送。' : ''), '❌');
+    showModal('送出失敗', (err.message || '送出失敗，請再試一次。') + (unsure ? '\n訂單可能已送出。內容沒有更動的話，再按一次「送出點餐」不會重複下單；也可以先到「對帳與查詢」確認。' : ''), '❌');
   } finally {
     btn.disabled = false; btn.innerHTML = '送出點餐';
   }
@@ -770,9 +779,9 @@ function fetchOrders(retries, silent) {
 async function loadStatusData(force = false) {
   const box = $('statusList'), rb = $('btnRefreshStatus');
   if (ordersReady) renderOrders(allOrders);
-  else if (!box.querySelector('.sk-wrap')) box.innerHTML = loaderHTML('載入紀錄中…');
+  else if (!box.querySelector('.sk-wrap')) box.innerHTML = loaderHTML('修但幾勒喔……');
   if (!force && ordersReady && Date.now() - lastOrdersAt < FRESH_MS) return;
-  rb.classList.add('busy'); const rbText = rb.textContent; if (force) rb.textContent = '更新中…';
+  rb.classList.add('busy'); const rbText = rb.textContent; if (force) rb.textContent = '修但幾勒喔……';
   try { await fetchOrders(force ? undefined : 0, !force); renderOrders(allOrders); }
   catch (err) { if (!ordersReady) { box.className = ''; box.innerHTML = retryHTML(err.message, 'loadStatusData(true)'); } }
   finally { rb.classList.remove('busy'); rb.textContent = rbText; }
@@ -823,8 +832,8 @@ function closeAdminModal() { $('adminLoginModal').style.display = 'none'; }
 async function submitAdminLogin() {
   const pwd = $('adminPasswordInput').value;
   if (!pwd) return;
-  const btn = $('adminLoginBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>驗證中…';
-  const slow = setTimeout(() => { btn.innerHTML = '<span class="spinner"></span>伺服器喚醒中…'; }, 3500);
+  const btn = $('adminLoginBtn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>修但幾勒喔……';
+  const slow = setTimeout(() => { btn.innerHTML = '<span class="spinner"></span>修但幾勒喔……'; }, 3500);
   try {
     const res = await apiRequest('adminVerify', { password: pwd }, 2);
     if (res && res.success) { adminToken = pwd; closeAdminModal(); switchTab('admin'); }
@@ -834,10 +843,10 @@ async function submitAdminLogin() {
 }
 async function loadAdminOrders(force = false) {
   const box = $('adminOrdersContainer');
-  if (!ordersReady && !box.querySelector('.sk-wrap')) box.innerHTML = loaderHTML('載入訂單中…');
+  if (!ordersReady && !box.querySelector('.sk-wrap')) box.innerHTML = loaderHTML('修但幾勒喔……');
   if (!force && ordersReady && Date.now() - lastOrdersAt < FRESH_MS) return;
   const rb = $('btnRefreshAdmin'), rbText = rb.textContent;
-  if (force) { rb.classList.add('busy'); rb.textContent = '更新中…'; }
+  if (force) { rb.classList.add('busy'); rb.textContent = '修但幾勒喔……'; }
   try { await fetchOrders(force ? undefined : 0, !force); renderAdminTable(allOrders); }
   catch (err) { if (!ordersReady) box.innerHTML = retryHTML(err.message, 'loadAdminOrders(true)'); }
   finally { rb.classList.remove('busy'); rb.textContent = rbText; }
@@ -858,7 +867,7 @@ function tallyItems(orders) {
   const map = {};
   orders.forEach(o => {
     if (Array.isArray(o.items)) {                       // 後端有回傳 items 時最準確
-      o.items.forEach(i => { if (i && i.name) map[i.name] = (map[i.name] || 0) + 1; });
+      o.items.forEach(i => { const n = typeof i === 'string' ? i.trim() : (i && i.name); if (n) map[n] = (map[n] || 0) + 1; });
     } else {
       orderDetails(o).split(/[、,，;；\n]+/).forEach(s => {   // 否則解析 details 文字
         const n = s.replace(/\s*[xX×*]\s*\d+\s*$/, '').replace(/\(\$?\d+\)|\$\d+/g, '').trim();
@@ -966,7 +975,7 @@ function handleAdminToggleOrdering() {
     open ? '確定要重新開放點餐嗎？' : '關閉後同學將無法再送出訂單，確定嗎？', '❓', async () => {
     const btn = $('btnToggleOrdering'), prev = orderingOpen;
     orderingOpen = open; applyOrderingState();                 // 先改畫面，管理員立刻看到結果
-    btn.classList.add('busy'); $('orderingState').textContent = '（同步中…）';
+    btn.classList.add('busy'); $('orderingState').textContent = '（修但幾勒喔……）';
     try {
       const res = await apiRequest('adminSetOrdering', { password: adminToken, open }, 0);
       if (!res || !res.success) throw new Error((res && res.message) || '操作失敗');
