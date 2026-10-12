@@ -285,8 +285,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <!-- 主食選項：每間店各自設定開關與選項名稱 -->
       <div class="panel">
         <label for="stapleInput">主食選項 <span id="stapleState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
-        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">只套用在今日店家「<b id="stapleShopLabel"></b>」，每間店各自記住。開啟後同學選完餐點要再勾選主食。選項用「、」分隔，最多 8 個。</p>
-        <input type="text" id="stapleInput" maxlength="60" placeholder="飯、麵、冬粉、米粉" oninput="this.dataset.dirty='1'">
+        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">只套用在今日店家「<b id="stapleShopLabel"></b>」，每間店各自記住。<br>開啟後同學選完餐點要再勾選主食。<br>選項用「、」分隔，最多 8 個。</p>
+        <input type="text" id="stapleInput" maxlength="60" placeholder="例如：飯、麵" oninput="this.dataset.dirty='1'">
         <button class="btn-action" id="btnStapleSave" style="width:100%;min-height:52px;margin-top:12px" onclick="saveStaple('save')">儲存選項名稱</button>
         <button class="btn-danger" id="btnStapleToggle" style="margin-top:12px" onclick="saveStaple('toggle')">開啟主食選項</button>
       </div>
