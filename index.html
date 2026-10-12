@@ -285,7 +285,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <!-- 主食選項：每間店各自設定開關與選項名稱 -->
       <div class="panel">
         <label for="stapleInput">主食選項 <span id="stapleState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
-        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">只套用在今日店家「<b id="stapleShopLabel"></b>」，每間店各自記住。<br>開啟後同學選完餐點要再勾選主食。<br>選項用「、」分隔，最多 8 個。</p>
+        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">只套用在今日店家「<b id="stapleShopLabel"></b>」，每間店會各自記住。<br>開啟後同學選完餐點要再勾選主食。<br>選項用「、」分隔，最多 8 個。</p>
         <input type="text" id="stapleInput" maxlength="60" placeholder="例如：飯、麵" oninput="this.dataset.dirty='1'">
         <button class="btn-action" id="btnStapleSave" style="width:100%;min-height:52px;margin-top:12px" onclick="saveStaple('save')">儲存選項名稱</button>
         <button class="btn-danger" id="btnStapleToggle" style="margin-top:12px" onclick="saveStaple('toggle')">開啟主食選項</button>
@@ -794,7 +794,7 @@ async function handleOrderSubmit() {
     if (res && res.success) {
       submitReq = { sig: '', id: '', at: 0 }; saveReq(); // 成功後清掉，下一次再點同樣的餐會是新的一單
       lastOrdersAt = 0; fetchOrders(0, true).catch(() => {}); // 背景預先更新訂單
-      burst(btn); showModal('點餐成功！', (res.duplicate ? '這份訂單剛才已經送出成功了，系統沒有重複建立。\n' : '') + '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎆', () => {
+      burst(btn); showModal('點餐成功！', (res.duplicate ? '你剛剛好像點過囉同學？\n' : '') + '記得要繳錢呦(๑•̀ㅂ•́)و✧', '🎆', () => {
         $('orderNote').value = ''; $('itemList').innerHTML = ''; addItemRow();
         switchTab('status');
       });
