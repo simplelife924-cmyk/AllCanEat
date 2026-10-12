@@ -58,9 +58,15 @@ input[type=text],input[type=password],select{width:100%;padding:12px 14px;min-he
 select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h12v2H10v2H8v2H6v2H4V6H2V4H0z' fill='%23131515'/%3E%3C/svg%3E");background-position:calc(100% - 14px) center;background-size:12px 8px;background-repeat:no-repeat;padding-right:40px;cursor:pointer}
 select:disabled{background-color:#F6DFC9;opacity:.6;cursor:not-allowed}
 input:focus,select:focus{border-color:var(--primary);box-shadow:4px 4px 0 var(--primary)}
-.item-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;background:var(--surface);padding:6px;border:2px solid var(--text);animation:slideIn .25s steps(3,end) both}
+.item-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;background:var(--surface);padding:6px;border:2px solid var(--text);animation:slideIn .25s steps(3,end) both}
 .item-row select{flex:2;min-width:0;border:none;background-color:transparent;padding:10px 36px 10px 8px;min-height:44px}
 .item-row select:focus{box-shadow:none;background-color:#FFF1E0}
+.staple-row{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:6px;padding:2px 2px 4px}
+.staple-opt{display:inline-flex;align-items:center;justify-content:center;position:relative;margin:0;padding:8px 16px;min-height:44px;border:2px solid var(--text);background:var(--surface);font-size:.95rem;font-weight:800;color:var(--muted);cursor:pointer}
+.staple-opt input{position:absolute;left:0;top:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.staple-opt.on{background:var(--forest);color:var(--text)}
+.staple-opt:focus-within{outline:3px dashed var(--primary);outline-offset:2px}
+.staple-opt:active{transform:translate(2px,2px)}
 .price-tag{width:70px;text-align:right;font-weight:900;font-size:1.1rem;font-variant-numeric:tabular-nums}
 .btn-remove{width:40px;height:40px;flex:none;background:var(--surface);border:2px solid var(--text);color:var(--text);font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--text)}
 .btn-remove:active{transform:translate(2px,2px);box-shadow:none}
@@ -237,7 +243,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <div class="form-group">
         <label for="orderNote">備註</label>
-        <input type="text" id="orderNote" maxlength="100" placeholder="（請填寫要麵、飯、米粉、冬粉）">
+        <input type="text" id="orderNote" maxlength="100" placeholder="（不一定要填）">
       </div>
       <div class="summary-box"><span>應付總金額</span><span class="total-price" id="totalDisplay" role="img" aria-label="$0">$0</span></div>
       <button class="btn-submit" id="submitBtn" onclick="handleOrderSubmit()">送出點餐</button>
@@ -275,6 +281,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <label>點餐開關 <span id="orderingState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
         <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">ฅ^•ﻌ•^ฅ</p>
         <button class="btn-danger" id="btnToggleOrdering" onclick="handleAdminToggleOrdering()">關閉今日點餐</button>
+      </div>
+      <!-- 主食選項：每間店各自設定開關與選項名稱 -->
+      <div class="panel">
+        <label for="stapleInput">主食選項 <span id="stapleState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
+        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">只套用在今日店家「<b id="stapleShopLabel"></b>」，每間店各自記住。開啟後同學選完餐點要再勾選主食。選項用「、」分隔，最多 8 個。</p>
+        <input type="text" id="stapleInput" maxlength="60" placeholder="飯、麵、冬粉、米粉" oninput="this.dataset.dirty='1'">
+        <button class="btn-action" id="btnStapleSave" style="width:100%;min-height:52px;margin-top:12px" onclick="saveStaple('save')">儲存選項名稱</button>
+        <button class="btn-danger" id="btnStapleToggle" style="margin-top:12px" onclick="saveStaple('toggle')">開啟主食選項</button>
       </div>
       <!-- 新增：今日品項統計＋一鍵複製叫餐文字 -->
       <div class="panel">
@@ -350,6 +364,8 @@ const LOW = LITE;
 const TOUCH = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
 if (LITE || TOUCH) document.documentElement.classList.add('lite');
 if (LOW) document.documentElement.classList.add('low');
+let stapleCfg = { enabled: false, options: [] }, stapleSeq = 0;
+const STAPLE_DEFAULT = ['飯', '麵', '冬粉', '米粉'];
 let toggling = 0, ordersPromise = null, adminFilter = 'all', ordersVer = 0, ordersSig = '', ordersReady = false, cachedTxt = '';
 let orderingOpen = true, syncing = false;
 function setSyncing(on) {
@@ -427,6 +443,7 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
         case 'adminClearAllOrders': r.adminClearAllOrders(data.password); break;
         case 'adminDeleteOrder': r.adminDeleteOrder(data.password, data.rowIndex, data.group, data.name, data.total); break;
         case 'adminSetOrdering': r.adminSetOrdering(data.password, data.open); break;
+        case 'adminSetStaple': r.adminSetStaple(data.password, data.shop, data.enabled, data.options); break;
         default: reject(new Error('未知的動作: ' + action));
       }
     });
@@ -577,9 +594,11 @@ function applyDataToUI(res) {
   const st = $('currentShopText'); st.className = 'shop-badge';
   if (st.dataset.shop !== currentShop) { st.dataset.shop = currentShop; st.innerHTML = '<span class="hl">' + escapeHTML(currentShop) + '</span>'; }
   orderingOpen = res.orderingOpen !== false; applyOrderingState();
+  const sp = res.staple, so = sp && Array.isArray(sp.options) ? sp.options.filter(Boolean) : [];
+  stapleCfg = { enabled: !!(sp && sp.enabled) && so.length > 0, options: so };
   if (currentTab === 'menu') renderMenuList();
   if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows();
-  if (adminToken) populateAdminShopsSelect();
+  if (adminToken) { populateAdminShopsSelect(); populateStaplePanel(); }
   renderOrders(allOrders);
   if (currentTab === 'admin') renderAdminTable(allOrders);
 }
@@ -614,7 +633,7 @@ function switchTab(tab) {
   const ti = tabs.indexOf(tab); if (ti >= 0) $('mainTabs').dataset.i = ti;
   if (tab === 'status') { renderOrders(allOrders); loadStatusData(); }
   if (tab === 'menu') renderMenuList();
-  if (tab === 'admin') { populateAdminShopsSelect(); renderAdminTable(allOrders); loadAdminOrders(); }
+  if (tab === 'admin') { populateAdminShopsSelect(); populateStaplePanel(); renderAdminTable(allOrders); loadAdminOrders(); }
   window.scrollTo(0, 0);
 }
 
@@ -645,7 +664,7 @@ function addItemRow() {
   if (list.querySelectorAll('.item-row').length >= 5) return showModal('提示', '每筆訂單最多只能選擇 5 項餐點！', '⚠️');
   const row = document.createElement('div');
   row.className = 'item-row';
-  row.innerHTML = `<select onchange="calculateTotal()" aria-label="餐點品項">${menuOptionsHTML()}</select><span class="price-tag">$0</span><button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除" aria-label="移除此項">✕</button>`;
+  row.innerHTML = `<select onchange="onItemChange(this)" aria-label="餐點品項">${menuOptionsHTML()}</select><span class="price-tag">$0</span><button type="button" class="btn-remove" onclick="removeItemRow(this)" title="移除" aria-label="移除此項">✕</button>`;
   list.appendChild(row);
   calculateTotal();
 }
@@ -657,6 +676,23 @@ function removeItemRow(btn) {
     if ($('itemList').children.length === 0) addItemRow(); else calculateTotal();
   }, 120);
 }
+// 主食勾選：只有「主食選項已開啟」且「這一列已選餐點」才顯示；選項沒變就不重畫，並保留已勾選的值
+function renderStaple(row) {
+  const sel = row.querySelector('select');
+  let box = row.querySelector('.staple-row');
+  if (!(stapleCfg.enabled && sel && sel.value)) { if (box) box.remove(); return; }
+  const key = stapleCfg.options.join('\u0001');
+  if (box && box.dataset.k === key) return;
+  const prevEl = box && box.querySelector('input:checked'), prev = prevEl ? prevEl.value : '';
+  if (!box) { box = document.createElement('div'); box.className = 'staple-row'; box.setAttribute('role', 'radiogroup'); box.setAttribute('aria-label', '主食'); row.appendChild(box); }
+  box.dataset.k = key;
+  const nm = row.dataset.sid || (row.dataset.sid = 'stp' + (++stapleSeq));
+  box.innerHTML = stapleCfg.options.map(o => `<label class="staple-opt${o === prev ? ' on' : ''}"><input type="radio" name="${nm}" value="${escapeHTML(o)}"${o === prev ? ' checked' : ''} onchange="pickStaple(this)"><span>${escapeHTML(o)}</span></label>`).join('');
+}
+function pickStaple(inp) {
+  inp.closest('.staple-row').querySelectorAll('.staple-opt').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
+}
+function onItemChange(sel) { renderStaple(sel.closest('.item-row')); calculateTotal(); }
 function updateExistingItemRows() {
   const options = menuOptionsHTML();
   document.querySelectorAll('.item-row select').forEach(s => {
@@ -664,15 +700,17 @@ function updateExistingItemRows() {
     s.innerHTML = options;
     s.value = v;
     if (s.selectedIndex < 0) s.selectedIndex = 0;
+    renderStaple(s.closest('.item-row'));
   });
   calculateTotal();
 }
 function readItems() {
   const items = [];
-  document.querySelectorAll('.item-row select').forEach(s => {
+  document.querySelectorAll('.item-row').forEach(row => {
+    const s = row.querySelector('select');
     if (!s.value) return;
-    const o = s.options[s.selectedIndex];
-    items.push({ name: s.value, price: Number(o && o.dataset.price) || 0 });
+    const o = s.options[s.selectedIndex], st = stapleCfg.enabled ? row.querySelector('.staple-row input:checked') : null;
+    items.push({ name: s.value, price: Number(o && o.dataset.price) || 0, staple: st ? st.value : '' });
   });
   return items;
 }
@@ -725,6 +763,14 @@ async function handleOrderSubmit() {
   if (!group || !name) return showModal('提示', '請先選擇組別以及座號姓名！', '⚠️');
   const items = readItems();
   if (items.length === 0) return showModal('提示', '請至少選擇一項餐點！', '⚠️');
+  if (stapleCfg.enabled) {
+    const miss = items.findIndex(i => !i.staple);
+    if (miss > -1) {
+      const rows = [...document.querySelectorAll('.item-row')].filter(r => r.querySelector('select').value);
+      if (rows[miss] && rows[miss].scrollIntoView) rows[miss].scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return showModal('提示', '請替「' + items[miss].name + '」選擇主食（' + stapleCfg.options.join('／') + '）！', '⚠️');
+    }
+  }
   const total = items.reduce((a, i) => a + i.price, 0);
 
   const btn = $('submitBtn');
@@ -734,7 +780,7 @@ async function handleOrderSubmit() {
     // 金額僅供顯示；後端會依菜單重新計算並以後端為準
     const note = $('orderNote').value.trim();
     // 同一份內容的重送沿用同一個 requestId，後端 10 分鐘內只會寫入一次
-    const sig = JSON.stringify([group, name, items.map(i => i.name), note]);
+    const sig = JSON.stringify([group, name, items.map(i => i.name + '|' + i.staple), note]);
     if (submitReq.sig !== sig || Date.now() - submitReq.at > 600000) { submitReq = { sig, id: newReqId(), at: Date.now() }; saveReq(); }
     const payload = { group, name, items, total, totalAmount: total, note, requestId: submitReq.id };
     let res = null;
@@ -968,6 +1014,41 @@ function handleAdminChangeShop() {
       showModal('成功', res.message || '店家已成功更換！', '🎉', () => loadInitialData());
     } catch (err) { showModal('錯誤', err.message || '更換店家失敗', '❌'); }
   });
+}
+// ---------- 主食選項（管理員） ----------
+function parseStapleInput(s) {
+  const seen = {}, out = [];
+  String(s || '').split(/[、,，;；\/\s]+/).forEach(x => { x = x.replace(/[()（）|]/g, '').trim().slice(0, 10); if (x && !seen[x]) { seen[x] = 1; out.push(x); } });
+  return out.slice(0, 8);
+}
+function populateStaplePanel() {
+  const on = stapleCfg.enabled, t = $('btnStapleToggle'), inp = $('stapleInput');
+  $('stapleShopLabel').textContent = currentShop || '';
+  $('stapleState').textContent = on ? '（目前：開啟）' : '（目前：關閉）';
+  t.textContent = on ? '關閉主食選項' : '開啟主食選項';
+  t.className = on ? 'btn-danger' : 'btn-action';
+  t.style.width = on ? '' : '100%'; t.style.minHeight = '52px';
+  if (document.activeElement !== inp && !inp.dataset.dirty) inp.value = (stapleCfg.options.length ? stapleCfg.options : STAPLE_DEFAULT).join('、');
+}
+async function saveStaple(mode) {
+  const inp = $('stapleInput'), enabled = mode === 'toggle' ? !stapleCfg.enabled : stapleCfg.enabled;
+  let opts = parseStapleInput(inp.value);
+  if (enabled && !opts.length) return showModal('提示', '請至少輸入一個主食選項（用「、」分隔）！', '⚠️');
+  if (!opts.length) opts = stapleCfg.options;               // 關閉時若輸入框是空的，保留原本已存的選項
+  const btn = $(mode === 'toggle' ? 'btnStapleToggle' : 'btnStapleSave'), bs = [$('btnStapleToggle'), $('btnStapleSave')];
+  bs.forEach(b => b.classList.add('busy')); btn.textContent = '修但幾勒喔……';
+  try {
+    const res = await apiRequest('adminSetStaple', { password: adminToken, shop: currentShop, enabled, options: opts }, 0);
+    if (!res || !res.success) throw new Error((res && res.message) || '儲存失敗');
+    stapleCfg = { enabled: !!res.staple.enabled, options: res.staple.options || [] };
+    inp.dataset.dirty = ''; cachedTxt = '';
+    try { const c = JSON.parse(store.get('lunchApp_cachedData') || 'null'); if (c) { c.staple = stapleCfg; store.set('lunchApp_cachedData', JSON.stringify(c)); } } catch (e) {}
+    updateExistingItemRows(); populateStaplePanel();
+    showModal('成功', res.message || '已儲存！', '🎉');
+  } catch (err) {
+    populateStaplePanel();
+    showModal('錯誤', err.message || '儲存失敗', '❌');
+  } finally { bs.forEach(b => b.classList.remove('busy')); btn.textContent = mode === 'toggle' ? btn.textContent : '儲存選項名稱'; }
 }
 function handleAdminToggleOrdering() {
   const open = !orderingOpen;
