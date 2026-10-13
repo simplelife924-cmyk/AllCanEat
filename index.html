@@ -998,22 +998,42 @@ function tallyNotes(orders) {
   });
   return list;
 }
-// 有備註的訂單從一般統計拆出來單獨列，兩邊加起來才是總份數，不會重複計算
+// 同品項放在一起：先「無備註」，再依備註分行；一人點多樣又只有一條備註的，列在最後
+function buildTallyRows(orders) {
+  const by = {}, order = [], multi = {}, multiOrder = [];
+  const grp = n => by[n] || (order.push(n), by[n] = { n: 0, plain: 0, notes: {}, nk: [] });
+  orders.forEach(o => {
+    const names = orderItemNames(o), raw = String(o.note || '').trim(), k = noteKey(raw), who = String(o.name || '').replace(/^\d+\s*/, '');
+    if (!names.length) return;
+    if (!k) { names.forEach(n => { const g = grp(n); g.n++; g.plain++; }); return; }
+    if (names.length === 1) {
+      const g = grp(names[0]); g.n++;
+      let e = g.notes[k]; if (!e) { e = g.notes[k] = { text: raw, c: 0, who: [] }; g.nk.push(k); }
+      e.c++; if (who) e.who.push(who);
+    } else {
+      const key = names.join('＋') + '\u0001' + k;
+      let e = multi[key]; if (!e) { e = multi[key] = { item: names.join('＋'), text: raw, c: 0, who: [] }; multiOrder.push(e); }
+      e.c++; if (who) e.who.push(who);
+    }
+  });
+  const rows = [];
+  order.sort((a, b) => by[b].n - by[a].n).forEach(n => {
+    const g = by[n];
+    if (g.plain) rows.push({ item: n, note: '', c: g.plain, who: [] });
+    g.nk.forEach(k => rows.push({ item: n, note: g.notes[k].text, c: g.notes[k].c, who: g.notes[k].who }));
+  });
+  multiOrder.forEach(e => rows.push({ item: e.item, note: e.text, c: e.c, who: e.who }));
+  return rows;
+}
 function renderTally(orders) {
-  const plain = orders.filter(o => !noteKey(o.note || '')), special = orders.filter(o => noteKey(o.note || ''));
-  const rows = tallyItems(plain), notes = tallyNotes(special), all = tallyItems(orders);
-  const cnt = a => a.reduce((x, r) => x + r[1], 0);
-  tallyText = '（正常無備註的）\n' + (rows.map(r => r[0] + '*' + r[1]).join('\n') || '無');
-  if (notes.length) tallyText += '\n\n（有備註的）\n' + notes.map(g => g.items + ' ' + g.text + '*' + g.n).join('\n');
-  $('itemTotalCount').textContent = all.length ? '（共 ' + cnt(all) + ' 份）' : '';
-  $('btnCopyTally').disabled = !all.length;
-  const sub = t => '<label style="margin:0 0 4px;display:block">' + t + '</label>';
-  $('itemTally').innerHTML = all.length
-    ? sub('（正常無備註的）') + (rows.length ? '<table class="menu-table">' + rows.map(r => `<tr><td>${escapeHTML(r[0])}</td><td>× ${r[1]}</td></tr>`).join('') + '</table>' : '<div class="empty">無</div>')
+  const rows = buildTallyRows(orders), all = tallyItems(orders);
+  tallyText = rows.map(r => r.item + (r.note ? ' ' + r.note : '') + '*' + r.c).join('\n');
+  $('itemTotalCount').textContent = all.length ? '（共 ' + all.reduce((a, r) => a + r[1], 0) + ' 份）' : '';
+  $('btnCopyTally').disabled = !rows.length;
+  $('noteTally').innerHTML = '';
+  $('itemTally').innerHTML = rows.length
+    ? '<table class="menu-table">' + rows.map(r => `<tr><td>${escapeHTML(r.item)}${r.note ? ' <span style="font-weight:800;color:var(--danger)">' + escapeHTML(r.note) + '</span><div style="font-size:.78rem;font-weight:700;color:var(--muted)">' + escapeHTML(r.who.join('、')) + '</div>' : ''}</td><td>× ${r.c}</td></tr>`).join('') + '</table>'
     : '<div class="empty">目前沒有訂單</div>';
-  $('noteTally').innerHTML = notes.length
-    ? '<label style="margin:18px 0 4px;display:block">（有備註的）</label><table class="menu-table">' + notes.map(g => `<tr><td><b>${escapeHTML(g.items)}</b> <span style="font-weight:800;color:var(--danger)">${escapeHTML(g.text)}</span><div style="font-size:.78rem;font-weight:700;color:var(--muted)">${escapeHTML(g.who.join('、'))}</div></td><td>× ${g.n}</td></tr>`).join('') + '</table>'
-    : '';
 }
 async function copyText(t) {
   try {
