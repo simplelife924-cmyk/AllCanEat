@@ -992,22 +992,27 @@ function tallyNotes(orders) {
   orders.forEach(o => {
     const raw = String(o.note || '').trim(), k = noteKey(raw);
     if (!k) return;
-    let g = map[k]; if (!g) { g = map[k] = { text: raw, n: 0, items: [] }; list.push(g); }
-    g.n++; orderItemNames(o).forEach(n => { if (g.items.indexOf(n) < 0) g.items.push(n); });
+    const items = orderItemNames(o).join('＋'), key = items + '\u0001' + k;
+    let g = map[key]; if (!g) { g = map[key] = { text: raw, items, n: 0, who: [] }; list.push(g); }
+    g.n++; if (o.name) g.who.push(String(o.name).replace(/^\d+\s*/, ''));
   });
-  return list.sort((a, b) => b.n - a.n);
+  return list;
 }
+// 有備註的訂單從一般統計拆出來單獨列，兩邊加起來才是總份數，不會重複計算
 function renderTally(orders) {
-  const rows = tallyItems(orders), notes = tallyNotes(orders);
-  tallyText = rows.map(r => r[0] + ' ×' + r[1]).join('、');   // 例如：雞腿飯 ×5、紅茶 ×3
-  if (notes.length) tallyText += '\n備註：\n' + notes.map(g => g.text + (g.n > 1 ? ' ×' + g.n : '') + '（' + g.items.join('、') + '）').join('\n');
-  $('itemTotalCount').textContent = rows.length ? '（共 ' + rows.reduce((a, r) => a + r[1], 0) + ' 份）' : '';
-  $('btnCopyTally').disabled = !rows.length;
-  $('itemTally').innerHTML = rows.length
-    ? '<table class="menu-table">' + rows.map(r => `<tr><td>${escapeHTML(r[0])}</td><td>× ${r[1]}</td></tr>`).join('') + '</table>'
+  const plain = orders.filter(o => !noteKey(o.note || '')), special = orders.filter(o => noteKey(o.note || ''));
+  const rows = tallyItems(plain), notes = tallyNotes(special), all = tallyItems(orders);
+  const cnt = a => a.reduce((x, r) => x + r[1], 0);
+  tallyText = '（正常無備註的）\n' + (rows.map(r => r[0] + '*' + r[1]).join('\n') || '無');
+  if (notes.length) tallyText += '\n\n（有備註的）\n' + notes.map(g => g.items + ' ' + g.text + '*' + g.n).join('\n');
+  $('itemTotalCount').textContent = all.length ? '（共 ' + cnt(all) + ' 份）' : '';
+  $('btnCopyTally').disabled = !all.length;
+  const sub = t => '<label style="margin:0 0 4px;display:block">' + t + '</label>';
+  $('itemTally').innerHTML = all.length
+    ? sub('（正常無備註的）') + (rows.length ? '<table class="menu-table">' + rows.map(r => `<tr><td>${escapeHTML(r[0])}</td><td>× ${r[1]}</td></tr>`).join('') + '</table>' : '<div class="empty">無</div>')
     : '<div class="empty">目前沒有訂單</div>';
   $('noteTally').innerHTML = notes.length
-    ? '<label style="margin:14px 0 0">備註（原文列出，相同的已合併）</label><table class="menu-table">' + notes.map(g => `<tr><td>${escapeHTML(g.text)}<div style="font-size:.8rem;font-weight:700;color:var(--muted)">${escapeHTML(g.items.join('、'))}</div></td><td>${g.n > 1 ? '× ' + g.n : ''}</td></tr>`).join('') + '</table>'
+    ? '<label style="margin:18px 0 4px;display:block">（有備註的）</label><table class="menu-table">' + notes.map(g => `<tr><td><b>${escapeHTML(g.items)}</b> <span style="font-weight:800;color:var(--danger)">${escapeHTML(g.text)}</span><div style="font-size:.78rem;font-weight:700;color:var(--muted)">${escapeHTML(g.who.join('、'))}</div></td><td>× ${g.n}</td></tr>`).join('') + '</table>'
     : '';
 }
 async function copyText(t) {
