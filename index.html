@@ -113,6 +113,18 @@ button.badge:active:not(:disabled){transform:translate(2px,2px)}
 .menu-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.95rem}
 .menu-table td{padding:14px 8px;border-bottom:3px dotted rgba(19,21,21,.25)}
 .menu-table tr:last-child td{border-bottom:none}
+.menu-table tr.off td{color:var(--muted);text-decoration:line-through}
+.tag-off{display:inline-block;margin-left:8px;padding:1px 8px;border:2px solid var(--danger);color:var(--danger);font-size:.72rem;font-weight:900;text-decoration:none;vertical-align:middle}
+details.panel>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;font-size:.9rem;font-weight:800}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary::after{content:"＋";font-weight:900;font-size:1.1rem}
+details.panel[open]>summary::after{content:"－"}
+.itm{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:3px dotted rgba(19,21,21,.25)}
+.itm:last-child{border-bottom:none}
+.itm-name{flex:1;min-width:0;font-weight:800;overflow-wrap:anywhere}
+.itm.is-off .itm-name,.itm.is-off .itm-price{color:var(--muted);text-decoration:line-through}
+.itm-price{font-weight:900;font-variant-numeric:tabular-nums}
+.itm .badge{flex:none;min-width:96px;min-height:44px;font-size:.88rem}
 .menu-table td:last-child{text-align:right;font-weight:900;font-size:1.1rem;font-variant-numeric:tabular-nums}
 .empty{text-align:center;padding:36px 20px;font-weight:800;color:var(--muted);background:rgba(255,255,255,.5);border:3px dashed var(--border)}
 /* ---- 打烊畫面 ---- */
@@ -290,6 +302,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button class="btn-action" id="btnStapleSave" style="width:100%;min-height:52px;margin-top:12px" onclick="saveStaple('save')">儲存選項名稱</button>
         <button class="btn-danger" id="btnStapleToggle" style="margin-top:12px" onclick="saveStaple('toggle')">開啟主食選項</button>
       </div>
+      <!-- 品項開放設定：逐項切換今天要不要開放點，每間店各自記住 -->
+      <details class="panel" id="itemsPanel">
+        <summary><span>品項開放設定 <span id="itemsSummary" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></span></summary>
+        <p style="font-size:.85rem;margin:10px 0 12px;color:var(--muted)">只套用在今日店家，每間店各自記住。設為「未開放」的品項，同學看得到但無法選取，想開再點一下就好。</p>
+        <div id="itemsList"></div>
+        <button class="btn-action" id="btnItemsAll" style="width:100%;min-height:52px;margin-top:12px" onclick="openAllItems()" disabled>全部開放</button>
+      </details>
       <!-- 新增：今日品項統計＋一鍵複製叫餐文字 -->
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
@@ -444,6 +463,7 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
         case 'adminDeleteOrder': r.adminDeleteOrder(data.password, data.rowIndex, data.group, data.name, data.total); break;
         case 'adminSetOrdering': r.adminSetOrdering(data.password, data.open); break;
         case 'adminSetStaple': r.adminSetStaple(data.password, data.shop, data.enabled, data.options); break;
+        case 'adminSetItemsOpen': r.adminSetItemsOpen(data.password, data.shop, data.names, data.open); break;
         default: reject(new Error('未知的動作: ' + action));
       }
     });
@@ -597,8 +617,8 @@ function applyDataToUI(res) {
   const sp = res.staple, so = sp && Array.isArray(sp.options) ? sp.options.filter(Boolean) : [];
   stapleCfg = { enabled: !!(sp && sp.enabled) && so.length > 0, options: so };
   if (currentTab === 'menu') renderMenuList();
-  if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows();
-  if (adminToken) { populateAdminShopsSelect(); populateStaplePanel(); }
+  if ($('itemList').children.length === 0) addItemRow(); else updateExistingItemRows(true);
+  if (adminToken) { populateAdminShopsSelect(); populateStaplePanel(); renderItemsPanel(); }
   renderOrders(allOrders);
   if (currentTab === 'admin') renderAdminTable(allOrders);
 }
@@ -633,7 +653,7 @@ function switchTab(tab) {
   const ti = tabs.indexOf(tab); if (ti >= 0) $('mainTabs').dataset.i = ti;
   if (tab === 'status') { renderOrders(allOrders); loadStatusData(); }
   if (tab === 'menu') renderMenuList();
-  if (tab === 'admin') { populateAdminShopsSelect(); populateStaplePanel(); renderAdminTable(allOrders); loadAdminOrders(); }
+  if (tab === 'admin') { if (Date.now() - lastInitialAt > 5000) loadInitialData(); populateAdminShopsSelect(); populateStaplePanel(); renderItemsPanel(); renderAdminTable(allOrders); loadAdminOrders(); }
   window.scrollTo(0, 0);
 }
 
@@ -657,7 +677,9 @@ function saveUserSelection() {
 let _opt = '';
 function menuOptionsHTML() {
   return _opt || (_opt = '<option value="" data-price="0">請選擇餐點品項</option>' +
-    menuItems.map(i => `<option value="${escapeHTML(i.name)}" data-price="${Number(i.price) || 0}">${escapeHTML(i.name)} ($${Number(i.price) || 0})</option>`).join(''));
+    menuItems.map(i => i.off
+      ? `<option value="${escapeHTML(i.name)}" data-price="0" disabled>${escapeHTML(i.name)}（未開放）</option>`
+      : `<option value="${escapeHTML(i.name)}" data-price="${Number(i.price) || 0}">${escapeHTML(i.name)} ($${Number(i.price) || 0})</option>`).join(''));
 }
 function addItemRow() {
   const list = $('itemList');
@@ -693,16 +715,18 @@ function pickStaple(inp) {
   inp.closest('.staple-row').querySelectorAll('.staple-opt').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
 }
 function onItemChange(sel) { renderStaple(sel.closest('.item-row')); calculateTotal(); }
-function updateExistingItemRows() {
-  const options = menuOptionsHTML();
+function updateExistingItemRows(notify) {
+  const options = menuOptionsHTML(), dropped = [];
   document.querySelectorAll('.item-row select').forEach(s => {
     const v = s.value;
     s.innerHTML = options;
     s.value = v;
     if (s.selectedIndex < 0) s.selectedIndex = 0;
+    else if (s.options[s.selectedIndex].disabled) { dropped.push(v); s.selectedIndex = 0; } // 剛被設為未開放：取消選取
     renderStaple(s.closest('.item-row'));
   });
   calculateTotal();
+  if (notify && dropped.length) showModal('提示', '「' + dropped.join('」「') + '」目前未開放點餐，已取消選取，請改選其他餐點。', '⚠️');
 }
 function readItems() {
   const items = [];
@@ -862,7 +886,7 @@ function renderMenuList() {
   const box = $('menuList');
   box.className = '';
   if (!menuItems.length) { box.innerHTML = '<div class="empty">目前尚無今日菜單</div>'; return; }
-  box.innerHTML = '<table class="menu-table">' + menuItems.map(i => `<tr><td>${escapeHTML(i.name)}</td><td>$${Number(i.price) || 0}</td></tr>`).join('') + '</table>';
+  box.innerHTML = '<table class="menu-table">' + menuItems.map(i => `<tr${i.off ? ' class="off"' : ''}><td>${escapeHTML(i.name)}${i.off ? '<span class="tag-off">未開放</span>' : ''}</td><td>$${Number(i.price) || 0}</td></tr>`).join('') + '</table>';
 }
 
 // ---------- 管理員 ----------
@@ -1015,6 +1039,43 @@ function handleAdminChangeShop() {
     } catch (err) { showModal('錯誤', err.message || '更換店家失敗', '❌'); }
   });
 }
+// ---------- 品項開放設定（管理員） ----------
+const itemBusy = {};
+function renderItemsPanel() {
+  const box = $('itemsList'); if (!box) return;
+  const total = menuItems.length, off = menuItems.filter(i => i.off).length;
+  $('itemsSummary').textContent = total ? '（開放 ' + (total - off) + '／' + total + ' 項）' : '';
+  $('btnItemsAll').disabled = off === 0;
+  box.innerHTML = total ? menuItems.map((i, k) => `<div class="itm${i.off ? ' is-off' : ''}"><span class="itm-name">${escapeHTML(i.name)}</span><span class="itm-price">$${Number(i.price) || 0}</span><button type="button" class="badge ${i.off ? 'badge-unpaid' : 'badge-paid'}" onclick="toggleItemOpen(${k})" aria-label="${escapeHTML(i.name)} 開放狀態，點擊切換">${i.off ? '○ 未開放' : '✔ 開放'}</button></div>`).join('') : '<div class="empty">目前尚無菜單</div>';
+}
+function setItemOff(name, off) { menuItems.forEach(i => { if (i.name === name) { if (off) i.off = true; else delete i.off; } }); }
+function afterItemsChanged() {
+  _opt = ''; updateExistingItemRows(); renderItemsPanel(); if (currentTab === 'menu') renderMenuList();
+  cachedTxt = '';
+  try { const c = JSON.parse(store.get('lunchApp_cachedData') || 'null'); if (c) { c.items = menuItems; store.set('lunchApp_cachedData', JSON.stringify(c)); } } catch (e) {}
+}
+// 樂觀更新：先改畫面，失敗再還原並重新同步
+async function setItemsOpen(names, open) {
+  names = names.filter(n => !itemBusy[n]);
+  if (!names.length) return;
+  const prev = names.map(n => [n, !!(menuItems.find(i => i.name === n) || {}).off]);
+  names.forEach(n => { itemBusy[n] = 1; setItemOff(n, !open); });
+  afterItemsChanged();
+  try {
+    const res = await apiRequest('adminSetItemsOpen', { password: adminToken, shop: currentShop, names, open }, 0);
+    if (!res || !res.success) throw new Error((res && res.message) || '更新失敗');
+  } catch (err) {
+    prev.forEach(p => setItemOff(p[0], p[1])); afterItemsChanged(); loadInitialData();
+    showModal('同步失敗', '已還原。\n(' + err.message + ')', '⚠️');
+  } finally { names.forEach(n => { delete itemBusy[n]; }); }
+}
+function toggleItemOpen(k) {
+  const it = menuItems[k]; if (!it) return;
+  if (navigator.vibrate) navigator.vibrate(12);
+  setItemsOpen([it.name], !!it.off);                          // 目前未開放 → 開放；目前開放 → 暫停
+}
+function openAllItems() { setItemsOpen([...new Set(menuItems.map(i => i.name))], true); } // 畫面可能過期（例如另一支手機改過），所以送出全部、由伺服器決定
+
 // ---------- 主食選項（管理員） ----------
 function parseStapleInput(s) {
   const seen = {}, out = [];
