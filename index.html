@@ -294,11 +294,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="stat-card"><div class="stat-label">已收金額</div><div class="stat-num" style="color:var(--success)" id="statPaidAmount">$0</div></div>
         <div class="stat-card"><div class="stat-label">未收金額</div><div class="stat-num" style="color:var(--danger)" id="statUnpaidAmount">$0</div></div>
       </div>
-      <div class="panel">
-        <label>點餐開關 <span id="orderingState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
-        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">ฅ^•ﻌ•^ฅ</p>
-        <button class="btn-danger" id="btnToggleOrdering" onclick="handleAdminToggleOrdering()">關閉今日點餐</button>
-      </div>
       <!-- 新增：今日品項統計＋一鍵複製叫餐文字 -->
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
@@ -327,6 +322,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <!-- 設定：換店與每間店各自記住的選項（開店前設定一次） -->
       <div id="adm-settings" hidden>
+      <div class="panel">
+        <label>點餐開關 <span id="orderingState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
+        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">ฅ^•ﻌ•^ฅ</p>
+        <button class="btn-danger" id="btnToggleOrdering" onclick="handleAdminToggleOrdering()">關閉今日點餐</button>
+      </div>
       <div class="panel">
         <label for="adminShopsSelect">切換今日店家</label>
         <div style="display:flex;gap:12px;margin-top:8px"><select id="adminShopsSelect"></select><button class="btn-action" style="white-space:nowrap;height:52px" onclick="handleAdminChangeShop()">確認更換</button></div>
@@ -1032,7 +1032,7 @@ function renderTally(orders) {
   $('btnCopyTally').disabled = !rows.length;
   $('noteTally').innerHTML = '';
   $('itemTally').innerHTML = rows.length
-    ? '<table class="menu-table">' + rows.map(r => `<tr><td>${escapeHTML(r.item)}${r.note ? ' <span style="font-weight:800;color:var(--danger)">' + escapeHTML(r.note) + '</span><div style="font-size:.78rem;font-weight:700;color:var(--muted)">' + escapeHTML(r.who.join('、')) + '</div>' : ''}</td><td>× ${r.c}</td></tr>`).join('') + '</table>'
+    ? '<table class="menu-table">' + rows.map(r => `<tr><td>${escapeHTML(r.item)}${r.note ? ' <span style="font-weight:800;color:var(--danger)">' + escapeHTML(r.note) + '</span>' : ''}</td><td>× ${r.c}</td></tr>`).join('') + '</table>'
     : '<div class="empty">目前沒有訂單</div>';
 }
 async function copyText(t) {
