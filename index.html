@@ -306,6 +306,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button class="btn-action" id="btnCopyTally" onclick="copyTally(this)" disabled>複製叫餐文字</button>
         </div>
         <div id="itemTally"></div>
+        <div id="noteTally"></div>
       </div>
       </div>
       <!-- 對帳：逐筆列表與清空（最長的內容獨佔一頁） -->
@@ -341,7 +342,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <!-- 品項開放設定：逐項切換今天要不要開放點，每間店各自記住 -->
       <details class="panel" id="itemsPanel">
         <summary><span>品項開放設定 <span id="itemsSummary" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></span></summary>
-        <p style="font-size:.85rem;margin:10px 0 12px;color:var(--muted)">設為「未開放」的品項<br>同學看得到但無法選取<br>想開再點一下就好。</p>
+        <p style="font-size:.85rem;margin:10px 0 12px;color:var(--muted)">只套用在今日店家，每間店各自記住。設為「未開放」的品項，同學看得到但無法選取，想開再點一下就好。</p>
         <div id="itemsList"></div>
         <button class="btn-action" id="btnItemsAll" style="width:100%;min-height:52px;margin-top:12px" onclick="openAllItems()" disabled>全部開放</button>
       </details>
@@ -980,14 +981,34 @@ function tallyItems(orders) {
   });
   return Object.entries(map).sort((a, b) => b[1] - a[1]);
 }
+function orderItemNames(o) {
+  if (Array.isArray(o.items)) return o.items.map(i => typeof i === 'string' ? i.trim() : (i && i.name)).filter(Boolean);
+  return orderDetails(o).split(/[、,，;；\n]+/).map(s => s.replace(/\s*[xX×*]\s*\d+\s*$/, '').replace(/\(\$?\d+\)|\$\d+/g, '').trim()).filter(Boolean);
+}
+// 備註整理：全形半形統一、轉小寫、去掉空白與標點後，完全相同的才合併；錯字不硬猜，各自原文列出
+function noteKey(t) { let s = String(t); try { s = s.normalize('NFKC'); } catch (e) {} return s.toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, ''); }
+function tallyNotes(orders) {
+  const map = {}, list = [];
+  orders.forEach(o => {
+    const raw = String(o.note || '').trim(), k = noteKey(raw);
+    if (!k) return;
+    let g = map[k]; if (!g) { g = map[k] = { text: raw, n: 0, items: [] }; list.push(g); }
+    g.n++; orderItemNames(o).forEach(n => { if (g.items.indexOf(n) < 0) g.items.push(n); });
+  });
+  return list.sort((a, b) => b.n - a.n);
+}
 function renderTally(orders) {
-  const rows = tallyItems(orders);
+  const rows = tallyItems(orders), notes = tallyNotes(orders);
   tallyText = rows.map(r => r[0] + ' ×' + r[1]).join('、');   // 例如：雞腿飯 ×5、紅茶 ×3
+  if (notes.length) tallyText += '\n備註：\n' + notes.map(g => g.text + (g.n > 1 ? ' ×' + g.n : '') + '（' + g.items.join('、') + '）').join('\n');
   $('itemTotalCount').textContent = rows.length ? '（共 ' + rows.reduce((a, r) => a + r[1], 0) + ' 份）' : '';
   $('btnCopyTally').disabled = !rows.length;
   $('itemTally').innerHTML = rows.length
     ? '<table class="menu-table">' + rows.map(r => `<tr><td>${escapeHTML(r[0])}</td><td>× ${r[1]}</td></tr>`).join('') + '</table>'
     : '<div class="empty">目前沒有訂單</div>';
+  $('noteTally').innerHTML = notes.length
+    ? '<label style="margin:14px 0 0">備註（原文列出，相同的已合併）</label><table class="menu-table">' + notes.map(g => `<tr><td>${escapeHTML(g.text)}<div style="font-size:.8rem;font-weight:700;color:var(--muted)">${escapeHTML(g.items.join('、'))}</div></td><td>${g.n > 1 ? '× ' + g.n : ''}</td></tr>`).join('') + '</table>'
+    : '';
 }
 async function copyText(t) {
   try {
