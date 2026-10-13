@@ -43,6 +43,7 @@ header::before{content:"";position:absolute;width:160px;height:160px;background:
 header .spinner{border-color:rgba(19,21,21,.2);border-top-color:var(--text)}
 @keyframes pulse{50%{opacity:.5}}
 .tabs{display:flex;gap:0;max-width:480px;margin:-32px auto 0;padding:4px;background:var(--surface);border:var(--bd);box-shadow:var(--sh);position:relative;z-index:2;width:calc(100% - 32px)}
+.tabs.sub-tabs{margin:0 0 22px;width:100%;max-width:none;position:sticky;top:0;top:env(safe-area-inset-top);z-index:20;box-shadow:var(--sh-sm)}
 .tab-btn{flex:1;padding:10px 6px;min-height:44px;border:none;background:transparent;font-size:.9rem;font-weight:800;color:var(--muted);cursor:pointer;position:relative;z-index:1}
 .tab-thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/3);background:var(--forest);transition:transform .25s steps(5,end);z-index:0}
 .tabs[data-i="1"] .tab-thumb{transform:translateX(100%)}.tabs[data-i="2"] .tab-thumb{transform:translateX(200%)}
@@ -280,6 +281,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div id="tab-admin" style="display:none;">
     <div class="card">
       <div class="card-title"><div>管理員控制台<span class="admin-badge">已登入</span></div></div>
+      <div class="tabs sub-tabs" id="adminTabs" role="tablist" data-i="0"><span class="tab-thumb" aria-hidden="true"></span>
+        <button role="tab" class="tab-btn active" aria-selected="true" onclick="switchAdminTab('overview')">總覽</button>
+        <button role="tab" class="tab-btn" aria-selected="false" onclick="switchAdminTab('orders')">對帳</button>
+        <button role="tab" class="tab-btn" aria-selected="false" onclick="switchAdminTab('settings')">設定</button>
+      </div>
+      <!-- 總覽：統計數字、點餐開關、叫餐統計（進後台第一眼要看的、最常按的） -->
+      <div id="adm-overview">
       <div class="admin-stats-grid">
         <div class="stat-card"><div class="stat-label">今日訂單數</div><div class="stat-num" id="statOrderCount">0</div></div>
         <div class="stat-card"><div class="stat-label">訂單總金額</div><div class="stat-num" id="statTotalAmount">$0</div></div>
@@ -287,28 +295,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="stat-card"><div class="stat-label">未收金額</div><div class="stat-num" style="color:var(--danger)" id="statUnpaidAmount">$0</div></div>
       </div>
       <div class="panel">
-        <label for="adminShopsSelect">切換今日店家</label>
-        <div style="display:flex;gap:12px;margin-top:8px"><select id="adminShopsSelect"></select><button class="btn-action" style="white-space:nowrap;height:52px" onclick="handleAdminChangeShop()">確認更換</button></div>
-        <div style="border-top:2px dashed var(--muted);margin:20px 0 16px"></div>
         <label>點餐開關 <span id="orderingState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
         <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">ฅ^•ﻌ•^ฅ</p>
         <button class="btn-danger" id="btnToggleOrdering" onclick="handleAdminToggleOrdering()">關閉今日點餐</button>
       </div>
-      <!-- 主食選項：每間店各自設定開關與選項名稱 -->
-      <div class="panel">
-        <label for="stapleInput">主食選項 <span id="stapleState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
-        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">只套用在今日店家「<b id="stapleShopLabel"></b>」，每間店會各自記住。<br>開啟後同學選完餐點要再勾選主食。<br>選項用「、」分隔，最多 8 個。</p>
-        <input type="text" id="stapleInput" maxlength="60" placeholder="例如：飯、麵" oninput="this.dataset.dirty='1'">
-        <button class="btn-action" id="btnStapleSave" style="width:100%;min-height:52px;margin-top:12px" onclick="saveStaple('save')">儲存選項名稱</button>
-        <button class="btn-danger" id="btnStapleToggle" style="margin-top:12px" onclick="saveStaple('toggle')">開啟主食選項</button>
-      </div>
-      <!-- 品項開放設定：逐項切換今天要不要開放點，每間店各自記住 -->
-      <details class="panel" id="itemsPanel">
-        <summary><span>品項開放設定 <span id="itemsSummary" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></span></summary>
-        <p style="font-size:.85rem;margin:10px 0 12px;color:var(--muted)">只套用在今日店家，每間店各自記住。設為「未開放」的品項，同學看得到但無法選取，想開再點一下就好。</p>
-        <div id="itemsList"></div>
-        <button class="btn-action" id="btnItemsAll" style="width:100%;min-height:52px;margin-top:12px" onclick="openAllItems()" disabled>全部開放</button>
-      </details>
       <!-- 新增：今日品項統計＋一鍵複製叫餐文字 -->
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
@@ -317,6 +307,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <div id="itemTally"></div>
       </div>
+      </div>
+      <!-- 對帳：逐筆列表與清空（最長的內容獨佔一頁） -->
+      <div id="adm-orders" hidden>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:16px">
           <label style="margin:0">對帳管理 <span style="font-size:.75rem;font-weight:400;opacity:.65;display:block;margin-top:4px">點擊狀態按鈕可切換已付／未付</span></label>
@@ -329,6 +322,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <label style="color:var(--danger)">清空今日所有點餐紀錄</label>
         <p style="font-size:.85rem;margin-bottom:16px;color:var(--muted)">會清除「今日誰點餐」的所有訂購資料</p>
         <button class="btn-danger" onclick="handleAdminClearOrders()">清空今日紀錄</button>
+      </div>
+      </div>
+      <!-- 設定：換店與每間店各自記住的選項（開店前設定一次） -->
+      <div id="adm-settings" hidden>
+      <div class="panel">
+        <label for="adminShopsSelect">切換今日店家</label>
+        <div style="display:flex;gap:12px;margin-top:8px"><select id="adminShopsSelect"></select><button class="btn-action" style="white-space:nowrap;height:52px" onclick="handleAdminChangeShop()">確認更換</button></div>
+      </div>
+      <!-- 主食選項：每間店各自設定開關與選項名稱 -->
+      <div class="panel">
+        <label for="stapleInput">主食選項 <span id="stapleState" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></label>
+        <p style="font-size:.85rem;margin:6px 0 14px;color:var(--muted)">只套用在今日店家「<b id="stapleShopLabel"></b>」，每間店會各自記住。<br>開啟後同學選完餐點要再勾選主食。<br>選項用「、」分隔，最多 8 個。</p>
+        <input type="text" id="stapleInput" maxlength="60" placeholder="例如：飯、麵" oninput="this.dataset.dirty='1'">
+        <button class="btn-action" id="btnStapleSave" style="width:100%;min-height:52px;margin-top:12px" onclick="saveStaple('save')">儲存選項名稱</button>
+        <button class="btn-danger" id="btnStapleToggle" style="margin-top:12px" onclick="saveStaple('toggle')">開啟主食選項</button>
+      </div>
+      <!-- 品項開放設定：逐項切換今天要不要開放點，每間店各自記住 -->
+      <details class="panel" id="itemsPanel">
+        <summary><span>品項開放設定 <span id="itemsSummary" style="font-size:.8rem;font-weight:700;color:var(--muted)"></span></span></summary>
+        <p style="font-size:.85rem;margin:10px 0 12px;color:var(--muted)">設為「未開放」的品項<br>同學看得到但無法選取<br>想開再點一下就好。</p>
+        <div id="itemsList"></div>
+        <button class="btn-action" id="btnItemsAll" style="width:100%;min-height:52px;margin-top:12px" onclick="openAllItems()" disabled>全部開放</button>
+      </details>
       </div>
       <button class="btn-back" onclick="switchTab('order')">返回點餐頁面</button>
     </div>
@@ -383,6 +399,7 @@ const LOW = LITE;
 const TOUCH = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
 if (LITE || TOUCH) document.documentElement.classList.add('lite');
 if (LOW) document.documentElement.classList.add('low');
+let adminSub = 'overview';
 let stapleCfg = { enabled: false, options: [] }, stapleSeq = 0;
 const STAPLE_DEFAULT = ['飯', '麵', '冬粉', '米粉'];
 let toggling = 0, ordersPromise = null, adminFilter = 'all', ordersVer = 0, ordersSig = '', ordersReady = false, cachedTxt = '';
@@ -591,7 +608,7 @@ const BASE_POLL = POLL_MS * (LITE ? 2 : 1);
 let pollDelay = BASE_POLL, pollTimer = 0;
 function schedulePoll(ms) { clearTimeout(pollTimer); pollTimer = setTimeout(pollOrders, ms || pollDelay * (0.8 + Math.random() * 0.4)); }
 async function pollOrders() {
-  if (document.hidden || navigator.onLine === false || toggling || (currentTab !== 'status' && currentTab !== 'admin')) return schedulePoll();
+  if (document.hidden || navigator.onLine === false || toggling || (currentTab !== 'status' && currentTab !== 'admin') || (currentTab === 'admin' && adminSub === 'settings')) return schedulePoll();
   const v = ordersVer;
   try {
     await fetchOrders(0, true); renderOrders(allOrders); renderAdminTable(allOrders);
@@ -644,6 +661,22 @@ async function loadInitialData() {
 }
 
 // ---------- 分頁 ----------
+// ---------- 管理員子分頁：總覽／對帳／設定 ----------
+const ADMIN_SUBS = ['overview', 'orders', 'settings'];
+function switchAdminTab(sub, keepScroll) {
+  if (ADMIN_SUBS.indexOf(sub) < 0) sub = 'overview';
+  adminSub = sub;
+  ADMIN_SUBS.forEach(s => { $('adm-' + s).hidden = s !== sub; });
+  const bar = $('adminTabs'); bar.dataset.i = ADMIN_SUBS.indexOf(sub);
+  bar.querySelectorAll('.tab-btn').forEach((b, i) => { const on = ADMIN_SUBS[i] === sub; b.classList.toggle('active', on); b.setAttribute('aria-selected', on); });
+  if (sub === 'settings') {                                  // 設定頁用的是店家／菜單資料，不需要訂單
+    if (Date.now() - lastInitialAt > 5000) loadInitialData();
+    populateAdminShopsSelect(); populateStaplePanel(); renderItemsPanel();
+  } else {                                                   // 總覽、對帳都要訂單資料
+    renderAdminTable(allOrders); loadAdminOrders();
+  }
+  if (!keepScroll) window.scrollTo(0, 0);
+}
 function switchTab(tab) {
   currentTab = tab;
   ['order', 'status', 'menu', 'admin'].forEach(t => { $('tab-' + t).style.display = t === tab ? 'block' : 'none'; });
@@ -653,7 +686,7 @@ function switchTab(tab) {
   const ti = tabs.indexOf(tab); if (ti >= 0) $('mainTabs').dataset.i = ti;
   if (tab === 'status') { renderOrders(allOrders); loadStatusData(); }
   if (tab === 'menu') renderMenuList();
-  if (tab === 'admin') { if (Date.now() - lastInitialAt > 5000) loadInitialData(); populateAdminShopsSelect(); populateStaplePanel(); renderItemsPanel(); renderAdminTable(allOrders); loadAdminOrders(); }
+  if (tab === 'admin') switchAdminTab('overview', true);
   window.scrollTo(0, 0);
 }
 
