@@ -6,6 +6,11 @@
 <meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
 <meta name="theme-color" content="#FF6701">
 <meta name="color-scheme" content="light">
+<meta name="description" content="AllCanEat">
+<meta property="og:type" content="website">
+<meta property="og:title" content="今天要吃什麼勒">
+<meta property="og:description" content="AllCanEat">
+<meta property="og:site_name" content="AllCanEat">
 <link rel="preconnect" href="https://script.google.com" crossorigin>
 <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
 <script>var GAS_URL="https://script.google.com/macros/s/AKfycbzS82dxzGqzlT6nip3OkjqHMOOeHmMFbvQPcluNSjrzN13ERfcAW1ugOChkYf-9rcIw6g/exec";var PRE={};(function(){try{if(!/^(https?|file):$/.test(location.protocol)||/googleusercontent\.com$/.test(location.hostname)||!window.fetch)return;['getInitialData'].forEach(function(a){PRE[a]=fetch(GAS_URL,{method:'POST',redirect:'follow',cache:'no-store',priority:'high',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a})}).then(function(r){return r.text().then(function(t){return{ok:r.ok,status:r.status,text:t}})});PRE[a].catch(function(){})})}catch(e){}})();</script>
@@ -208,7 +213,7 @@ img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PLHQ33RV"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
-<div class="conn-banner" id="connBanner" role="status">連線不穩，資料可能不是最新，正在重新連線…</div>
+<div class="conn-banner" id="connBanner" role="status"></div>
 
 <header>
   <div class="head-inner">
@@ -527,8 +532,8 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
   }
   throw lastErr || new Error('連線失敗，請檢查網路後再試一次');
 }
-function showConnBanner() { $('connBanner').classList.add('show'); }
-function hideConnBanner() { $('connBanner').classList.remove('show'); }
+function showConnBanner() { const b = $('connBanner'); b.textContent = '連線不穩，資料可能不是最新，正在重新連線…'; b.classList.add('show'); }
+function hideConnBanner() { const b = $('connBanner'); b.classList.remove('show'); b.textContent = ''; }
 
 // ---------- Modal ----------
 function setModalIcon(icon) { $('modalIcon').innerHTML = '<i class="ic i-' + (ICON_MAP[icon] || 'ok') + '"></i>'; }
