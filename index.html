@@ -435,7 +435,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <input type="text" id="shopSearch" class="search-box" placeholder="搜尋店名" oninput="renderShopList()" style="margin-bottom:4px">
             <div id="shopList"></div>
           </div>
-          <p style="font-size:.8rem;color:var(--muted);font-weight:700;margin:0 0 20px">右邊開關是上架／下架。</p>
+          <p style="font-size:.8rem;color:var(--muted);font-weight:700;margin:0 0 20px">右邊開關是上架／下架。下架的店家不會出現在「切換今日店家」，資料和舊訂單都保留，想用時再上架就好。</p>
         </div>
         <div id="shopWizard" hidden>
           <div class="wz-steps"><span id="wzS1">① 貼上菜單</span><span id="wzS2">② 校對品項</span><span id="wzS3">③ 確認儲存</span></div>
@@ -857,6 +857,7 @@ const ADMIN_SUBS = ['overview', 'orders', 'settings', 'shops'];
 function switchAdminTab(sub, keepScroll) {
   if (ADMIN_SUBS.indexOf(sub) < 0) sub = 'overview';
   adminSub = sub;
+  wzBackBtn(sub !== 'shops' || $('shopWizard').hidden); // 只有在店家精靈裡才隱藏「返回點餐頁面」
   ADMIN_SUBS.forEach(s => { $('adm-' + s).hidden = s !== sub; });
   const bar = $('adminTabs'); bar.dataset.i = ADMIN_SUBS.indexOf(sub);
   bar.querySelectorAll('.tab-btn').forEach((b, i) => { const on = ADMIN_SUBS[i] === sub; b.classList.toggle('active', on); b.setAttribute('aria-selected', on); });
@@ -1511,7 +1512,7 @@ async function editShop(i) {
   finally { rows.forEach(b => b.classList.remove('busy')); }
 }
 function closeShopWizard(silent) {
-  $('shopWizard').hidden = true; $('shopListView').hidden = false;
+  $('shopWizard').hidden = true; $('shopListView').hidden = false; wzBackBtn(true);
   if (!silent) window.scrollTo(0, 0);
 }
 // 已經貼了菜單或改過表格才問，避免誤按「取消」整份不見
@@ -1520,14 +1521,14 @@ function cancelShopWizard() {
   if (!wzDirty()) return closeShopWizard();
   showConfirmModal('放棄這次的編輯？', '貼上的菜單和修改都不會儲存。', '❓', () => closeShopWizard());
 }
+function wzBackBtn(show) { const b = document.querySelector('#tab-admin .btn-back'); if (b) b.hidden = !show; }
 function wzGo(n) {
   if (n === 3 && !checkWzRows(true)) return;
   wz.step = n;
-  $('shopListView').hidden = true; $('shopWizard').hidden = false;
+  $('shopListView').hidden = true; $('shopWizard').hidden = false; wzBackBtn(false);
   [1, 2, 3].forEach(k => { $('wzStep' + k).hidden = k !== n; $('wzS' + k).className = k === n ? 'on' : (k < n ? 'done' : ''); });
   $('wzS1').textContent = wz.mode === 'edit' ? '① 重新貼上' : '① 貼上菜單';
   if (n === 2) {
-    $('wzBack2').textContent = wz.mode === 'edit' ? '重新貼上菜單' : '← 上一步';
     renderWzRows(); renderWzLeft();
   }
   if (n === 3) renderWzSummary();
@@ -1664,7 +1665,7 @@ function renderWzSummary() {
   $('wzSumBody').innerHTML =
     `<div class="wz-sum"><span>品項數</span><span>${items.length} 項</span></div>` +
     `<div class="wz-sum"><span>價格範圍</span><span>$${Math.min(...prices)} ～ $${Math.max(...prices)}</span></div>` +
-    `<div class="wz-sum"><span>${wz.mode === 'edit' ? '儲存後會整份取代原本的品項' : '新增到菜單總表'}</span><span></span></div>`;
+    (wz.mode === 'edit' ? `<div class="wz-sum"><span>儲存後會整份取代原本的品項</span><span></span></div>` : '');
 }
 async function saveWzShop() {
   const shop = $('wzName').value.trim(), btn = $('wzBtnSave');
