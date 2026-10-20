@@ -237,6 +237,43 @@ img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
 .summary-box{flex-wrap:wrap;gap:6px 12px}
 .modal-btn-group{flex-wrap:wrap}.modal-btn{min-width:7em}
 .modal-title,.modal-msg,.shop-badge,.order-details,.menu-table td{overflow-wrap:anywhere}
+/* ---------- 後台「店家」分頁 ---------- */
+#adminTabs .tab-thumb{width:calc((100% - 8px)/4)}
+#adminTabs[data-i="3"] .tab-thumb{transform:translateX(300%)}
+.shop-row{display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:3px dotted rgba(19,21,21,.25)}
+.shop-row:last-child{border-bottom:none}
+.shop-row .nm{flex:1;min-width:0}
+.shop-row .nm b{display:block;font-size:1rem;font-weight:900;overflow-wrap:anywhere}
+.shop-row .nm small{font-size:.78rem;font-weight:700;color:var(--muted)}
+.shop-row.off .nm b{color:var(--muted);text-decoration:line-through}
+.shop-row .btn-action{background:var(--surface);flex:none}
+.today-tag{display:inline-block;background:var(--gold);border:2px solid var(--text);font-size:.68rem;font-weight:900;padding:1px 6px;margin-left:6px;vertical-align:middle;text-decoration:none}
+.wz-steps{display:flex;gap:6px;margin:0 0 18px}
+.wz-steps span{flex:1;min-width:0;text-align:center;font-size:.78rem;font-weight:900;padding:8px 2px;border:2px solid var(--text);background:var(--surface);color:var(--muted);overflow-wrap:anywhere}
+.wz-steps span.on{background:var(--primary);color:var(--text)}
+.wz-steps span.done{background:var(--sand);color:var(--text)}
+.wz-how{border:2px dotted var(--text);background:var(--bg);padding:10px 12px;margin:8px 0 12px;font-size:.82rem}
+.wz-how summary{font-weight:900;cursor:pointer}
+.wz-how-body{margin-top:8px;line-height:1.8;font-weight:700}
+.wz-how-body span{color:var(--muted)}
+.wz-paste{width:100%;min-height:110px;border:var(--bd);background:var(--surface);padding:12px;font:inherit;font-size:.9rem;resize:vertical;box-sizing:border-box}
+.wz-head,.wz-row{display:grid;grid-template-columns:minmax(0,1fr) 78px 34px;gap:6px;align-items:center}
+.wz-head{font-size:.75rem;font-weight:900;color:var(--muted);margin-bottom:6px}
+.wz-row{margin-bottom:8px}
+.wz-row input{min-height:44px;height:44px;padding:6px 8px;font-size:.9rem;border:2px solid var(--text);background:var(--surface);box-sizing:border-box;width:100%;min-width:0}
+.wz-row input.bad{border-color:var(--danger);background:var(--danger-bg)}
+.wz-row .x{border:2px solid var(--text);background:var(--surface);height:44px;min-height:0;font-weight:900;cursor:pointer;padding:0}
+.wz-warn{background:var(--danger-bg);border:2px solid var(--danger);color:var(--danger);font-size:.82rem;font-weight:800;padding:8px 10px;margin:4px 0 12px}
+.wz-left{border:2px dotted var(--text);padding:10px;margin-top:12px;font-size:.82rem}
+.wz-left summary{font-weight:900;cursor:pointer}
+.wz-left button{display:block;width:100%;text-align:left;margin-top:6px;border:2px solid var(--text);background:var(--bg);padding:8px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;overflow-wrap:anywhere}
+.wz-nav{display:flex;gap:10px;margin-top:16px}
+.wz-nav .btn-action{flex:1;min-height:52px}
+.wz-nav .ghost{background:var(--surface)}
+.wz-sum{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:3px dotted rgba(19,21,21,.25);font-weight:800}
+.wz-sum:last-child{border-bottom:none}
+.wz-chk{display:flex;align-items:center;gap:10px;margin:16px 0;font-weight:800}
+.wz-chk input{width:22px;height:22px;min-height:0;accent-color:var(--primary);flex:none}
 </style>
 </head>
 <body>
@@ -322,6 +359,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button role="tab" class="tab-btn active" aria-selected="true" onclick="switchAdminTab('overview')">總覽</button>
         <button role="tab" class="tab-btn" aria-selected="false" onclick="switchAdminTab('orders')">對帳</button>
         <button role="tab" class="tab-btn" aria-selected="false" onclick="switchAdminTab('settings')">設定</button>
+        <button role="tab" class="tab-btn" aria-selected="false" onclick="switchAdminTab('shops')">店家管理</button>
       </div>
       <!-- 總覽：統計數字、點餐開關、叫餐統計（進後台第一眼要看的、最常按的） -->
       <div id="adm-overview">
@@ -388,6 +426,49 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div id="itemsList"></div>
         <button class="btn-action" id="btnItemsAll" style="width:100%;min-height:52px;margin-top:12px" onclick="openAllItems()" disabled>全部開放</button>
       </details>
+      </div>
+      <!-- 店家：新增店家（上傳菜單照片／貼上文字 → 校對 → 儲存）、編輯品項、上下架 -->
+      <div id="adm-shops" hidden>
+        <div id="shopListView">
+          <button class="btn-submit" onclick="startShopWizard()">＋ 新增店家</button>
+          <div class="panel" style="margin-top:22px">
+            <input type="text" id="shopSearch" class="search-box" placeholder="搜尋店名" oninput="renderShopList()" style="margin-bottom:4px">
+            <div id="shopList"></div>
+          </div>
+          <p style="font-size:.8rem;color:var(--muted);font-weight:700;margin:0 0 20px">右邊開關是上架／下架。</p>
+        </div>
+        <div id="shopWizard" hidden>
+          <div class="wz-steps"><span id="wzS1">① 貼上菜單</span><span id="wzS2">② 校對品項</span><span id="wzS3">③ 確認儲存</span></div>
+          <div id="wzStep1">
+            <div class="form-group"><label for="wzName">店名 *</label><input type="text" id="wzName" maxlength="30"></div>
+            <div class="form-group">
+              <label for="wzText">菜單文字</label>
+              <details class="wz-how" open>
+                <summary>怎麼從菜單照片複製文字？</summary>
+                <div class="wz-how-body">
+                  <b>iPhone</b>：相簿打開照片 → 長按文字 → 拖曳選取範圍 →「拷貝」<br>
+                  <b>Android</b>：相簿打開照片 →「智慧鏡頭」→「文字」→「全選」→「複製」<br>
+                  <span>品名和價格分在不同行也沒關係，會自動配對。</span>
+                </div>
+              </details>
+              <textarea class="wz-paste" id="wzText" placeholder="把菜單文字貼在這裡，例如：&#10;雞腿飯 150&#10;雞排便當 160"></textarea>
+            </div>
+            <div class="wz-nav"><button class="btn-action ghost" onclick="cancelShopWizard()">取消</button><button class="btn-action" id="wzBtnParse" onclick="runWzParse()">整理成表格 →</button></div>
+          </div>
+          <div id="wzStep2" hidden>
+            <div class="wz-warn" id="wzWarn" hidden></div>
+            <div class="wz-head"><span>品項</span><span>價格</span><span></span></div>
+            <div id="wzRows"></div>
+            <button type="button" class="btn-add-item" onclick="addWzRow('', '')">+ 新增一列</button>
+            <details class="wz-left" id="wzLeft" hidden><summary id="wzLeftSum"></summary><div id="wzLeftList"></div></details>
+            <div class="wz-nav"><button class="btn-action ghost" id="wzBack2" onclick="wzGo(1)">← 上一步</button><button class="btn-action" id="wzNext2" onclick="wzGo(3)">下一步 →</button></div>
+          </div>
+          <div id="wzStep3" hidden>
+            <div class="panel"><div style="font-size:1.2rem;font-weight:900;overflow-wrap:anywhere" id="wzSumName"></div><div id="wzSumBody" style="margin-top:8px"></div></div>
+            <label class="wz-chk" id="wzListWrap"><input type="checkbox" id="wzListed" checked>儲存後出現在「切換今日店家」</label>
+            <div class="wz-nav"><button class="btn-action ghost" onclick="wzGo(2)">← 返回修改</button><button class="btn-action" id="wzBtnSave" onclick="saveWzShop()">儲存 ✓</button></div>
+          </div>
+        </div>
       </div>
       <button class="btn-back" onclick="switchTab('order')">返回點餐頁面</button>
     </div>
@@ -526,6 +607,10 @@ async function apiRequest(action, data = {}, retries = MAX_RETRIES, silent = fal
         case 'adminSetAutoClose': r.adminSetAutoClose(data.password, data.enabled, data.time); break;
         case 'adminSetStaple': r.adminSetStaple(data.password, data.shop, data.enabled, data.options); break;
         case 'adminSetItemsOpen': r.adminSetItemsOpen(data.password, data.shop, data.names, data.open); break;
+        case 'adminListShops': r.adminListShops(data.password); break;
+        case 'adminGetShopItems': r.adminGetShopItems(data.password, data.shop); break;
+        case 'adminSaveShop': r.adminSaveShop(data.password, data.shop, data.items, data.mode); break;
+        case 'adminSetShopHidden': r.adminSetShopHidden(data.password, data.shop, data.hidden); break;
         default: reject(new Error('未知的動作: ' + action));
       }
     });
@@ -711,7 +796,7 @@ const BASE_POLL = POLL_MS * (LITE ? 2 : 1);
 let pollDelay = BASE_POLL, pollTimer = 0;
 function schedulePoll(ms) { clearTimeout(pollTimer); pollTimer = setTimeout(pollOrders, ms || pollDelay * (0.8 + Math.random() * 0.4)); }
 async function pollOrders() {
-  if (document.hidden || navigator.onLine === false || toggling || (currentTab !== 'status' && currentTab !== 'admin') || (currentTab === 'admin' && adminSub === 'settings')) return schedulePoll();
+  if (document.hidden || navigator.onLine === false || toggling || (currentTab !== 'status' && currentTab !== 'admin') || (currentTab === 'admin' && (adminSub === 'settings' || adminSub === 'shops'))) return schedulePoll();
   const v = ordersVer;
   try {
     await fetchOrders(0, true); renderOrders(allOrders); renderAdminTable(allOrders);
@@ -768,7 +853,7 @@ async function loadInitialData() {
 
 // ---------- 分頁 ----------
 // ---------- 管理員子分頁：總覽／對帳／設定 ----------
-const ADMIN_SUBS = ['overview', 'orders', 'settings'];
+const ADMIN_SUBS = ['overview', 'orders', 'settings', 'shops'];
 function switchAdminTab(sub, keepScroll) {
   if (ADMIN_SUBS.indexOf(sub) < 0) sub = 'overview';
   adminSub = sub;
@@ -778,6 +863,9 @@ function switchAdminTab(sub, keepScroll) {
   if (sub === 'settings') {                                  // 設定頁用的是店家／菜單資料，不需要訂單
     if (Date.now() - lastInitialAt > 5000) loadInitialData();
     populateAdminShopsSelect(); populateStaplePanel(); renderItemsPanel(); populateAutoPanel();
+  } else if (sub === 'shops') {                              // 店家頁：每次進來都回到清單並重新讀取
+    if (!$('shopWizard').hidden && wzDirty()) { /* 編輯中誤點分頁：保留畫面，不清掉 */ }
+    else { closeShopWizard(true); loadShopList(); }
   } else {                                                   // 總覽、對帳都要訂單資料
     renderAdminTable(allOrders); loadAdminOrders();
   }
@@ -1367,6 +1455,235 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && !/googleus
 }
 init();
 
+
+// ---------- 管理員：店家管理（新增／編輯／上下架） ----------
+// 管理員用手機內建文字辨識複製菜單後貼上，前端把品名和價格配對成表格，校對後才寫進菜單總表。
+let shopsAdmin = [], wz = { mode: 'new', items: [], left: [], step: 1 };
+
+async function loadShopList() {
+  const box = $('shopList');
+  if (!shopsAdmin.length) box.innerHTML = loaderHTML('修但幾勒喔……');
+  try {
+    const res = await apiRequest('adminListShops', { password: adminToken }, 1);
+    if (!res || !res.success) throw new Error((res && res.message) || '讀取失敗');
+    shopsAdmin = res.shops || []; renderShopList();
+  } catch (err) { box.innerHTML = retryHTML(err.message, 'loadShopList()'); }
+}
+function renderShopList() {
+  const q = ($('shopSearch').value || '').trim().toLowerCase();
+  const list = shopsAdmin.filter(s => !q || s.name.toLowerCase().includes(q));
+  $('shopList').innerHTML = list.length ? list.map(s => {
+    const i = shopsAdmin.indexOf(s), n = escapeHTML(s.name);
+    return `<div class="shop-row${s.hidden ? ' off' : ''}"><div class="nm"><b>${n}${s.today ? '<span class="today-tag">今日</span>' : ''}</b><small>${s.count} 品項${s.hidden ? '・已下架' : ''}</small></div>` +
+      `<button class="btn-action" onclick="editShop(${i})">編輯</button>` +
+      `<button class="sw" role="switch" aria-checked="${!s.hidden}" aria-label="${n} 上架" onclick="toggleShopHidden(${i}, this)"></button></div>`;
+  }).join('') : '<div class="empty">' + (q ? '找不到符合的店家' : '還沒有店家，按上面新增一間吧') + '</div>';
+}
+async function toggleShopHidden(i, el) {
+  const s = shopsAdmin[i]; if (!s) return;
+  if (s.today && !s.hidden) return showModal('沒辦法下架', '「' + s.name + '」是今日店家，請先到「設定」切換到別家再下架。', '⚠️');
+  el.classList.add('busy');
+  try {
+    const res = await apiRequest('adminSetShopHidden', { password: adminToken, shop: s.name, hidden: !s.hidden }, 0);
+    if (!res || !res.success) throw new Error((res && res.message) || '更新失敗');
+    s.hidden = res.hidden; renderShopList(); lastInitialAt = 0;
+  } catch (err) { showModal('錯誤', err.message, '❌'); }
+  finally { el.classList.remove('busy'); }
+}
+
+function startShopWizard() {
+  wz = { mode: 'new', items: [], left: [], step: 1 };
+  $('wzName').value = ''; $('wzName').disabled = false; $('wzText').value = '';
+  $('wzListWrap').hidden = false; $('wzListed').checked = true;
+  wzGo(1);
+}
+async function editShop(i) {
+  const s = shopsAdmin[i]; if (!s) return;
+  const rows = $('shopList').querySelectorAll('.shop-row .btn-action'); rows.forEach(b => b.classList.add('busy'));
+  try {
+    const res = await apiRequest('adminGetShopItems', { password: adminToken, shop: s.name }, 1);
+    if (!res || !res.success) throw new Error((res && res.message) || '讀取失敗');
+    wz = { mode: 'edit', items: res.items.map(it => ({ name: it.name, price: String(it.price) })), left: [], step: 2 };
+    $('wzName').value = s.name; $('wzName').disabled = true; $('wzText').value = '';
+    $('wzListWrap').hidden = true;
+    wzGo(2);
+  } catch (err) { showModal('錯誤', err.message, '❌'); }
+  finally { rows.forEach(b => b.classList.remove('busy')); }
+}
+function closeShopWizard(silent) {
+  $('shopWizard').hidden = true; $('shopListView').hidden = false;
+  if (!silent) window.scrollTo(0, 0);
+}
+// 已經貼了菜單或改過表格才問，避免誤按「取消」整份不見
+function wzDirty() { return !!($('wzText').value.trim() || (wz.mode === 'new' && $('wzName').value.trim()) || wz.dirty); }
+function cancelShopWizard() {
+  if (!wzDirty()) return closeShopWizard();
+  showConfirmModal('放棄這次的編輯？', '貼上的菜單和修改都不會儲存。', '❓', () => closeShopWizard());
+}
+function wzGo(n) {
+  if (n === 3 && !checkWzRows(true)) return;
+  wz.step = n;
+  $('shopListView').hidden = true; $('shopWizard').hidden = false;
+  [1, 2, 3].forEach(k => { $('wzStep' + k).hidden = k !== n; $('wzS' + k).className = k === n ? 'on' : (k < n ? 'done' : ''); });
+  $('wzS1').textContent = wz.mode === 'edit' ? '① 重新貼上' : '① 貼上菜單';
+  if (n === 2) {
+    $('wzBack2').textContent = wz.mode === 'edit' ? '重新貼上菜單' : '← 上一步';
+    renderWzRows(); renderWzLeft();
+  }
+  if (n === 3) renderWzSummary();
+  window.scrollTo(0, 0);
+}
+
+// ----- 整理：貼上的文字直接在前端拆成表格 -----
+function runWzParse() {
+  const name = $('wzName').value.trim(), text = $('wzText').value.trim();
+  if (!name) { showModal('還沒填店名', '請先輸入店名。', '⚠️'); return $('wzName').focus(); }
+  if (wz.mode === 'new' && shopsAdmin.some(s => s.name === name)) return showModal('店名重複', '已經有「' + name + '」了，請改名，或回清單按那間店的「編輯」。', '⚠️');
+  if (!text) { showModal('還沒有菜單', '請貼上菜單文字。', '⚠️'); return $('wzText').focus(); }
+  const r = parseMenuText(text);
+  wz.items = r.items.length ? r.items : [{ name: '', price: '' }]; wz.left = r.left; // 編輯時重新貼上＝取代舊品項（儲存前都還能改）
+  wzGo(2);
+}
+// 把菜單文字拆成品項。手機文字辨識常把「品名」和「價格」拆成不同行（甚至整欄品名先出、整欄價格後出），
+// 所以分三種行處理：同一行有品名＋價格→直接成一項；只有品名→排隊；只有價格→跟最早排隊的品名配對（反之亦然）。
+// 標題、備註、地址電話等雜訊不參與配對，放進「未辨識的文字」。
+const WZ_PRICE_ONLY = /^(?:NT\$?|\$|＄)?\s*(\d{1,5})\s*(?:元|起|\/份)?$/i;
+function wzNoise(t) {
+  return t.length > 18 || /[{}｛｝【】\[\]「」『』※＊*#＃@]|電話|地址|營業|外送|訂購|LINE|官網|http|www|週|星期|公休|tel|招牌推薦|價格|價目|單位|元起|另計|時價|謝謝|歡迎|恕不|請先|以上|部分|不含/i.test(t)
+    || /^[\d\s:：\-\/().,，、~～]+$/.test(t) || /(類|系列|專區|套餐區|飲品區|單點區)$/.test(t) || !/[一-鿿A-Za-z]/.test(t);
+}
+function wzCleanName(n) {
+  return n.replace(/^[\s\-•·*＊、.．\d]+(?=[^\d\s])/, '').replace(/[\s.．…·•:：\-—_|,，、$＄]+$/g, '').replace(/^[(（](.*)[)）]$/, '$1').trim().slice(0, 40);
+}
+function parseMenuText(text) {
+  const items = [], left = [], seen = {};
+  let names = [], prices = [];
+  const push = (n, p) => { n = wzCleanName(n); if (!n || seen[n]) return false; seen[n] = 1; items.push({ name: n, price: String(p) }); return true; };
+  const lines = String(text || '').replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/＄/g, '$')
+    .split(/\r?\n/).map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const priceVals = line => { const t = line.split(/\s+/); return t.every(x => WZ_PRICE_ONLY.test(x)) ? t.map(x => x.match(WZ_PRICE_ONLY)[1]) : null; };
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // 1) 連續的「只有價格」行收成一段：1 個價格配最近的品名；N 個價格依序配最後 N 個品名（整欄排版）。
+    //    比較早排隊、沒配到的品名多半是標題（店名、「加點」），移到未辨識。
+    if (priceVals(line)) {
+      let run = [];
+      while (i < lines.length && priceVals(lines[i])) run = run.concat(priceVals(lines[i++]));
+      i--;
+      if (names.length) {
+        const use = names.slice(-run.length);
+        names.slice(0, names.length - use.length).forEach(n => left.push(n));
+        use.forEach((n, k) => push(n, run[k]));
+        run = run.slice(use.length); names = [];
+      }
+      prices = prices.concat(run);
+      continue;
+    }
+    // 2) 多尺寸：「珍奶 中50 大60」
+    const sizes = [...line.matchAll(/(特大|大碗|小碗|大|中|小|L|M|S)\s*[:：]?\s*\$?\s*(\d{1,5})\s*元?/g)];
+    if (sizes.length >= 2) {
+      const base = line.slice(0, sizes[0].index).trim();
+      if (base && !wzNoise(base)) { flushNames(); sizes.forEach(m => push(base + '（' + m[1] + '）', m[2])); continue; }
+    }
+    // 3) 同一行品名＋價格
+    const m = line.match(/^(.*?[^\d\s$])\s*(?:NT\$?|\$)?\s*(\d{1,5})\s*(?:元|起)?$/i);
+    if (m && !wzNoise(m[1].trim()) && /[一-鿿A-Za-z]/.test(m[1])) { flushNames(); push(m[1], m[2]); continue; }
+    // 4) 只有品名：前面有沒配到的價格（價格在上、品名在下的排版）就配對，否則排隊
+    if (!wzNoise(line) && line.length >= 2) {
+      if (prices.length) push(line, prices.shift()); else names.push(line);
+      continue;
+    }
+    left.push(line);
+  }
+  // 沒配到價格的品名多半是標題或說明，放進「未辨識的文字」，需要時點一下就能加入
+  function flushNames() { names.forEach(n => left.push(n)); names = []; }
+  flushNames();
+  prices.forEach(v => left.push('$' + v));
+  return { items, left: left.slice(0, 60) };
+}
+
+// ----- 步驟 2：校對 -----
+function renderWzRows() {
+  $('wzRows').innerHTML = wz.items.map((it, i) =>
+    `<div class="wz-row"><input aria-label="品項" maxlength="40" value="${escapeHTML(it.name)}" oninput="wz.items[${i}].name=this.value;wz.dirty=1;checkWzRows()" onkeydown="wzKey(event,${i},0)">` +
+    `<input aria-label="價格" inputmode="numeric" maxlength="5" value="${escapeHTML(it.price)}" oninput="this.value=this.value.replace(/[^0-9]/g,'');wz.items[${i}].price=this.value;wz.dirty=1;checkWzRows()" onkeydown="wzKey(event,${i},1)">` +
+    `<button type="button" class="x" aria-label="刪除這列" onclick="wz.items.splice(${i},1);wz.dirty=1;renderWzRows()">✕</button></div>`).join('');
+  checkWzRows();
+}
+function wzKey(e, i, col) { // Enter 跳到下一列同一欄，最後一列再按 Enter 自動新增
+  if (e.key !== 'Enter') return; e.preventDefault();
+  if (i === wz.items.length - 1) addWzRow('', '');
+  const rows = $('wzRows').querySelectorAll('.wz-row'); const t = rows[i + 1] && rows[i + 1].querySelectorAll('input')[col]; if (t) t.focus();
+}
+function addWzRow(n, p) { wz.dirty = 1; wz.items.push({ name: n, price: p }); renderWzRows(); const r = $('wzRows').lastElementChild; if (r && !n) r.querySelector('input').focus(); }
+function checkWzRows(alert) {
+  const names = {}; let bad = 0, dup = '';
+  const rows = $('wzRows').querySelectorAll('.wz-row');
+  wz.items.forEach((it, i) => {
+    const n = it.name.trim(), p = String(it.price).trim(), r = rows[i];
+    const nBad = !n || (names[n] && (dup = dup || n)), pBad = !/^\d{1,5}$/.test(p);
+    if (n) names[n] = 1;
+    if (nBad || pBad) bad++;
+    if (r) { const ins = r.querySelectorAll('input'); ins[0].classList.toggle('bad', !!nBad); ins[1].classList.toggle('bad', pBad); }
+  });
+  const w = $('wzWarn');
+  const msg = !wz.items.length ? '至少要有一個品項' : bad ? `有 ${bad} 列的品名或價格待修正` + (dup ? `（「${dup}」重複，可加上大、小區分）` : '') + '，修正後才能下一步' : '';
+  w.hidden = !msg; w.textContent = msg;
+  $('wzNext2').disabled = !!msg;
+  if (alert && msg) w.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return !msg;
+}
+function renderWzLeft() {
+  const d = $('wzLeft');
+  d.hidden = !wz.left.length;
+  $('wzLeftSum').textContent = '未辨識的文字（' + wz.left.length + ' 行，點一下加入表格）';
+  $('wzLeftList').innerHTML = wz.left.map((t, i) => `<button type="button" onclick="useWzLeft(${i})">＋ ${escapeHTML(t)}</button>`).join('');
+}
+function useWzLeft(i) {
+  wz.dirty = 1;
+  const t = wz.left.splice(i, 1)[0] || '';
+  const po = t.replace(/\s+/g, '').match(/^(?:NT\$?|\$)?(\d{1,5})(?:元)?$/i);
+  if (po) { // 只有價格：補進第一個缺價格的品項
+    const row = wz.items.find(it => it.name.trim() && !/^\d+$/.test(String(it.price)));
+    if (row) row.price = po[1]; else wz.items.push({ name: '', price: po[1] });
+  } else {
+    const m = t.match(/(\d{1,5})\s*元?\s*$/);
+    const name = wzCleanName((m ? t.slice(0, m.index) : t).replace(/[\s:：]*(時價|價格另計|另計|請洽店家|NT\$?|\$)\s*$/i, ''));
+    const row = wz.items.find(it => !it.name.trim());
+    if (row) { row.name = name; if (m && !row.price) row.price = m[1]; }
+    else wz.items.push({ name, price: m ? m[1] : '' });
+  }
+  renderWzRows(); renderWzLeft();
+}
+
+// ----- 步驟 3：確認與儲存 -----
+function renderWzSummary() {
+  const items = wz.items.map(it => ({ name: it.name.trim(), price: Number(it.price) }));
+  const prices = items.map(i => i.price);
+  $('wzSumName').textContent = $('wzName').value.trim();
+  $('wzSumBody').innerHTML =
+    `<div class="wz-sum"><span>品項數</span><span>${items.length} 項</span></div>` +
+    `<div class="wz-sum"><span>價格範圍</span><span>$${Math.min(...prices)} ～ $${Math.max(...prices)}</span></div>` +
+    `<div class="wz-sum"><span>${wz.mode === 'edit' ? '儲存後會整份取代原本的品項' : '新增到菜單總表'}</span><span></span></div>`;
+}
+async function saveWzShop() {
+  const shop = $('wzName').value.trim(), btn = $('wzBtnSave');
+  btn.classList.add('busy'); btn.innerHTML = '<span class="spinner"></span>修但幾勒喔……';
+  try {
+    const items = wz.items.map(it => ({ name: it.name.trim(), price: Number(it.price) }));
+    const res = await apiRequest('adminSaveShop', { password: adminToken, shop, items, mode: wz.mode }, 0);
+    if (!res || !res.success) throw new Error((res && res.message) || '儲存失敗');
+    if (wz.mode === 'new' && !$('wzListed').checked) await apiRequest('adminSetShopHidden', { password: adminToken, shop, hidden: true }, 0).catch(() => {});
+    lastInitialAt = 0;
+    if (shop === currentShop) loadInitialData();
+    closeShopWizard(); loadShopList();
+    showModal('已儲存', res.message, '🎉');
+  } catch (err) {
+    const net = /逾時|連線|網路/.test(err.message || '');
+    showModal('儲存失敗', net ? err.message + '\n\n可能其實已經存好了，直接再按一次「儲存」即可，不會重複新增。' : err.message, '❌');
+  }
+  finally { btn.classList.remove('busy'); btn.textContent = '儲存 ✓'; }
+}
 </script>
 </body>
 </html>
